@@ -31,3 +31,20 @@ class productos(db.Model):
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     
     categoria = db.relationship('categorias_producto', backref='productos')
+
+class Color(db.Model):
+    __tablename__ = 'colores'
+
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(50), nullable=False)
+    clave = db.Column(db.String(50), unique=True, nullable=False)
+    codigo_hex = db.Column(db.String(7))
+    activo = db.Column(db.Boolean, default=True)
+
+class UnidadMedida(db.Model):
+    __tablename__ = 'unidades_medida'
+
+    id = db.Column(db.Integer, primary_key=True)
+    clave = db.Column(db.String(10), unique=True, nullable=False)
+    nombre = db.Column(db.String(50), nullable=False)
+    activo = db.Column(db.Boolean, default=True)

@@ -1,0 +1,100 @@
+<script src="https://cdn.tailwindcss.com"></script>
+
+<div class="flex h-screen bg-[#0B2239] text-white">
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-[#0F2A44] border-r border-[#1E3A5F] flex flex-col">
+
+        <!-- LOGO -->
+        <div class="flex items-center gap-3 px-6 py-5 border-b border-[#1E3A5F]">
+            <div class="bg-[#008DC0] w-8 h-8 flex items-center justify-center rounded font-bold">
+                CT
+            </div>
+            <span class="font-semibold tracking-wide">CONCRETUM</span>
+        </div>
+
+        <!-- MENU -->
+        <nav class="flex-1 px-4 py-6 space-y-6 text-sm">
+
+            <!-- PRINCIPAL -->
+            <div>
+                <p class="text-gray-400 text-xs mb-2 uppercase">Principal</p>
+                <a href="#" class="flex items-center gap-3 px-3 py-2 rounded bg-[#123555] text-[#70A7C7]">
+                    📊 Dashboard
+                </a>
+            </div>
+
+            <!-- OPERACIONES -->
+            <div>
+                <p class="text-gray-400 text-xs mb-2 uppercase">Operaciones</p>
+                <div class="space-y-1">
+                    <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555]">🏭 Producción</a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555]">📋 Recetas / Fórmulas</a>
+                    <a href="#" class="flex items-center justify-between px-3 py-2 rounded hover:bg-[#123555]">
+                        <span class="flex items-center gap-3">⚠️ Mermas</span>
+                        <span class="bg-yellow-500 text-xs px-2 py-0.5 rounded-full">3</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- INVENTARIO -->
+            <div>
+                <p class="text-gray-400 text-xs mb-2 uppercase">Inventario</p>
+                <div class="space-y-1">
+                    <a href="#" class="flex items-center justify-between px-3 py-2 rounded hover:bg-[#123555]">
+                        <span class="flex items-center gap-3">🧱 Materia Prima</span>
+                        <span class="bg-red-500 text-xs px-2 py-0.5 rounded-full">1</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555]">📦 Inventario General</a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555]">🛒 Compras</a>
+                </div>
+            </div>
+
+            <!-- COMERCIAL -->
+            <div>
+                <p class="text-gray-400 text-xs mb-2 uppercase">Comercial</p>
+                <div class="space-y-1">
+                    <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555]">💰 Ventas</a>
+                    <a href="#" class="flex items-center justify-between px-3 py-2 rounded hover:bg-[#123555]">
+                        <span class="flex items-center gap-3">📑 Pedidos</span>
+                        <span class="bg-blue-500 text-xs px-2 py-0.5 rounded-full">7</span>
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555]">🕒 Historial</a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555]">🧾 Ticket / Factura</a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555]">💵 Corte de Caja</a>
+                </div>
+            </div>
+
+            <!-- SISTEMA -->
+            <div>
+                <p class="text-gray-400 text-xs mb-2 uppercase">Sistema</p>
+                <div class="space-y-1">
+                    <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555]">👥 Usuarios</a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555]">⚙️ Configuración</a>
+                </div>
+            </div>
+
+        </nav>
+
+        <!-- USER -->
+        <div class="px-4 py-4 border-t border-[#1E3A5F]">
+            <div class="flex items-center gap-3 bg-[#123555] p-3 rounded">
+                <div class="bg-[#008DC0] w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold">
+                    CA
+                </div>
+                <div>
+                    <p class="text-sm font-medium">Carlos Álvarez</p>
+                    <p class="text-xs text-gray-400">Administrador</p>
+                </div>
+            </div>
+        </div>
+
+    </aside>
+
+    <!-- CONTENIDO DE AREA -->
+    <main class="flex-1 bg-[#0D1F30]">
+        {% block content %}
+        
+        {% endblock %}
+    </main>
+
+</div>

@@ -23,6 +23,10 @@ def index():
         .all()
     return render_template("/home/index.html", productos_lista=productos_lista)
 
+@app.route("/admin")
+def admin():
+    return render_template("/layout-admin.html")
+
 if __name__ == '__main__':
 	app.run(debug=True)
  
