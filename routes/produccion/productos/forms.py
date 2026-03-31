@@ -1,16 +1,73 @@
-from wtforms import DecimalField, Form, StringField, SelectField, NumberRange
-from wtforms import IntegerField, DateField, SubmitField, validators, SelectMultipleField
-from .routes import get_colores, get_unidades
+from datetime import date
+from wtforms import DecimalField, Form, StringField, SelectField, ValidationError
+from wtforms import IntegerField, DateField, SubmitField, SelectMultipleField
+from flask_wtf.file import FileField, FileRequired, FileAllowed
+from wtforms.validators import DataRequired, NumberRange, Length
 
-
+def fecha_hoy(form, field):
+    if field.data != date.today():
+        raise ValidationError("La fecha debe ser la de hoy")
 class ProductoForm(Form):
-    categoria_id = SelectField('categoria', [validators.DataRequired(message="Este campo es requerido")], coerce=int)
-    enlace_fotografia = StringField('enlace', [validators.DataRequired(message="Este campo es requerido")], validators.Length(max=200))
-    sku = StringField('sku', [validators.DataRequired(message="Este campo es requerido")], validators.Length(min=8, max=12))
-    nombre = StringField('nombre', [validators.DataRequired(message="Este campo es requerido")], validators.Length(max=200))
-    descripcion = StringField('descripcion', [validators.DataRequired(message="Este campo es requerido")], validators.Length(max=255))
-    unidad_medida = SelectField('unidad_medida', validators=[validators.DataRequired()], choices=[], coerce=int)
-    resistencia_mpa = DecimalField('resistencia_mpa', [validators.DataRequired(message="Este campo es requerido"), NumberRange(min=0.01, message="Debe ser mayor a 0")])
-    color = SelectField('color', validators=[validators.DataRequired()], choices=[], coerce=int)
-    precio_base = DecimalField('precio_base', [validators.DataRequired(message="Este campo es requerido")], NumberRange(min=0.01, message="Debe ser mayor a 0"))
-    fecha_creacion = StringField('fecha_creacion', [validators.DataRequired(message="Este campo es requerido")], validators.Length(min=8, max=12))
+    categoria_id = SelectField(
+        'Categoria', 
+        [DataRequired(message="Este campo es requerido")], 
+        choices=[], 
+        coerce=int
+    )
+
+    enlace_fotografia = FileField(
+        'Fotografía',
+        validators=[
+            FileRequired(message="La imagen es requerida"),
+            FileAllowed(['jpg', 'png', 'jpeg'], message="Solo imágenes")
+        ]
+    )
+
+    sku = StringField(
+        'SKU',
+        [DataRequired(message="Este campo es requerido"), Length(min=8, max=12)]
+    )
+
+    nombre = StringField(
+        'Nombre',
+        [DataRequired(message="Este campo es requerido"), Length(max=200)]
+    )
+
+    descripcion = StringField(
+        'Descripción',
+        [DataRequired(message="Este campo es requerido"), Length(max=255)]
+    )
+
+    unidad_medida = SelectField(
+        'Unidad de Medida',
+        validators=[DataRequired(message="Este campo es requerido")],
+        choices=[],
+        coerce=int
+    )
+
+    resistencia_mpa = DecimalField(
+        'Resistencia MPA',
+        [DataRequired(message="Este campo es requerido"), NumberRange(min=0.01, message="Debe ser mayor a 0")]
+    )
+
+    color = SelectField(
+        'Color',
+        validators=[DataRequired(message="Este campo es requerido")],
+        choices=[],
+        coerce=int
+    )
+
+    precio_base = DecimalField(
+        'Precio Base',
+        [DataRequired(message="Este campo es requerido"), NumberRange(min=0.01, message="Debe ser mayor a 0")]
+    )
+
+    fecha_creacion = DateField(
+        'Fecha de Registro',
+        validators=[
+            DataRequired(message="Este campo es requerido"),
+            fecha_hoy
+        ]
+    )
+    
+    

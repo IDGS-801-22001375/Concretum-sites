@@ -1,0 +1,28 @@
+{% extends "layout-admin.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+
+<div class="p-6">
+
+    <!-- HEADER -->
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-semibold">Módulo de Productos</h1>
+
+        <button onclick="activarForm()" class="bg-[#00AEEF] hover:bg-[#0095cc] px-4 py-2 rounded text-sm">
+            + Nuevo Producto
+        </button>
+    </div>
+
+    <!-- CARDS -->
+    {% include "produccion/productos/_estadisticas.html" %}
+
+    <!-- FORM -->
+    {% include "produccion/productos/_formulario.html" %}
+
+    <!-- TABLE -->
+    {% include "produccion/productos/_lista.html" %}
+
+</div>
+
+{% endblock %}

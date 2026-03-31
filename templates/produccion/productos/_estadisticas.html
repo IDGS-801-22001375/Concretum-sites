@@ -1,24 +1,23 @@
-<script src="https://cdn.tailwindcss.com"></script>
+<div class="grid grid-cols-4 gap-4 mb-6">
 
-<div>
-    <h1>MODULO DE PRODUCTOS</h1>
-    <div class="grid grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-lg shadow-md">
-            <h2 class="text-lg font-bold">Total de Productos</h2>
-            <p class="text-2xl font-bold">100</p>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow-md">
-            <h2 class="text-lg font-bold">Total de Productos</h2>
-            <p class="text-2xl font-bold">100</p>
-        </div>
-        
-        <div class="bg-white p-4 rounded-lg shadow-md">
-            <h2 class="text-lg font-bold">Total de Productos</h2>
-            <p class="text-2xl font-bold">100</p>
-        </div>
-        <div class="bg-white p-4 rounded-lg shadow-md">
-            <h2 class="text-lg font-bold">Total de Productos</h2>
-            <p class="text-2xl font-bold">100</p>
-        </div>
+    <div class="bg-[#123555] p-4 rounded-lg border-t-4 border-cyan-400">
+        <p class="text-sm text-gray-400">Total de productos</p>
+        <h2 class="text-2xl font-bold">{{ total_productos or 0 }}</h2>
     </div>
+
+    <div class="bg-[#123555] p-4 rounded-lg border-t-4 border-green-400">
+        <p class="text-sm text-gray-400">Activos</p>
+        <h2 class="text-2xl font-bold">{{ activos or 0 }}</h2>
+    </div>
+
+    <div class="bg-[#123555] p-4 rounded-lg border-t-4 border-yellow-400">
+        <p class="text-sm text-gray-400">Bajo stock</p>
+        <h2 class="text-2xl font-bold">{{ bajo_stock or 0 }}</h2>
+    </div>
+
+    <div class="bg-[#123555] p-4 rounded-lg border-t-4 border-red-400">
+        <p class="text-sm text-gray-400">Inactivos</p>
+        <h2 class="text-2xl font-bold">{{ inactivos or 0 }}</h2>
+    </div>
+
 </div>

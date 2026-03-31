@@ -1,8 +1,9 @@
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="{{ url_for('static', filename='src/script.js') }}"></script>
 
-<div class="flex h-screen bg-[#0B2239] text-white">
+<div class="flex min-h-screen bg-[#0B2239] text-white">
     <!-- SIDEBAR -->
-    <aside class="w-64 bg-[#0F2A44] border-r border-[#1E3A5F] flex flex-col">
+    <aside class="fixed top-0 left-0 h-screen w-64 bg-[#0F2A44] border-r border-[#1E3A5F] flex flex-col overflow-y-auto">
 
         <!-- LOGO -->
         <div class="flex items-center gap-3 px-6 py-5 border-b border-[#1E3A5F]">
@@ -91,7 +92,7 @@
     </aside>
 
     <!-- CONTENIDO DE AREA -->
-    <main class="flex-1 bg-[#0D1F30]">
+    <main class="flex-1 ml-64 bg-[#0D1F30] overflow-y-auto h-screen">
         {% block content %}
         
         {% endblock %}

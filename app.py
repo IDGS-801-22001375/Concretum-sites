@@ -1,7 +1,7 @@
 from flask import Flask, render_template
 from config import DevelopmentConfig
-from routes.productos import productos_bp
-from models import db, productos, categorias_producto
+from routes.produccion.productos import productos_bp
+from routes.produccion.productos.models import db, productos, categorias_producto
 from config import DevelopmentConfig
 from flask_wtf.csrf import CSRFProtect
 
