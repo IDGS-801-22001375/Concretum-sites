@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Concretum - {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+</head>
+<body class="bg-gray-50 dark:bg-gray-900">
+    
+    {% include 'includes/_sidebar.html' %}
+
+    <div class="fixed top-5 right-5 z-[100] flex flex-col gap-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    
+                    {% if category == 'error' %}
+                        <div id="alert-{{ loop.index }}" class="flex items-center p-4 text-red-800 bg-red-100 rounded-lg shadow-lg dark:bg-red-900 dark:text-red-100" role="alert">
+                    {% elif category == 'success' %}
+                        <div id="alert-{{ loop.index }}" class="flex items-center p-4 text-green-800 bg-green-100 rounded-lg shadow-lg dark:bg-green-900 dark:text-green-100" role="alert">
+                    {% else %}
+                        <div id="alert-{{ loop.index }}" class="flex items-center p-4 text-blue-800 bg-blue-100 rounded-lg shadow-lg dark:bg-blue-900 dark:text-blue-100" role="alert">
+                    {% endif %}
+                    
+                        <div class="ms-3 text-sm font-bold tracking-wide">{{ message }}</div>
+                        
+                        <button type="button" class="ms-auto -mx-1.5 -my-1.5 rounded-lg focus:ring-2 p-1.5 inline-flex items-center justify-center h-8 w-8 opacity-70 hover:opacity-100 transition-opacity" data-dismiss-target="#alert-{{ loop.index }}" aria-label="Close">
+                            <span class="sr-only">Cerrar</span>
+                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="p-4 sm:ml-64">
+        <div class="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 mt-14">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
+    
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('[role="alert"]').forEach(alert => {
+                alert.style.transition = "opacity 0.5s ease";
+                alert.style.opacity = "0";
+                setTimeout(() => alert.remove(), 500);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
