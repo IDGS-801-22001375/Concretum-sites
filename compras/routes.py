@@ -104,7 +104,7 @@ def api_compras():
     })
 
 # ----------------------------------------------------------------------
-# OBTENER COMPRA
+# OBTENER COMPRA (para editar)
 # ----------------------------------------------------------------------
 @compras_bp.route('/compras/obtener/<int:id>', methods=['GET'])
 @login_required
@@ -118,11 +118,12 @@ def obtener_compra(id):
         'precio_unitario': float(d.precio_unitario),
         'subtotal': float(d.subtotal)
     } for d in compra.detalles]
+    # Devolver solo la fecha (YYYY-MM-DD) para el input date
     return jsonify({
         'id': compra.id,
         'folio': compra.folio,
         'proveedor_id': compra.proveedor_id,
-        'fecha_compra': compra.fecha_compra.strftime('%Y-%m-%dT%H:%M'),
+        'fecha_compra': compra.fecha_compra.strftime('%Y-%m-%d'),  # solo fecha
         'total': float(compra.total),
         'estado': compra.estado,
         'detalles': detalles
@@ -138,12 +139,14 @@ def guardar_compra():
     data = request.form
     id_compra = data.get('id_compra')
     
-    # Validar fecha
+    # Validar fecha (solo fecha, se convertirá a datetime con hora 23:59:59)
     fecha_str = data.get('fecha_compra')
     if not fecha_str:
-        return jsonify({'success': False, 'errors': {'fecha_compra': 'La fecha y hora son obligatorias.'}}), 400
+        return jsonify({'success': False, 'errors': {'fecha_compra': 'La fecha es obligatoria.'}}), 400
     try:
-        fecha_compra = datetime.datetime.strptime(fecha_str, '%Y-%m-%dT%H:%M')
+        fecha_compra = datetime.datetime.strptime(fecha_str, '%Y-%m-%d')
+        # Establecer hora al final del día (23:59:59)
+        fecha_compra = fecha_compra.replace(hour=23, minute=59, second=59)
     except ValueError:
         return jsonify({'success': False, 'errors': {'fecha_compra': 'Formato de fecha inválido.'}}), 400
     
@@ -222,7 +225,7 @@ def guardar_compra():
         return jsonify({'success': True, 'message': f'Compra creada con folio {folio}.'})
 
 # ----------------------------------------------------------------------
-# CAMBIAR ESTADO (CON ACTUALIZACIÓN DE STOCK AL RECIBIR Y AL CANCELAR)
+# CAMBIAR ESTADO (CON ACTUALIZACIÓN DE STOCK)
 # ----------------------------------------------------------------------
 @compras_bp.route('/compras/cambiar_estado/<int:id>', methods=['POST'])
 @login_required
@@ -235,7 +238,6 @@ def cambiar_estado(id):
     compra = Compra.query.get_or_404(id)
     estado_anterior = compra.estado
     
-    # Validaciones
     if estado_anterior == 'CANCELADA':
         return jsonify({'success': False, 'message': 'No se puede cambiar el estado de una compra cancelada.'}), 400
     if estado_anterior == 'RECIBIDA' and nuevo_estado != 'CANCELADA':
@@ -245,7 +247,6 @@ def cambiar_estado(id):
     
     try:
         if nuevo_estado == 'RECIBIDA':
-            # Sumar stock
             for detalle in compra.detalles:
                 existencia = ExistenciaMateriaPrima.query.filter_by(materia_prima_id=detalle.materia_prima_id).first()
                 if not existencia:
@@ -255,19 +256,16 @@ def cambiar_estado(id):
                 existencia.stock_actual += detalle.cantidad
             compra.estado = 'RECIBIDA'
         elif nuevo_estado == 'CANCELADA' and estado_anterior == 'RECIBIDA':
-            # Restar stock (revertir la recepción)
             for detalle in compra.detalles:
                 existencia = ExistenciaMateriaPrima.query.filter_by(materia_prima_id=detalle.materia_prima_id).first()
                 if existencia:
                     existencia.stock_actual -= detalle.cantidad
-                    # Evitar stock negativo
                     if existencia.stock_actual < 0:
                         existencia.stock_actual = 0
             compra.estado = 'CANCELADA'
         else:
             compra.estado = nuevo_estado
         
-        # Registrar historial
         historial = HistorialCompra(
             compra_id=compra.id,
             estado_anterior=estado_anterior,

@@ -6,13 +6,10 @@
     <title>CRM Concretum - {% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
     <style>
-        /* Custom scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        
-        /* Smooth transitions */
         * { transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
     </style>
 </head>
@@ -20,7 +17,6 @@
     
     {% include 'includes/_sidebar.html' %}
 
-    <!-- Botón de menú para móvil (fuera del sidebar) -->
     <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar" type="button" class="fixed top-4 left-4 z-50 inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600 bg-white/10 backdrop-blur-sm shadow-md">
         <span class="sr-only">Abrir sidebar</span>
         <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -28,7 +24,6 @@
         </svg>
     </button>
 
-    <!-- Mensajes flash (fijos arriba derecha) -->
     <div class="fixed top-5 right-5 z-[100] flex flex-col gap-3 pointer-events-none">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -61,7 +56,6 @@
         {% endwith %}
     </div>
 
-    <!-- Contenido principal -->
     <main class="flex-1 ml-0 sm:ml-64 bg-[#0D1F30] min-h-screen overflow-y-auto">
         <div class="p-4 sm:p-6 lg:p-8">
             {% block content %}{% endblock %}
@@ -69,8 +63,34 @@
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
-    
     <script>
+        // Configuración global desde la empresa
+        window.APP_CONFIG = {
+            moneda: "{{ config_empresa.moneda if config_empresa else 'MXN' }}",
+            zona_horaria: "{{ config_empresa.zona_horaria if config_empresa else 'America/Mexico_City' }}",
+            alerta_stock_minimo: {{ 'true' if config_empresa.alerta_stock_minimo else 'false' }},
+            alerta_vencimiento_credito: {{ 'true' if config_empresa.alerta_vencimiento_credito else 'false' }},
+            alerta_merma_diaria: {{ 'true' if config_empresa.alerta_merma_diaria else 'false' }}
+        };
+
+        function formatearFecha(fechaUTC, formato = 'datetime') {
+            if (!fechaUTC) return '—';
+            try {
+                let date = new Date(fechaUTC);
+                if (isNaN(date.getTime())) return fechaUTC;
+                let options = { timeZone: window.APP_CONFIG.zona_horaria };
+                if (formato === 'date') {
+                    return date.toLocaleDateString('es-MX', options);
+                } else if (formato === 'time') {
+                    return date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: window.APP_CONFIG.zona_horaria });
+                } else {
+                    return date.toLocaleString('es-MX', options);
+                }
+            } catch(e) {
+                return fechaUTC;
+            }
+        }
+
         // Auto-dismiss flash messages
         setTimeout(() => {
             document.querySelectorAll('.flash-message').forEach(alert => {
@@ -80,31 +100,6 @@
             });
         }, 5000);
     </script>
-    <script>
-    window.APP_CONFIG = {
-        moneda: "{{ config_empresa.moneda if config_empresa else 'MXN' }}",
-        zona_horaria: "{{ config_empresa.zona_horaria if config_empresa else 'America/Mexico_City' }}"
-    };
-    
-    function formatearFecha(fechaUTC, formato = 'datetime') {
-        if (!fechaUTC) return '—';
-        try {
-            let date = new Date(fechaUTC);
-            if (isNaN(date.getTime())) return fechaUTC;
-            let options = { timeZone: window.APP_CONFIG.zona_horaria };
-            if (formato === 'date') {
-                return date.toLocaleDateString('es-MX', options);
-            } else if (formato === 'time') {
-                return date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: window.APP_CONFIG.zona_horaria });
-            } else {
-                return date.toLocaleString('es-MX', options);
-            }
-        } catch(e) {
-            return fechaUTC;
-        }
-    }
-</script>
-    
     <style>
         @keyframes slideIn {
             from { opacity: 0; transform: translateX(100%); }

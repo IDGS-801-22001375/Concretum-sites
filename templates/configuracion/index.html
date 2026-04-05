@@ -39,7 +39,10 @@
                     <label class="block text-sm font-medium text-gray-300 mb-2">Logo (imagen)</label>
                     <input type="file" name="logo" accept="image/*" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
                     {% if config.logo %}
-                    <p class="text-xs text-gray-400 mt-1">Logo actual: <a href="{{ config.logo }}" target="_blank" class="text-[#008DC0]">Ver</a></p>
+                        <div class="mt-2">
+                            <p class="text-xs text-gray-400 mb-1">Logo actual:</p>
+                            <img src="{{ url_for('static', filename=config.logo) }}" alt="Logo actual" class="h-12 w-auto object-contain border border-[#1E3A5F] rounded p-1 bg-white">
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -100,4 +103,4 @@
     </form>
 </div>
 
-{% endblock %}  
+{% endblock %}

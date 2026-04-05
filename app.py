@@ -38,7 +38,6 @@ mongo_db = mongo_client.get_database()
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
 security = Security(app, user_datastore, login_form=LoginFormSimple)
 
-# Configuramos Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'security.login'
@@ -53,10 +52,8 @@ app.register_blueprint(inventario_bp)
 app.register_blueprint(mermas_bp)
 app.register_blueprint(configuracion_bp)
 
-# CORRECCIÓN: el user_loader debe buscar por fs_uniquifier, no por id numérico
 @login_manager.user_loader
 def load_user(user_id):
-    # user_id es el fs_uniquifier (string)
     return User.query.filter_by(fs_uniquifier=user_id).first()
 
 @app.context_processor
@@ -75,16 +72,13 @@ def on_user_authenticated(app, user, **extra):
             'type': 'access',
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=1)
         }, app.config['SECRET_KEY'], algorithm='HS256')
-
         refresh_token = jwt.encode({
             'user_id': user.id,
             'type': 'refresh',
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7)
         }, app.config['SECRET_KEY'], algorithm='HS256')
-
         request.environ['set_jwt_access'] = access_token
         request.environ['set_jwt_refresh'] = refresh_token
-
         mongo_db.auditoria_eventos.insert_one({
             "usuario_id": user.id,
             "evento": "Inicio de Sesión",
@@ -151,12 +145,11 @@ def dashboard():
     return render_template('dashboard/dashboard.html')
 
 # ============================================================================
-# VISTA DE LOGIN PERSONALIZADA (reemplaza la de Flask-Security)
+# VISTA DE LOGIN PERSONALIZADA
 # ============================================================================
 def custom_login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
-
     form = LoginFormSimple()
     if form.validate_on_submit():
         user = form.user
@@ -169,11 +162,10 @@ def custom_login():
             return redirect(next_page)
     return render_template('auth/login.html', login_user_form=form)
 
-# Reemplazar la vista de login de Flask-Security por la nuestra
 app.view_functions['security.login'] = custom_login
 
 # ============================================================================
-# Ruta PERSONALIZADA para verificar el código 2FA (página simple)
+# RUTAS 2FA
 # ============================================================================
 @app.route('/verificar-2fa', methods=['GET', 'POST'])
 def verificar_2fa():
@@ -181,12 +173,10 @@ def verificar_2fa():
     if not user_id:
         flash('No hay una sesión de verificación activa.', 'error')
         return redirect(url_for('security.login'))
-
-    user = User.query.get(user_id)   # user_id es numérico porque lo guardamos como user.id
+    user = User.query.get(user_id)
     if not user:
         flash('Usuario no encontrado.', 'error')
         return redirect(url_for('security.login'))
-
     if request.method == 'POST':
         code = request.form.get('codigo')
         if not code:
@@ -194,7 +184,7 @@ def verificar_2fa():
         else:
             secret = user.tf_totp_secret
             if not secret:
-                flash('El usuario no tiene 2FA configurado. Contacta al administrador.', 'error')
+                flash('El usuario no tiene 2FA configurado.', 'error')
                 return redirect(url_for('security.login'))
             totp = pyotp.TOTP(secret)
             if totp.verify(code):
@@ -205,12 +195,8 @@ def verificar_2fa():
             else:
                 flash('Código incorrecto. Inténtalo de nuevo.', 'error')
         return render_template('auth/verificar_2fa.html')
-
     return render_template('auth/verificar_2fa.html')
 
-# ============================================================================
-# Ruta PERSONALIZADA para configurar 2FA (con sidebar, dentro del dashboard)
-# ============================================================================
 @app.route('/configurar-2fa', methods=['GET', 'POST'])
 @login_required
 def configurar_2fa():
@@ -221,10 +207,7 @@ def configurar_2fa():
             db.session.commit()
             flash('2FA desactivado correctamente.', 'success')
             return redirect(url_for('configurar_2fa'))
-        return render_template('security/custom_2fa.html', 
-                               activado=True,
-                               metodo=current_user.tf_primary_method)
-
+        return render_template('security/custom_2fa.html', activado=True, metodo=current_user.tf_primary_method)
     if request.method == 'POST':
         if 'codigo' in request.form:
             secret = current_user.tf_totp_secret
@@ -235,7 +218,7 @@ def configurar_2fa():
             if totp.verify(request.form['codigo']):
                 current_user.tf_primary_method = 'authenticator'
                 db.session.commit()
-                flash('2FA activado correctamente. A partir de ahora deberás ingresar el código al iniciar sesión.', 'success')
+                flash('2FA activado correctamente.', 'success')
                 return redirect(url_for('configurar_2fa'))
             else:
                 flash('Código incorrecto. Inténtalo de nuevo.', 'error')
@@ -245,7 +228,6 @@ def configurar_2fa():
                 current_user.tf_totp_secret = pyotp.random_base32()
                 db.session.commit()
             return redirect(url_for('configurar_2fa'))
-
     secret = current_user.tf_totp_secret
     if secret:
         uri = f"otpauth://totp/CRM_Concretum:{current_user.email}?secret={secret}&issuer=CRM_Concretum"
@@ -254,37 +236,37 @@ def configurar_2fa():
         qr.save(img_io, 'PNG')
         img_io.seek(0)
         qr_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
-        return render_template('security/custom_2fa.html', 
-                               activado=False,
-                               qr_base64=qr_base64,
-                               secret=secret)
+        return render_template('security/custom_2fa.html', activado=False, qr_base64=qr_base64, secret=secret)
     else:
         return render_template('security/custom_2fa.html', activado=False)
 
 # ============================================================================
-# CONTEXT PROCESSOR PARA BADGES DEL SIDEBAR (CORREGIDO)
+# CONTEXT PROCESSORS
 # ============================================================================
 @app.context_processor
 def inject_sidebar_counts():
-    from sqlalchemy import and_
+    from models import ConfiguracionEmpresa
+    config = ConfiguracionEmpresa.query.first()
     
-    # Materiales críticos: stock_actual < stock_minimo (usando ExistenciaMateriaPrima)
-    criticos = db.session.query(MateriaPrima).join(
-        ExistenciaMateriaPrima,
-        MateriaPrima.id_materia_prima == ExistenciaMateriaPrima.materia_prima_id
-    ).filter(
-        MateriaPrima.es_activo == True,
-        MateriaPrima.stock_minimo > 0,
-        ExistenciaMateriaPrima.stock_actual < MateriaPrima.stock_minimo
-    ).count()
+    criticos = 0
+    mermas_recientes = 0
     
-    # Producciones activas (en proceso)
+    if config and config.alerta_stock_minimo:
+        criticos = db.session.query(MateriaPrima).join(
+            ExistenciaMateriaPrima,
+            MateriaPrima.id_materia_prima == ExistenciaMateriaPrima.materia_prima_id
+        ).filter(
+            MateriaPrima.es_activo == True,
+            MateriaPrima.stock_minimo > 0,
+            ExistenciaMateriaPrima.stock_actual < MateriaPrima.stock_minimo
+        ).count()
+    
+    if config and config.alerta_merma_diaria:
+        from datetime import datetime, timedelta
+        hace_7dias = datetime.utcnow() - timedelta(days=7)
+        mermas_recientes = Merma.query.filter(Merma.fecha_registro >= hace_7dias).count()
+    
     producciones_activas = Produccion.query.filter_by(estado='EN_PROCESO').count()
-    
-    # Mermas recientes (últimos 7 días)
-    from datetime import datetime, timedelta
-    hace_7dias = datetime.utcnow() - timedelta(days=7)
-    mermas_recientes = Merma.query.filter(Merma.fecha_registro >= hace_7dias).count()
     
     return {
         'sidebar_criticos': criticos,
@@ -297,7 +279,6 @@ def inject_config():
     from models import ConfiguracionEmpresa
     config = ConfiguracionEmpresa.query.first()
     if not config:
-        # Crear una instancia por defecto si no existe (no debería ocurrir)
         config = ConfiguracionEmpresa()
         db.session.add(config)
         db.session.commit()

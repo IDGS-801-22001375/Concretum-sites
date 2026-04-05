@@ -9,23 +9,24 @@
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4">
     
-    <!-- Background Pattern -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
         <div class="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
         <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl"></div>
     </div>
     
     <div class="relative w-full max-w-md">
-        <!-- Logo & Title -->
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-xl shadow-blue-600/30 mb-4">
-                <span class="text-white font-black text-2xl">C</span>
-            </div>
-            <h1 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">CONCRETUM</h1>
+            {% if config_empresa and config_empresa.logo %}
+                <img src="{{ url_for('static', filename=config_empresa.logo) }}" alt="Logo" class="h-16 mx-auto mb-4">
+            {% else %}
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-xl shadow-blue-600/30 mb-4">
+                    <span class="text-white font-black text-2xl">C</span>
+                </div>
+            {% endif %}
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{{ config_empresa.razon_social if config_empresa else 'CONCRETUM' }}</h1>
             <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Sistema de Gestión y Operaciones</p>
         </div>
         
-        <!-- Login Card -->
         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-8">
             
             {% include "security/_messages.html" %}
@@ -70,7 +71,7 @@
             <div class="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
                 <div class="flex flex-col items-center gap-3">
                     <button type="button" onclick="autoLoginAdmin()" class="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
-                        Autocompletar Admin (Desarrollo)
+                        ⚡ Autocompletar Admin (Desarrollo)
                     </button>
                     <p class="text-sm text-slate-500 dark:text-slate-400">
                         ¿No tienes cuenta? 
@@ -82,7 +83,6 @@
             </div>
         </div>
         
-        <!-- Footer -->
         <p class="text-center text-xs text-slate-400 dark:text-slate-500 mt-6">
             &copy; {{ now().year if now is defined else '2024' }} Concretum. Todos los derechos reservados.
         </p>

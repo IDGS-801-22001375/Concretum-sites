@@ -223,3 +223,11 @@ def pagos_proveedor(id):
                 'observaciones': pago.observaciones
             })
     return jsonify({'pagos': pagos})
+
+@proveedores_bp.route('/resumen-vencimientos')
+@login_required
+def resumen_vencimientos():
+    from models import Proveedor
+    proveedores = Proveedor.query.filter_by(es_activo=True).all()
+    total_vencido = sum(p.monto_vencido for p in proveedores)
+    return jsonify({'total_vencido': total_vencido})
