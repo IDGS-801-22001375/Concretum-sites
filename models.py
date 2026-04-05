@@ -176,3 +176,175 @@ class PagoProveedor(db.Model):
     @property
     def id(self):
         return self.id_pago
+
+
+# ====================== COMPRA DETALLE ======================
+class CompraDetalle(db.Model):
+    __tablename__ = 'compras_detalle'
+    id_detalle = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    compra_id = db.Column(db.BigInteger, db.ForeignKey('compras.id_compra', ondelete='CASCADE'), nullable=False)
+    materia_prima_id = db.Column(db.BigInteger, db.ForeignKey('materias_primas.id_materia_prima', ondelete='RESTRICT'), nullable=False)
+    cantidad = db.Column(db.Numeric(14,3), nullable=False)
+    precio_unitario = db.Column(db.Numeric(12,2), nullable=False)
+    subtotal = db.Column(db.Numeric(12,2), nullable=False)
+    
+    compra = db.relationship('Compra', backref='detalles')
+    materia_prima = db.relationship('MateriaPrima')
+
+    @property
+    def id(self):
+        return self.id_detalle
+
+
+# ====================== HISTORIAL DE COMPRAS (auditoría de estados) ======================
+class HistorialCompra(db.Model):
+    __tablename__ = 'historial_compras'
+    id_historial = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    compra_id = db.Column(db.BigInteger, db.ForeignKey('compras.id_compra', ondelete='CASCADE'), nullable=False)
+    estado_anterior = db.Column(db.Enum('CREADA', 'RECIBIDA', 'CANCELADA'), nullable=True)
+    estado_nuevo = db.Column(db.Enum('CREADA', 'RECIBIDA', 'CANCELADA'), nullable=False)
+    usuario_id = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario', ondelete='RESTRICT'), nullable=False)
+    observaciones = db.Column(db.Text)
+    fecha_cambio = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    compra = db.relationship('Compra', backref='historial')
+    usuario = db.relationship('User', backref='cambios_compras')
+
+    @property
+    def id(self):
+        return self.id_historial
+
+
+
+# ====================== CATEGORÍAS DE PRODUCTO ======================
+class CategoriaProducto(db.Model):
+    __tablename__ = 'categorias_producto'
+    id_categoria = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    nombre = db.Column(db.String(120), unique=True, nullable=False)
+    descripcion = db.Column(db.String(255))
+    es_activo = db.Column(db.Boolean, default=True)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime, onupdate=datetime.utcnow)
+
+    @property
+    def id(self):
+        return self.id_categoria
+
+
+# ====================== PRODUCTOS TERMINADOS ======================
+class Producto(db.Model):
+    __tablename__ = 'productos'
+    id_producto = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    categoria_id = db.Column(db.BigInteger, db.ForeignKey('categorias_producto.id_categoria', ondelete='RESTRICT'), nullable=False)
+    sku = db.Column(db.String(80), unique=True, nullable=False)
+    nombre = db.Column(db.String(200), nullable=False)
+    descripcion = db.Column(db.String(500))
+    unidad_medida = db.Column(db.Enum('PIEZA', 'M2', 'M3', 'KG', 'TON'), nullable=False)
+    resistencia_mpa = db.Column(db.Numeric(6,2))
+    color = db.Column(db.String(60))
+    precio_base = db.Column(db.Numeric(12,2), nullable=False, default=0)
+    es_activo = db.Column(db.Boolean, default=True)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    fecha_actualizacion = db.Column(db.DateTime, onupdate=datetime.utcnow)
+
+    categoria = db.relationship('CategoriaProducto', backref='productos')
+    existencia = db.relationship('Existencia', uselist=False, back_populates='producto', cascade='all, delete-orphan')
+
+    @property
+    def id(self):
+        return self.id_producto
+
+
+# ====================== EXISTENCIAS (PRODUCTOS TERMINADOS) ======================
+class Existencia(db.Model):
+    __tablename__ = 'existencias'
+    id_existencias = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    producto_id = db.Column(db.BigInteger, db.ForeignKey('productos.id_producto', ondelete='RESTRICT'), unique=True, nullable=False)
+    stock_actual = db.Column(db.Numeric(14,3), nullable=False, default=0)
+    fecha_actualizacion = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    producto = db.relationship('Producto', back_populates='existencia')
+    movimientos = db.relationship('MovimientoInventario', backref='existencia', lazy='dynamic', cascade='all, delete-orphan')
+
+    @property
+    def id(self):
+        return self.id_existencias
+
+
+# ====================== MOVIMIENTOS DE INVENTARIO ======================
+class MovimientoInventario(db.Model):
+    __tablename__ = 'movimientos_inventario'
+    id_movimiento_in = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    existencia_id = db.Column(db.BigInteger, db.ForeignKey('existencias.id_existencias', ondelete='CASCADE'), nullable=False)
+    usuario_id = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario', ondelete='SET NULL'), nullable=True)
+    tipo = db.Column(db.Enum('ENTRADA', 'SALIDA', 'AJUSTE'), nullable=False)
+    cantidad = db.Column(db.Numeric(14,3), nullable=False)
+    motivo = db.Column(db.String(255))
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+
+    usuario = db.relationship('User', backref='movimientos_inventario')
+
+    @property
+    def id(self):
+        return self.id_movimiento_in
+
+
+# ====================== RECETAS (para producción) ======================
+class Receta(db.Model):
+    __tablename__ = 'recetas'
+    id_receta = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    producto_id = db.Column(db.BigInteger, db.ForeignKey('productos.id_producto', ondelete='CASCADE'), nullable=False)
+    descripcion = db.Column(db.String(255))
+    cuanto_produce = db.Column(db.Numeric(14,3), nullable=False)
+    es_activa = db.Column(db.Boolean, default=True)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+
+    producto = db.relationship('Producto', backref='recetas')
+
+    @property
+    def id(self):
+        return self.id_receta
+
+
+# ====================== PRODUCCIONES ======================
+class Produccion(db.Model):
+    __tablename__ = 'producciones'
+    id_produccion = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    producto_id = db.Column(db.BigInteger, db.ForeignKey('productos.id_producto', ondelete='RESTRICT'), nullable=False)
+    receta_id = db.Column(db.BigInteger, db.ForeignKey('recetas.id_receta', ondelete='RESTRICT'), nullable=False)
+    cantidad_producida = db.Column(db.Numeric(14,3), nullable=False)
+    unidad_medida = db.Column(db.Enum('PIEZA', 'M2', 'M3', 'KG', 'TON'), nullable=False)
+    fecha_inicio = db.Column(db.DateTime, nullable=False)
+    fecha_fin = db.Column(db.DateTime, nullable=True)
+    estado = db.Column(db.Enum('PLANIFICADA', 'EN_PROCESO', 'FINALIZADA', 'CANCELADA'), nullable=False, default='PLANIFICADA')
+    observaciones = db.Column(db.String(500))
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+
+    producto = db.relationship('Producto', backref='producciones')
+    receta = db.relationship('Receta', backref='producciones')
+
+    @property
+    def id(self):
+        return self.id_produccion
+
+# ====================== MERMAS ======================
+class Merma(db.Model):
+    __tablename__ = 'mermas'
+    id_merma = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    tipo_material = db.Column(db.Enum('MATERIA_PRIMA', 'PRODUCTO'), nullable=False)
+    material_id = db.Column(db.BigInteger, nullable=False)  # ID de la tabla correspondiente
+    cantidad = db.Column(db.Numeric(14,3), nullable=False)
+    causa = db.Column(db.Enum('ROTURA', 'HUMEDAD', 'CADUCIDAD', 'PROCESO', 'TRANSPORTE'), nullable=False)
+    responsable = db.Column(db.String(100))
+    observaciones = db.Column(db.Text)
+    valor_monetario = db.Column(db.Numeric(12,2), nullable=False)
+    usuario_id = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario', ondelete='SET NULL'))
+    fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
+    movimiento_id = db.Column(db.BigInteger, db.ForeignKey('movimientos_inventario.id_movimiento_in', ondelete='SET NULL'))
+
+    usuario = db.relationship('User', backref='mermas')
+    movimiento = db.relationship('MovimientoInventario', backref='merma')
+
+    @property
+    def id(self):
+        return self.id_merma

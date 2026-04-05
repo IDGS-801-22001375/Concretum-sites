@@ -7,6 +7,7 @@ from flask_login.signals import user_logged_out
 from flask_login import login_user, logout_user, LoginManager
 from pymongo import MongoClient
 from flask_wtf.csrf import CSRFProtect
+from forms import LoginFormSimple
 import jwt
 import datetime
 import logging
@@ -20,7 +21,9 @@ logging.basicConfig(level=logging.DEBUG)
 from usuarios import usuarios_bp
 from materia_prima import materia_prima_bp
 from proveedores import proveedores_bp
-from forms import LoginFormSimple
+from compras import compras_bp
+from inventario import inventario_bp
+from mermas import mermas_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -43,7 +46,10 @@ login_manager.login_message_category = 'info'
 
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(materia_prima_bp)
-app.register_blueprint(proveedores_bp) 
+app.register_blueprint(proveedores_bp)
+app.register_blueprint(compras_bp)
+app.register_blueprint(inventario_bp)
+app.register_blueprint(mermas_bp)
 
 # CORRECCIÓN: el user_loader debe buscar por fs_uniquifier, no por id numérico
 @login_manager.user_loader

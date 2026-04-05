@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+{% block title %}Inventario General{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Inventario General</h2>
+
+    <!-- KPIs -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white border rounded-lg shadow-sm p-5 dark:bg-gray-800">
+            <p class="text-xs font-bold text-gray-500 uppercase">Total Productos</p>
+            <p id="kpi-total-productos" class="text-3xl font-bold">0</p>
+        </div>
+        <div class="bg-white border rounded-lg shadow-sm p-5 dark:bg-gray-800">
+            <p class="text-xs font-bold text-gray-500 uppercase">Valor Inventario</p>
+            <p id="kpi-valor-total" class="text-3xl font-bold">$0.00</p>
+        </div>
+        <div class="bg-white border rounded-lg shadow-sm p-5 dark:bg-gray-800">
+            <p class="text-xs font-bold text-gray-500 uppercase">Alertas de Stock</p>
+            <p id="kpi-alertas" class="text-3xl font-bold text-red-600">0</p>
+        </div>
+        <div class="bg-white border rounded-lg shadow-sm p-5 dark:bg-gray-800">
+            <p class="text-xs font-bold text-gray-500 uppercase">Movimientos (mes)</p>
+            <p id="kpi-movimientos" class="text-3xl font-bold">0</p>
+        </div>
+    </div>
+
+    <!-- Pestañas -->
+    <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
+        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="inventario-tabs" data-tabs-toggle="#inventario-tab-content" role="tablist">
+            <li class="me-2" role="presentation">
+                <button class="inline-block p-4 border-b-2 rounded-t-lg" id="productos-tab" data-tabs-target="#productos" type="button" role="tab" aria-controls="productos" aria-selected="false">Productos Terminados</button>
+            </li>
+            <li class="me-2" role="presentation">
+                <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="materia-prima-tab" data-tabs-target="#materia-prima" type="button" role="tab" aria-controls="materia-prima" aria-selected="false">Materia Prima</button>
+            </li>
+            <li class="me-2" role="presentation">
+                <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="produccion-tab" data-tabs-target="#produccion" type="button" role="tab" aria-controls="produccion" aria-selected="false">En Proceso</button>
+            </li>
+            <li class="me-2" role="presentation">
+                <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="movimientos-tab" data-tabs-target="#movimientos" type="button" role="tab" aria-controls="movimientos" aria-selected="false">Movimientos</button>
+            </li>
+        </ul>
+    </div>
+
+    <div id="inventario-tab-content">
+        <!-- Productos Terminados -->
+        <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="productos" role="tabpanel" aria-labelledby="productos-tab">
+            <div class="mb-4 flex justify-between items-center">
+                <input type="text" id="search-productos" placeholder="Buscar por SKU o nombre..." class="px-3 py-2 border rounded-lg w-64">
+                <button id="btn-movimiento" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Registrar Movimiento</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-4 py-2 text-left">SKU</th>
+                            <th class="px-4 py-2 text-left">Nombre</th>
+                            <th class="px-4 py-2 text-left">Unidad</th>
+                            <th class="px-4 py-2 text-right">Stock</th>
+                            <th class="px-4 py-2 text-right">Valor Inventario</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-productos">
+                        <tr><td colspan="5" class="text-center py-4">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="pagination-productos" class="flex justify-between items-center mt-4"></div>
+        </div>
+
+        <!-- Materia Prima -->
+        <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="materia-prima" role="tabpanel" aria-labelledby="materia-prima-tab">
+            <div class="mb-4">
+                <input type="text" id="search-mp" placeholder="Buscar por SKU o nombre..." class="px-3 py-2 border rounded-lg w-64">
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-4 py-2 text-left">SKU</th>
+                            <th class="px-4 py-2 text-left">Nombre</th>
+                            <th class="px-4 py-2 text-left">Unidad</th>
+                            <th class="px-4 py-2 text-right">Stock</th>
+                            <th class="px-4 py-2 text-right">Valor Inventario</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-mp">
+                        <tr><td colspan="5" class="text-center py-4">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="pagination-mp" class="flex justify-between items-center mt-4"></div>
+        </div>
+
+        <!-- En Proceso -->
+        <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="produccion" role="tabpanel" aria-labelledby="produccion-tab">
+            <div class="mb-4">
+                <input type="text" id="search-produccion" placeholder="Buscar por producto..." class="px-3 py-2 border rounded-lg w-64">
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Producto</th>
+                            <th class="px-4 py-2 text-right">Cantidad</th>
+                            <th class="px-4 py-2 text-left">Unidad</th>
+                            <th class="px-4 py-2 text-left">Fecha Inicio</th>
+                            <th class="px-4 py-2 text-left">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-produccion">
+                        <tr><td colspan="5" class="text-center py-4">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="pagination-produccion" class="flex justify-between items-center mt-4"></div>
+        </div>
+
+        <!-- Movimientos -->
+        <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="movimientos" role="tabpanel" aria-labelledby="movimientos-tab">
+            <div class="mb-4 flex gap-2">
+                <select id="filter-tipo" class="px-3 py-2 border rounded-lg">
+                    <option value="">Todos</option>
+                    <option value="ENTRADA">Entrada</option>
+                    <option value="SALIDA">Salida</option>
+                    <option value="AJUSTE">Ajuste</option>
+                </select>
+                <input type="text" id="search-movimientos" placeholder="Buscar por producto..." class="px-3 py-2 border rounded-lg w-64">
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
+                    <thead class="bg-gray-100 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-4 py-2 text-left">Producto</th>
+                            <th class="px-4 py-2 text-left">Tipo</th>
+                            <th class="px-4 py-2 text-right">Cantidad</th>
+                            <th class="px-4 py-2 text-left">Motivo</th>
+                            <th class="px-4 py-2 text-left">Usuario</th>
+                            <th class="px-4 py-2 text-left">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-movimientos">
+                        <tr><td colspan="6" class="text-center py-4">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="pagination-movimientos" class="flex justify-between items-center mt-4"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para registrar movimiento -->
+<div id="movimiento-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white dark:bg-gray-800">
+        <div class="flex justify-between items-center pb-3">
+            <h3 class="text-lg font-semibold">Registrar Movimiento</h3>
+            <button id="close-modal" class="text-gray-400 hover:text-gray-600">&times;</button>
+        </div>
+        <form id="movimiento-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-4">
+                <label class="block mb-2">Producto</label>
+                <select id="producto_id" name="producto_id" class="w-full px-3 py-2 border rounded-lg" required>
+                    <option value="">Seleccione...</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-2">Tipo de Movimiento</label>
+                <select id="tipo" name="tipo" class="w-full px-3 py-2 border rounded-lg" required>
+                    <option value="ENTRADA">Entrada</option>
+                    <option value="SALIDA">Salida</option>
+                    <option value="AJUSTE">Ajuste (establecer stock)</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-2">Cantidad</label>
+                <input type="number" step="any" id="cantidad" name="cantidad" class="w-full px-3 py-2 border rounded-lg" required>
+            </div>
+            <div class="mb-4">
+                <label class="block mb-2">Motivo</label>
+                <textarea id="motivo" name="motivo" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button type="button" id="cancelar-movimiento" class="px-4 py-2 bg-gray-300 rounded-lg">Cancelar</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flowbite@2.2.1/dist/flowbite.min.js"></script>
+<script>
+    // Función para cargar KPIs
+    async function cargarKPIs() {
+        const res = await fetch('/inventario/kpis');
+        const data = await res.json();
+        document.getElementById('kpi-total-productos').textContent = data.total_productos;
+        document.getElementById('kpi-valor-total').textContent = '$' + data.valor_total.toFixed(2);
+        document.getElementById('kpi-alertas').textContent = data.alertas;
+        document.getElementById('kpi-movimientos').textContent = data.movimientos_mes;
+    }
+
+    // Cargar lista de productos para el selector del modal
+    async function cargarProductosSelector() {
+        const res = await fetch('/inventario/productos-lista');
+        const data = await res.json();
+        const select = document.getElementById('producto_id');
+        select.innerHTML = '<option value="">Seleccione...</option>';
+        data.items.forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.id;
+            option.textContent = `${p.nombre} (Stock: ${p.stock})`;
+            select.appendChild(option);
+        });
+    }
+
+    // Gestión de paginación y carga de tablas (simplificado)
+    let currentPage = { productos: 1, mp: 1, produccion: 1, movimientos: 1 };
+    let currentSearch = { productos: '', mp: '', produccion: '', movimientos: '' };
+    let currentTipo = '';
+
+    async function cargarProductos(page = 1) {
+        const search = document.getElementById('search-productos').value;
+        currentSearch.productos = search;
+        const params = new URLSearchParams({ page, per_page: 10, search, sort_by: 'nombre', sort_order: 'asc' });
+        const res = await fetch(`/inventario/api/productos?${params}`);
+        const data = await res.json();
+        const tbody = document.getElementById('tbody-productos');
+        if (!data.items.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Sin registros</td></tr>';
+        } else {
+            tbody.innerHTML = data.items.map(p => `
+                <tr class="border-b">
+                    <td class="px-4 py-2">${p.sku}</td>
+                    <td class="px-4 py-2">${p.nombre}</td>
+                    <td class="px-4 py-2">${p.unidad_medida}</td>
+                    <td class="px-4 py-2 text-right font-mono">${p.stock.toFixed(3)}</td>
+                    <td class="px-4 py-2 text-right">$${p.valor_inventario.toFixed(2)}</td>
+                </tr>
+            `).join('');
+        }
+        renderPaginacion('productos', data.page, data.pages);
+        currentPage.productos = page;
+    }
+
+    async function cargarMateriaPrima(page = 1) {
+        const search = document.getElementById('search-mp').value;
+        currentSearch.mp = search;
+        const params = new URLSearchParams({ page, per_page: 10, search, sort_by: 'nombre', sort_order: 'asc' });
+        const res = await fetch(`/inventario/api/materia-prima?${params}`);
+        const data = await res.json();
+        const tbody = document.getElementById('tbody-mp');
+        if (!data.items.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Sin registros</td></tr>';
+        } else {
+            tbody.innerHTML = data.items.map(mp => `
+                <tr class="border-b">
+                    <td class="px-4 py-2">${mp.sku}</td>
+                    <td class="px-4 py-2">${mp.nombre}</td>
+                    <td class="px-4 py-2">${mp.unidad_medida}</td>
+                    <td class="px-4 py-2 text-right font-mono">${mp.stock.toFixed(3)}</td>
+                    <td class="px-4 py-2 text-right">$${mp.valor_inventario.toFixed(2)}</td>
+                </tr>
+            `).join('');
+        }
+        renderPaginacion('mp', data.page, data.pages);
+        currentPage.mp = page;
+    }
+
+    async function cargarProduccion(page = 1) {
+        const search = document.getElementById('search-produccion').value;
+        currentSearch.produccion = search;
+        const params = new URLSearchParams({ page, per_page: 10, search, sort_by: 'fecha_inicio', sort_order: 'desc' });
+        const res = await fetch(`/inventario/api/producciones?${params}`);
+        const data = await res.json();
+        const tbody = document.getElementById('tbody-produccion');
+        if (!data.items.length) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Sin órdenes en proceso</td></tr>';
+        } else {
+            tbody.innerHTML = data.items.map(prod => `
+                <tr class="border-b">
+                    <td class="px-4 py-2">${prod.producto_nombre}</td>
+                    <td class="px-4 py-2 text-right">${prod.cantidad_producida}</td>
+                    <td class="px-4 py-2">${prod.unidad_medida}</td>
+                    <td class="px-4 py-2">${prod.fecha_inicio}</td>
+                    <td class="px-4 py-2"><span class="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">${prod.estado}</span></td>
+                </tr>
+            `).join('');
+        }
+        renderPaginacion('produccion', data.page, data.pages);
+        currentPage.produccion = page;
+    }
+
+    async function cargarMovimientos(page = 1) {
+        const tipo = document.getElementById('filter-tipo').value;
+        const search = document.getElementById('search-movimientos').value;
+        currentTipo = tipo;
+        currentSearch.movimientos = search;
+        const params = new URLSearchParams({ page, per_page: 10, tipo, search, sort_by: 'fecha_creacion', sort_order: 'desc' });
+        const res = await fetch(`/inventario/api/movimientos?${params}`);
+        const data = await res.json();
+        const tbody = document.getElementById('tbody-movimientos');
+        if (!data.items.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Sin movimientos</td></tr>';
+        } else {
+            tbody.innerHTML = data.items.map(mov => `
+                <tr class="border-b">
+                    <td class="px-4 py-2">${mov.producto_nombre}</td>
+                    <td class="px-4 py-2">
+                        <span class="px-2 py-1 rounded-full text-xs ${mov.tipo === 'ENTRADA' ? 'bg-green-100 text-green-800' : mov.tipo === 'SALIDA' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}">${mov.tipo}</span>
+                    </td>
+                    <td class="px-4 py-2 text-right">${mov.cantidad.toFixed(3)}</td>
+                    <td class="px-4 py-2">${mov.motivo || '-'}</td>
+                    <td class="px-4 py-2">${mov.usuario}</td>
+                    <td class="px-4 py-2">${mov.fecha}</td>
+                </tr>
+            `).join('');
+        }
+        renderPaginacion('movimientos', data.page, data.pages);
+        currentPage.movimientos = page;
+    }
+
+    function renderPaginacion(tab, current, total) {
+        const container = document.getElementById(`pagination-${tab}`);
+        if (!container) return;
+        if (total <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+        let html = '<div class="flex gap-2">';
+        for (let i = 1; i <= total; i++) {
+            html += `<button data-page="${i}" class="px-3 py-1 rounded ${i === current ? 'bg-blue-600 text-white' : 'bg-gray-200'}">${i}</button>`;
+        }
+        html += '</div>';
+        container.innerHTML = html;
+        container.querySelectorAll('button[data-page]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const page = parseInt(btn.dataset.page);
+                if (tab === 'productos') cargarProductos(page);
+                else if (tab === 'mp') cargarMateriaPrima(page);
+                else if (tab === 'produccion') cargarProduccion(page);
+                else if (tab === 'movimientos') cargarMovimientos(page);
+            });
+        });
+    }
+
+    // Modal movimiento
+    const modal = document.getElementById('movimiento-modal');
+    const btnMovimiento = document.getElementById('btn-movimiento');
+    const closeModal = document.getElementById('close-modal');
+    const cancelar = document.getElementById('cancelar-movimiento');
+    const formMovimiento = document.getElementById('movimiento-form');
+
+    btnMovimiento.addEventListener('click', async () => {
+        await cargarProductosSelector();
+        modal.classList.remove('hidden');
+    });
+    function cerrarModal() {
+        modal.classList.add('hidden');
+        formMovimiento.reset();
+    }
+    closeModal.addEventListener('click', cerrarModal);
+    cancelar.addEventListener('click', cerrarModal);
+
+    formMovimiento.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const producto_id = document.getElementById('producto_id').value;
+        const tipo = document.getElementById('tipo').value;
+        const cantidad = document.getElementById('cantidad').value;
+        const motivo = document.getElementById('motivo').value;
+        const csrf = document.querySelector('input[name="csrf_token"]').value;
+        const res = await fetch('/inventario/movimiento', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+            body: JSON.stringify({ producto_id, tipo, cantidad: parseFloat(cantidad), motivo })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert(data.message);
+            cerrarModal();
+            cargarProductos(currentPage.productos);
+            cargarMateriaPrima(currentPage.mp);
+            cargarMovimientos(currentPage.movimientos);
+            cargarKPIs();
+        } else {
+            alert(data.message);
+        }
+    });
+
+    // Eventos de búsqueda
+    document.getElementById('search-productos').addEventListener('input', () => cargarProductos(1));
+    document.getElementById('search-mp').addEventListener('input', () => cargarMateriaPrima(1));
+    document.getElementById('search-produccion').addEventListener('input', () => cargarProduccion(1));
+    document.getElementById('search-movimientos').addEventListener('input', () => cargarMovimientos(1));
+    document.getElementById('filter-tipo').addEventListener('change', () => cargarMovimientos(1));
+
+    // Inicializar
+    cargarKPIs();
+    cargarProductos(1);
+    cargarMateriaPrima(1);
+    cargarProduccion(1);
+    cargarMovimientos(1);
+</script>
+{% endblock %}
