@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% import 'macros/crud_components.html' as components %}
+
+{% block title %}Gestión de Usuarios{% endblock %}
+
+{% block content %}
+{# Preparamos las opciones de roles para el filtro #}
+{% set role_options = [] %}
+{% for role in roles_list %}
+    {% set _ = role_options.append({'value': role.id_rol, 'label': role.name}) %}
+{% endfor %}
+
+{{ components.crud_table(
+    id_table='usuarios',
+    api_endpoint='/usuarios',
+    columns=[
+        {'field': 'username', 'label': 'Nombre', 'sortable': true},
+        {'field': 'email', 'label': 'Email', 'sortable': true},
+        {'field': 'roles', 'label': 'Roles', 'sortable': false},
+        {'field': 'es_activo', 'label': 'Estado', 'sortable': true},
+        {'field': 'ultima_sesion', 'label': 'Última conexión', 'sortable': true}
+    ],
+    search_placeholder="Buscar por nombre o email...",
+    filters=[
+        {'type': 'select', 'name': 'role', 'label': 'Rol', 'options': role_options, 'label_default': 'Todos los roles'},
+        {'type': 'select', 'name': 'active', 'label': 'Estado', 'options': [
+            {'value': 'true', 'label': 'Activos'},
+            {'value': 'false', 'label': 'Inactivos'}
+        ], 'label_default': 'Todos'}
+    ]
+) }}
+
+{% set form_fields = [
+    {'name': 'username', 'label': 'Nombre de Usuario', 'type': 'text', 'required': true},
+    {'name': 'email', 'label': 'Correo Electrónico', 'type': 'email', 'required': true}
+] %}
+
+{% call components.crud_modal('usuarios', form_fields, id_field='id_usuario') %}
+    <!-- Cambiar contraseña -->
+    <div class="md:col-span-2">
+        <label class="relative inline-flex items-center cursor-pointer">
+            <input type="checkbox" name="cambiar_password" id="cambiar_password" class="sr-only peer">
+            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            <span class="ms-3 text-sm font-medium text-gray-900 dark:text-gray-300">Cambiar Contraseña</span>
+        </label>
+    </div>
+    <div id="password-fields" class="md:col-span-2 hidden">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label for="password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Nueva Contraseña</label>
+                <input type="password" name="password" id="password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white">
+                <div class="error-password text-red-500 text-xs mt-1 hidden"></div>
+            </div>
+            <div>
+                <label for="confirm_password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirmar Contraseña</label>
+                <input type="password" name="confirm_password" id="confirm_password" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white">
+                <div class="error-confirm_password text-red-500 text-xs mt-1 hidden"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Roles -->
+    <div class="md:col-span-2">
+        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Roles</label>
+        <div id="roles-checkboxes" class="grid grid-cols-2 gap-2">
+            {% for role in roles_list %}
+            <label class="flex items-center">
+                <input type="checkbox" name="roles" value="{{ role.id_rol }}" class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                <span class="ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">{{ role.name }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        <div class="error-roles text-red-500 text-xs mt-1 hidden"></div>
+    </div>
+{% endcall %}
+
+<script src="{{ url_for('static', filename='js/crud.js') }}"></script>
+<script>
+    function fillUserForm(item) {
+        document.querySelectorAll('input[name="roles"]').forEach(cb => cb.checked = false);
+        if (item.roles) {
+            item.roles.forEach(roleId => {
+                const cb = document.querySelector(`input[name="roles"][value="${roleId}"]`);
+                if (cb) cb.checked = true;
+            });
+        }
+        document.getElementById('cambiar_password').checked = false;
+        document.getElementById('password-fields').classList.add('hidden');
+        document.getElementById('password').value = '';
+        document.getElementById('confirm_password').value = '';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        window.crudManagers['usuarios'] = new CrudManager({
+            id: 'usuarios',
+            apiEndpoint: '/usuarios',
+            columns: [
+                { field: 'username', label: 'Nombre', sortable: true },
+                { field: 'email', label: 'Email', sortable: true },
+                { field: 'roles', label: 'Roles', sortable: false, render: (val) => {
+                    if (!val || !val.length) return '';
+                    return val.map(r => `<span class="bg-blue-100 text-blue-800 text-xs font-bold me-2 px-2.5 py-0.5 rounded border dark:bg-blue-600 dark:border-blue-500 dark:text-white">${escapeHtml(r.name)}</span>`).join('');
+                } },
+                { field: 'es_activo', label: 'Estado', sortable: true, render: (val) => `<div class="flex items-center"><div class="h-2.5 w-2.5 rounded-full ${val ? 'bg-green-500' : 'bg-red-500'} me-2"></div>${val ? 'Activo' : 'Baja'}</div>` },
+                { field: 'ultima_sesion', label: 'Última conexión', sortable: true, render: (val) => val || 'Nunca' }
+            ],
+            formFields: [
+                { name: 'username', label: 'Nombre de Usuario', type: 'text', required: true },
+                { name: 'email', label: 'Correo Electrónico', type: 'email', required: true }
+            ],
+            sortBy: 'username',
+            onEdit: fillUserForm
+        });
+    });
+
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.id === 'cambiar_password') {
+            const passwordFields = document.getElementById('password-fields');
+            if (e.target.checked) {
+                passwordFields.classList.remove('hidden');
+                document.getElementById('password').required = true;
+                document.getElementById('confirm_password').required = true;
+            } else {
+                passwordFields.classList.add('hidden');
+                document.getElementById('password').required = false;
+                document.getElementById('confirm_password').required = false;
+                document.getElementById('password').value = '';
+                document.getElementById('confirm_password').value = '';
+            }
+        }
+    });
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+{% endblock %}

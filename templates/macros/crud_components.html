@@ -1,394 +1,468 @@
+{# ----------------------------------------------------------
+   MACRO: payment_history_modal
+   Modal reutilizable para historial de pagos de proveedores
+   ---------------------------------------------------------- #}
+{% macro payment_history_modal(proveedor_id, razon_social, pagos=[]) %}
+<div id="modal-pagos-{{ proveedor_id }}" class="fixed inset-0 bg-[#0B2239]/90 backdrop-blur-sm overflow-y-auto h-full w-full z-[60] flex items-center justify-center p-4" style="display: none;">
+    <div class="relative w-full max-w-4xl mx-auto bg-[#0F2A44] rounded-2xl shadow-2xl border border-[#1E3A5F]">
+        <div class="flex justify-between items-center px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239] rounded-t-2xl">
+            <div>
+                <p class="text-xs font-bold text-[#008DC0] uppercase tracking-widest mb-1">Historial de Pagos</p>
+                <h3 class="text-lg font-bold text-white">{{ razon_social }}</h3>
+            </div>
+            <button type="button" class="close-payment-modal p-2 text-gray-400 hover:text-white hover:bg-[#1E3A5F] rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div id="pagos-content-{{ proveedor_id }}" class="p-6 max-h-96 overflow-y-auto">
+            <!-- Aquí se cargará el contenido vía JS -->
+            <div class="flex items-center justify-center py-8">
+                <svg class="w-8 h-8 animate-spin text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Función global para abrir modal de pagos (se puede llamar desde el botón)
+window.abrirModalPagos = async function(proveedorId, razonSocial) {
+    // Verificar si ya existe el modal
+    let modal = document.getElementById(`modal-pagos-${proveedorId}`);
+    if (!modal) {
+        // Crear el modal dinámicamente usando el macro (esto es un poco complicado desde JS puro,
+        // pero podemos clonar el HTML desde un template oculto o construirlo manualmente.
+        // Para simplificar, usaremos la función original pero mejorada.
+        // En lugar de reescribir todo, invocamos la función original que ya tienes,
+        // pero modificada para usar el cierre con backdrop.
+        // Dado que el macro ya incluye la estructura, lo que haremos es que la función `verPagos`
+        // use este macro en lugar de HTML inline.
+        // Por ahora, mantendremos la función original pero le añadiremos el cierre adecuado.
+        // Ver la actualización de verPagos en proveedores/index.html
+    }
+    modal.style.display = 'flex';
+    // Cargar datos...
+}
+</script>
+{% endmacro %}
 {# ============================================================
-CRUD COMPONENTS — CRM CONCRETUM
-============================================================ #}
+   CRUD COMPONENTS - CRM CONCRETUM v4 (DARK THEME UNIFIED)
+   Todos los componentes usan la paleta oscura de Concretum
+   ============================================================ #}
 
 {# ----------------------------------------------------------
-MACRO: crud_table
----------------------------------------------------------- #}
-{% macro crud_table(id_table, api_endpoint, columns, title="Gestión",
-search_placeholder="Buscar...", filters=[],
-with_pagination=true) %}
-<div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-
-  <div class="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-    <h2 class="text-lg font-bold text-gray-900 dark:text-white tracking-tight">{{ title }}</h2>
-    <button id="btn-nuevo-{{ id_table }}"
-      class="inline-flex items-center gap-2 text-sm font-semibold text-white
-             bg-blue-600 hover:bg-blue-700 active:bg-blue-800
-             px-5 py-2.5 rounded-xl transition-colors shadow-sm
-             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
-      </svg>
-      Nuevo
-    </button>
-  </div>
-
-  <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-    <div class="flex flex-wrap gap-3 items-center">
-
-      <div class="relative flex-1 min-w-[200px]">
-        <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
-          fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+   MACRO: page_header
+   ---------------------------------------------------------- #}
+{% macro page_header(title, subtitle='', show_back=false, back_url='') %}
+<div class="mb-8">
+    {% if show_back and back_url %}
+    <a href="{{ back_url }}" class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-gray-200 mb-3 group transition-colors">
+        <svg class="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
-        <input type="text" id="search-input-{{ id_table }}"
-          placeholder="{{ search_placeholder }}"
-          class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl
-                 border border-gray-200 dark:border-gray-600
-                 bg-white dark:bg-gray-700
-                 text-gray-900 dark:text-white
-                 placeholder-gray-400 dark:placeholder-gray-500
-                 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                 transition-all">
-      </div>
-
-      {% for filter in filters %}
-        {% if filter.type == 'select' %}
-          <select id="filter-{{ id_table }}-{{ filter.name }}"
-            class="py-2.5 px-3 text-sm rounded-xl
-                   border border-gray-200 dark:border-gray-600
-                   bg-white dark:bg-gray-700
-                   text-gray-900 dark:text-white
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                   transition-all min-w-[160px] cursor-pointer">
-            <option value="">{{ filter.label_default | default('Todos') }}</option>
-            {% for opt in filter.options %}
-              <option value="{{ opt.value }}">{{ opt.label }}</option>
-            {% endfor %}
-          </select>
-        {% elif filter.type == 'text' %}
-          <input type="text" id="filter-{{ id_table }}-{{ filter.name }}"
-            placeholder="{{ filter.placeholder | default(filter.label) }}"
-            class="py-2.5 px-3 text-sm rounded-xl
-                   border border-gray-200 dark:border-gray-600
-                   bg-white dark:bg-gray-700
-                   text-gray-900 dark:text-white
-                   placeholder-gray-400 dark:placeholder-gray-500
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                   transition-all min-w-[160px]">
-        {% endif %}
-      {% endfor %}
-
-      <select id="per-page-{{ id_table }}"
-        class="py-2.5 px-3 text-sm rounded-xl
-               border border-gray-200 dark:border-gray-600
-               bg-white dark:bg-gray-700
-               text-gray-900 dark:text-white
-               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-               transition-all cursor-pointer">
-        <option value="5">5 / página</option>
-        <option value="10" selected>10 / página</option>
-        <option value="20">20 / página</option>
-        <option value="50">50 / página</option>
-      </select>
-
-    </div>
-  </div>
-
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm text-left" id="tabla-{{ id_table }}">
-      <thead class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider
-                    bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <tr>
-          {% for col in columns %}
-          <th class="px-6 py-4 whitespace-nowrap
-                     {% if col.sortable %}cursor-pointer select-none hover:text-gray-800 dark:hover:text-gray-200 transition-colors{% endif %}"
-              {% if col.sortable %}data-sort="{{ col.field }}"{% endif %}>
-            <div class="flex items-center gap-1.5">
-              {{ col.label }}
-              {% if col.sortable %}
-              <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-              </svg>
-              {% endif %}
-            </div>
-          </th>
-          {% endfor %}
-          <th class="px-6 py-4 text-right">Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="tbody-{{ id_table }}" class="divide-y divide-gray-100 dark:divide-gray-700/60">
-        <tr>
-          <td colspan="{{ columns|length + 1 }}" class="px-6 py-12 text-center text-gray-400 dark:text-gray-500">
-            <div class="flex flex-col items-center gap-3">
-              <svg class="w-8 h-8 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581
-                     m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span class="text-sm">Cargando datos...</span>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-  {% if with_pagination %}
-  <div class="flex items-center justify-between px-6 py-4
-              border-t border-gray-200 dark:border-gray-700
-              bg-gray-50 dark:bg-gray-800">
-    <span id="pagination-info-{{ id_table }}" class="text-xs text-gray-500 dark:text-gray-400"></span>
-    <div id="pagination-controls-{{ id_table }}" class="flex items-center gap-1.5"></div>
-  </div>
-  {% endif %}
-
+        Volver
+    </a>
+    {% endif %}
+    <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight">{{ title }}</h1>
+    {% if subtitle %}
+    <p class="mt-1.5 text-sm text-gray-400">{{ subtitle }}</p>
+    {% endif %}
 </div>
 {% endmacro %}
 
 
 {# ----------------------------------------------------------
-MACRO: crud_modal
----------------------------------------------------------- #}
-{% macro crud_modal(id_modal, form_fields, id_field='id',
-modal_title='Registro', modal_size='md') %}
+   MACRO: kpi_card
+   ---------------------------------------------------------- #}
+{% macro kpi_card(title, value_id, default_value='0', color='slate', icon='') %}
+{% set color_map = {
+    'slate':  {'text': 'text-white', 'icon_bg': 'bg-[#1E3A5F]', 'border_hover': 'hover:border-gray-500'},
+    'blue':   {'text': 'text-[#008DC0]', 'icon_bg': 'bg-[#008DC0]/20', 'border_hover': 'hover:border-[#008DC0]'},
+    'green':  {'text': 'text-emerald-400', 'icon_bg': 'bg-emerald-500/20', 'border_hover': 'hover:border-emerald-500'},
+    'red':    {'text': 'text-red-400', 'icon_bg': 'bg-red-500/20', 'border_hover': 'hover:border-red-500'},
+    'amber':  {'text': 'text-amber-400', 'icon_bg': 'bg-amber-500/20', 'border_hover': 'hover:border-amber-500'},
+    'purple': {'text': 'text-purple-400', 'icon_bg': 'bg-purple-500/20', 'border_hover': 'hover:border-purple-500'}
+} %}
+{% set colors = color_map.get(color, color_map['slate']) %}
+
+<div class="relative overflow-hidden bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] p-6 group {{ colors.border_hover }} transition-all hover:shadow-lg">
+    <!-- Gradient accent -->
+    <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#008DC0] to-[#00A8E8]"></div>
+    
+    <div class="flex items-start justify-between">
+        <div class="flex-1">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{{ title }}</p>
+            <p id="{{ value_id }}" class="text-3xl sm:text-4xl font-bold tracking-tight {{ colors.text }}">
+                {{ default_value }}
+            </p>
+        </div>
+        {% if icon %}
+        <div class="flex-shrink-0 w-12 h-12 rounded-xl {{ colors.icon_bg }} flex items-center justify-center">
+            {{ icon|safe }}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+
+{# ----------------------------------------------------------
+   MACRO: crud_table (con estilo oscuro)
+   ---------------------------------------------------------- #}
+{% macro crud_table(id_table, api_endpoint, title='', columns=[], search_placeholder='Buscar...', filters=[], with_pagination=true, btn_new_label='Nuevo', show_actions=true) %}
+
+<div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden shadow-sm">
+    
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5 border-b border-[#1E3A5F] bg-[#0F2A44]/50">
+        {% if title %}
+        <div>
+            <h2 class="text-lg font-bold text-white">{{ title }}</h2>
+        </div>
+        {% endif %}
+        <button type="button" id="btn-nuevo-{{ id_table }}"
+            class="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-[#008DC0] hover:bg-[#007AAD] rounded-xl shadow-lg shadow-[#008DC0]/20 transition-all active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+            </svg>
+            {{ btn_new_label }}
+        </button>
+    </div>
+    
+    <!-- Filters Bar -->
+    <div class="px-6 py-4 border-b border-[#1E3A5F] bg-[#0F2A44]">
+        <div class="flex flex-wrap items-center gap-3">
+            <!-- Search Input -->
+            <div class="relative flex-1 min-w-[200px] max-w-md">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input type="text" id="search-input-{{ id_table }}"
+                    placeholder="{{ search_placeholder }}"
+                    class="w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#008DC0]/40 focus:border-[#008DC0] transition-all">
+            </div>
+            
+            <!-- Filters -->
+            {% for filter in filters %}
+                {% if filter.type == 'select' %}
+                <select id="filter-{{ id_table }}-{{ filter.name }}"
+                    class="px-3 py-2.5 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white focus:outline-none focus:ring-2 focus:ring-[#008DC0]/40 focus:border-[#008DC0] transition-all min-w-[150px] cursor-pointer">
+                    <option value="">{{ filter.label_default | default('Todos') }}</option>
+                    {% for opt in filter.options %}
+                    <option value="{{ opt.value }}">{{ opt.label }}</option>
+                    {% endfor %}
+                </select>
+                {% elif filter.type == 'text' %}
+                <input type="text" id="filter-{{ id_table }}-{{ filter.name }}"
+                    placeholder="{{ filter.placeholder | default(filter.label) }}"
+                    class="px-3 py-2.5 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#008DC0]/40 focus:border-[#008DC0] transition-all min-w-[150px]">
+                {% endif %}
+            {% endfor %}
+            
+            <!-- Per Page -->
+            <select id="per-page-{{ id_table }}"
+                class="px-3 py-2.5 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white focus:outline-none focus:ring-2 focus:ring-[#008DC0]/40 focus:border-[#008DC0] transition-all cursor-pointer">
+                <option value="5">5 / pág</option>
+                <option value="10" selected>10 / pág</option>
+                <option value="20">20 / pág</option>
+                <option value="50">50 / pág</option>
+            </select>
+        </div>
+    </div>
+    
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="w-full" id="tabla-{{ id_table }}">
+            <thead>
+                <tr class="bg-[#0B2239] border-b border-[#1E3A5F]">
+                    {% for col in columns %}
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap
+                        {% if col.sortable %}cursor-pointer select-none hover:text-white group{% endif %}"
+                        {% if col.sortable %}data-sort="{{ col.field }}"{% endif %}>
+                        <div class="inline-flex items-center gap-1.5">
+                            {{ col.label }}
+                            {% if col.sortable %}
+                            <svg class="w-3.5 h-3.5 opacity-0 group-hover:opacity-60 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
+                            </svg>
+                            {% endif %}
+                        </div>
+                    </th>
+                    {% endfor %}
+                    {% if show_actions %}
+                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Acciones</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody id="tbody-{{ id_table }}" class="divide-y divide-[#1E3A5F]">
+                <tr>
+                    <td colspan="{{ columns|length + 1 }}" class="px-6 py-16 text-center">
+                        <div class="flex flex-col items-center gap-3 text-gray-400">
+                            <svg class="w-8 h-8 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            <span class="text-sm font-medium">Cargando datos...</span>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    {% if with_pagination %}
+    <!-- Pagination -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-[#1E3A5F] bg-[#0B2239]">
+        <span id="pagination-info-{{ id_table }}" class="text-sm text-gray-400"></span>
+        <div id="pagination-controls-{{ id_table }}" class="flex items-center gap-1.5"></div>
+    </div>
+    {% endif %}
+</div>
+{% endmacro %}
+
+
+{# ----------------------------------------------------------
+   MACRO: crud_modal (estilo oscuro)
+   ---------------------------------------------------------- #}
+{% macro crud_modal(id_modal, form_fields, id_field='id', modal_title='Registro', modal_size='md') %}
 
 {% set size_map = {
-  'sm': 'max-w-lg',
-  'md': 'max-w-2xl',
-  'lg': 'max-w-3xl',
-  'xl': 'max-w-5xl'
+    'sm': 'max-w-lg',
+    'md': 'max-w-2xl',
+    'lg': 'max-w-3xl',
+    'xl': 'max-w-5xl',
+    '2xl': 'max-w-6xl'
 } %}
-{% set size_class = size_map[modal_size] if modal_size in size_map else 'max-w-2xl' %}
+{% set size_class = size_map.get(modal_size, 'max-w-2xl') %}
 
 <div id="modal-{{ id_modal }}"
-  class="hidden fixed inset-0 z-50 items-center justify-center p-4"
-  role="dialog" aria-modal="true" aria-labelledby="modal-title-{{ id_modal }}">
-
-  <div id="modal-backdrop-{{ id_modal }}"
-    class="absolute inset-0 bg-gray-950/70 backdrop-blur-sm
-           transition-opacity duration-200 opacity-0"></div>
-
-  <div id="modal-card-{{ id_modal }}"
-    class="relative w-full {{ size_class }} mx-auto
-           bg-white dark:bg-gray-900
-           rounded-2xl shadow-2xl
-           border border-gray-200 dark:border-gray-700
-           transition-all duration-200 scale-95 opacity-0
-           flex flex-col max-h-[90vh]">
-
-    <div class="flex items-start justify-between px-8 py-6
-                border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-      <div>
-        <p class="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest mb-1">
-          {{ id_modal | replace('-', ' ') | title }}
-        </p>
-        <h3 id="modal-title-{{ id_modal }}"
-          class="text-xl font-bold text-gray-900 dark:text-white">
-          {{ modal_title }}
-        </h3>
-      </div>
-      <button type="button" id="close-modal-{{ id_modal }}"
-        class="ml-4 mt-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300
-               hover:bg-gray-100 dark:hover:bg-gray-800
-               rounded-xl p-2 transition-colors
-               focus:outline-none focus:ring-2 focus:ring-gray-300">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-        <span class="sr-only">Cerrar</span>
-      </button>
-    </div>
-
-    <div class="overflow-y-auto flex-1">
-      <form id="form-{{ id_modal }}" method="POST" class="px-8 py-7">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" id="id_{{ id_modal }}" name="{{ id_field }}" value="">
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
-
-          {% for field in form_fields %}
-          <div class="{% if field.full_width is defined and field.full_width %}sm:col-span-2{% endif %}">
-
-            <label for="{{ field.name }}"
-              class="block text-xs font-bold text-gray-600 dark:text-gray-400
-                     uppercase tracking-wider mb-2">
-              {{ field.label }}
-              {% if field.required is defined and field.required %}
-              <span class="text-red-500 ml-0.5">*</span>
-              {% endif %}
-            </label>
-
-            {% if field.type == 'select' %}
-            <select name="{{ field.name }}" id="{{ field.name }}"
-              class="w-full px-4 py-3 text-sm rounded-xl
-                     border border-gray-200 dark:border-gray-700
-                     bg-white dark:bg-gray-800
-                     text-gray-900 dark:text-white
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                     transition-all cursor-pointer">
-              {% for opt in field.options %}
-              <option value="{{ opt.value }}">{{ opt.label }}</option>
-              {% endfor %}
-            </select>
-
-            {% elif field.type == 'textarea' %}
-            <textarea name="{{ field.name }}" id="{{ field.name }}"
-              rows="{{ field.rows | default(3) }}"
-              placeholder="{{ field.placeholder | default('') }}"
-              class="w-full px-4 py-3 text-sm rounded-xl resize-y
-                     border border-gray-200 dark:border-gray-700
-                     bg-white dark:bg-gray-800
-                     text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                     transition-all"></textarea>
-
-            {% else %}
-            <input
-              type="{{ field.type | default('text') }}"
-              name="{{ field.name }}"
-              id="{{ field.name }}"
-              {% if field.placeholder is defined %}placeholder="{{ field.placeholder }}"{% endif %}
-              {% if field.step is defined %}step="{{ field.step }}"{% endif %}
-              {% if field.min is defined %}min="{{ field.min }}"{% endif %}
-              {% if field.max is defined %}max="{{ field.max }}"{% endif %}
-              class="w-full px-4 py-3 text-sm rounded-xl
-                     border border-gray-200 dark:border-gray-700
-                     bg-white dark:bg-gray-800
-                     text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500
-                     focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
-                     transition-all">
-            {% endif %}
-
-            <p class="error-{{ field.name }} hidden mt-1.5 text-xs text-red-500 font-medium"></p>
-          </div>
-          {% endfor %}
-
-          {% if caller %}
-          {{ caller() }}
-          {% endif %}
-
+    class="hidden fixed inset-0 z-50 items-center justify-center p-4 sm:p-6"
+    role="dialog" aria-modal="true" aria-labelledby="modal-title-{{ id_modal }}">
+    
+    <!-- Backdrop -->
+    <div id="modal-backdrop-{{ id_modal }}" class="absolute inset-0 bg-[#0B2239]/90 backdrop-blur-sm transition-opacity duration-300 opacity-0"></div>
+    
+    <!-- Modal Card -->
+    <div id="modal-card-{{ id_modal }}"
+        class="relative w-full {{ size_class }} mx-auto bg-[#0F2A44] rounded-2xl shadow-2xl border border-[#1E3A5F] transition-all duration-300 scale-95 opacity-0 flex flex-col max-h-[90vh]">
+        
+        <!-- Header -->
+        <div class="flex items-start justify-between px-6 sm:px-8 py-5 border-b border-[#1E3A5F] flex-shrink-0 bg-[#0B2239] rounded-t-2xl">
+            <div>
+                <p class="text-xs font-bold text-[#008DC0] uppercase tracking-widest mb-1">
+                    {{ id_modal | replace('-', ' ') | replace('_', ' ') | title }}
+                </p>
+                <h3 id="modal-title-{{ id_modal }}" class="text-xl font-bold text-white">
+                    {{ modal_title }}
+                </h3>
+            </div>
+            <button type="button" id="close-modal-{{ id_modal }}"
+                class="p-2 -mr-2 text-gray-400 hover:text-white hover:bg-[#1E3A5F] rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                <span class="sr-only">Cerrar</span>
+            </button>
         </div>
-      </form>
+        
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto">
+            <form id="form-{{ id_modal }}" method="POST" class="px-6 sm:px-8 py-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" id="id_{{ id_modal }}" name="{{ id_field }}" value="">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-5">
+                    {% for field in form_fields %}
+                    <div class="{% if field.full_width is defined and field.full_width %}sm:col-span-2{% endif %}">
+                        <label for="{{ field.name }}" class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                            {{ field.label }}
+                            {% if field.required is defined and field.required %}
+                            <span class="text-red-500 ml-0.5">*</span>
+                            {% endif %}
+                        </label>
+                        
+                        {% if field.type == 'select' %}
+                        <select name="{{ field.name }}" id="{{ field.name }}"
+                            {% if field.required %}required{% endif %}
+                            class="w-full px-4 py-3 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white focus:outline-none focus:ring-2 focus:ring-[#008DC0]/40 focus:border-[#008DC0] transition-all cursor-pointer">
+                            <option value="">Seleccionar...</option>
+                            {% for opt in field.options %}
+                            <option value="{{ opt.value }}">{{ opt.label }}</option>
+                            {% endfor %}
+                        </select>
+                        
+                        {% elif field.type == 'textarea' %}
+                        <textarea name="{{ field.name }}" id="{{ field.name }}"
+                            rows="{{ field.rows | default(3) }}"
+                            {% if field.placeholder is defined %}placeholder="{{ field.placeholder }}"{% endif %}
+                            {% if field.required %}required{% endif %}
+                            class="w-full px-4 py-3 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#008DC0]/40 focus:border-[#008DC0] transition-all resize-y"></textarea>
+                        
+                        {% else %}
+                        <input type="{{ field.type | default('text') }}"
+                            name="{{ field.name }}"
+                            id="{{ field.name }}"
+                            {% if field.placeholder is defined %}placeholder="{{ field.placeholder }}"{% endif %}
+                            {% if field.step is defined %}step="{{ field.step }}"{% endif %}
+                            {% if field.min is defined %}min="{{ field.min }}"{% endif %}
+                            {% if field.max is defined %}max="{{ field.max }}"{% endif %}
+                            {% if field.required %}required{% endif %}
+                            class="w-full px-4 py-3 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#008DC0]/40 focus:border-[#008DC0] transition-all">
+                        {% endif %}
+                        
+                        <p class="error-{{ field.name }} hidden mt-1.5 text-xs text-red-500 font-medium"></p>
+                    </div>
+                    {% endfor %}
+                    
+                    {# Caller slot for additional content #}
+                    {% if caller %}
+                    {{ caller() }}
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        
+        <!-- Footer -->
+        <div class="flex items-center justify-end gap-3 px-6 sm:px-8 py-5 border-t border-[#1E3A5F] bg-[#0B2239] rounded-b-2xl flex-shrink-0">
+            <button type="button" id="close-modal-{{ id_modal }}-footer"
+                class="px-5 py-2.5 text-sm font-semibold text-gray-300 bg-[#1E3A5F] hover:bg-[#2A4A6F] rounded-xl transition-all">
+                Cancelar
+            </button>
+            <button type="submit" form="form-{{ id_modal }}"
+                class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-[#008DC0] hover:bg-[#007AAD] rounded-xl shadow-lg shadow-[#008DC0]/25 transition-all active:scale-[0.98]">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                </svg>
+                Guardar
+            </button>
+        </div>
     </div>
-
-    <div class="flex items-center justify-end gap-3 px-8 py-5
-                border-t border-gray-200 dark:border-gray-700 flex-shrink-0
-                bg-gray-50 dark:bg-gray-800 rounded-b-2xl">
-      <button type="button" id="close-modal-{{ id_modal }}-footer"
-        class="px-5 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300
-               bg-white dark:bg-gray-700
-               border border-gray-200 dark:border-gray-600
-               rounded-xl hover:bg-gray-50 dark:hover:bg-gray-600
-               transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300">
-        Cancelar
-      </button>
-      <button type="submit" form="form-{{ id_modal }}"
-        class="px-6 py-2.5 text-sm font-semibold text-white
-               bg-blue-600 hover:bg-blue-700 active:bg-blue-800
-               rounded-xl transition-colors shadow-sm
-               focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-               focus:ring-offset-white dark:focus:ring-offset-gray-900
-               inline-flex items-center gap-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-        </svg>
-        Guardar
-      </button>
-    </div>
-
-  </div>
 </div>
 
 <script>
-(function () {
-  var MODAL_ID = 'modal-{{ id_modal }}';
-  var CARD_ID  = 'modal-card-{{ id_modal }}';
-  var BACK_ID  = 'modal-backdrop-{{ id_modal }}';
-  var CLOSE_ID = 'close-modal-{{ id_modal }}';
-  var CLOSEF_ID= 'close-modal-{{ id_modal }}-footer';
-
-  function openModal() {
-    var modal    = document.getElementById(MODAL_ID);
-    var card     = document.getElementById(CARD_ID);
-    var backdrop = document.getElementById(BACK_ID);
-    if (!modal) return;
-    modal.classList.remove('hidden');
-    modal.classList.add('flex');
-    document.body.style.overflow = 'hidden';
-    requestAnimationFrame(function () {
-      backdrop.classList.remove('opacity-0');
-      backdrop.classList.add('opacity-100');
-      card.classList.remove('scale-95', 'opacity-0');
-      card.classList.add('scale-100', 'opacity-100');
-    });
-  }
-
-  function closeModal() {
-    var modal    = document.getElementById(MODAL_ID);
-    var card     = document.getElementById(CARD_ID);
-    var backdrop = document.getElementById(BACK_ID);
-    if (!modal) return;
-    backdrop.classList.remove('opacity-100');
-    backdrop.classList.add('opacity-0');
-    card.classList.remove('scale-100', 'opacity-100');
-    card.classList.add('scale-95', 'opacity-0');
-    setTimeout(function () {
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
-      document.body.style.overflow = '';
-    }, 200);
-  }
-
-  window['openModal_{{ id_modal }}']  = openModal;
-  window['closeModal_{{ id_modal }}'] = closeModal;
-
-  function addListeners() {
-    var closeBtn = document.getElementById(CLOSE_ID);
-    if (closeBtn) closeBtn.addEventListener('click', closeModal);
-    var closeBtnF = document.getElementById(CLOSEF_ID);
-    if (closeBtnF) closeBtnF.addEventListener('click', closeModal);
-    var backdrop = document.getElementById(BACK_ID);
-    if (backdrop) backdrop.addEventListener('click', closeModal);
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeModal();
-    });
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', addListeners);
-  } else {
-    addListeners();
-  }
+(function() {
+    var MODAL_ID = 'modal-{{ id_modal }}';
+    var CARD_ID = 'modal-card-{{ id_modal }}';
+    var BACK_ID = 'modal-backdrop-{{ id_modal }}';
+    var CLOSE_ID = 'close-modal-{{ id_modal }}';
+    var CLOSEF_ID = 'close-modal-{{ id_modal }}-footer';
+    
+    function openModal() {
+        var modal = document.getElementById(MODAL_ID);
+        var card = document.getElementById(CARD_ID);
+        var backdrop = document.getElementById(BACK_ID);
+        if (!modal) return;
+        
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+        
+        requestAnimationFrame(function() {
+            backdrop.classList.remove('opacity-0');
+            backdrop.classList.add('opacity-100');
+            card.classList.remove('scale-95', 'opacity-0');
+            card.classList.add('scale-100', 'opacity-100');
+        });
+    }
+    
+    function closeModal() {
+        var modal = document.getElementById(MODAL_ID);
+        var card = document.getElementById(CARD_ID);
+        var backdrop = document.getElementById(BACK_ID);
+        if (!modal) return;
+        
+        backdrop.classList.remove('opacity-100');
+        backdrop.classList.add('opacity-0');
+        card.classList.remove('scale-100', 'opacity-100');
+        card.classList.add('scale-95', 'opacity-0');
+        
+        setTimeout(function() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = '';
+        }, 200);
+    }
+    
+    window['openModal_{{ id_modal }}'] = openModal;
+    window['closeModal_{{ id_modal }}'] = closeModal;
+    
+    function addListeners() {
+        var closeBtn = document.getElementById(CLOSE_ID);
+        var closeBtnF = document.getElementById(CLOSEF_ID);
+        var backdrop = document.getElementById(BACK_ID);
+        
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (closeBtnF) closeBtnF.addEventListener('click', closeModal);
+        if (backdrop) backdrop.addEventListener('click', closeModal);
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', addListeners);
+    } else {
+        addListeners();
+    }
 })();
 </script>
 {% endmacro %}
 
 
 {# ----------------------------------------------------------
-MACRO: kpi_card
----------------------------------------------------------- #}
-{% macro kpi_card(title, value_id, default_value='0', color='gray') %}
-{% set colors = {
-  'gray':  'text-gray-900 dark:text-white',
-  'blue':  'text-blue-600 dark:text-blue-400',
-  'red':   'text-red-600 dark:text-red-400',
-  'green': 'text-green-600 dark:text-green-400',
-  'amber': 'text-amber-600 dark:text-amber-400'
-} %}
-<div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm p-6">
-  <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
-    {{ title }}
-  </p>
-  <p id="{{ value_id }}"
-    class="text-4xl font-bold tracking-tight {{ colors[color] if color in colors else colors['gray'] }}">
-    {{ default_value }}
-  </p>
-</div>
+   MACRO: status_badge (oscuro)
+   ---------------------------------------------------------- #}
+{% macro status_badge(is_active, label_active='Activo', label_inactive='Inactivo') %}
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold
+    {% if is_active %}
+    bg-emerald-500/20 text-emerald-400
+    {% else %}
+    bg-red-500/20 text-red-400
+    {% endif %}">
+    <span class="w-1.5 h-1.5 rounded-full {% if is_active %}bg-emerald-500{% else %}bg-red-500{% endif %}"></span>
+    {{ label_active if is_active else label_inactive }}
+</span>
 {% endmacro %}
 
 
 {# ----------------------------------------------------------
-MACRO: status_badge
----------------------------------------------------------- #}
-{% macro status_badge(is_active, label_active='Activo', label_inactive='Inactivo') %}
-<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold
-             {% if is_active %}bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400
-             {% else %}bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400{% endif %}">
-  <span class="w-1.5 h-1.5 rounded-full {% if is_active %}bg-green-500{% else %}bg-red-500{% endif %}"></span>
-  {{ label_active if is_active else label_inactive }}
+   MACRO: state_badge (genérico)
+   ---------------------------------------------------------- #}
+{% macro state_badge(state, label='', color='slate') %}
+{% set color_map = {
+    'slate':  'bg-[#1E3A5F] text-gray-300',
+    'blue':   'bg-[#008DC0]/20 text-[#008DC0]',
+    'green':  'bg-emerald-500/20 text-emerald-400',
+    'red':    'bg-red-500/20 text-red-400',
+    'amber':  'bg-amber-500/20 text-amber-400',
+    'purple': 'bg-purple-500/20 text-purple-400'
+} %}
+<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold {{ color_map.get(color, color_map['slate']) }}">
+    {{ label if label else state }}
 </span>
+{% endmacro %}
+
+
+{# ----------------------------------------------------------
+   MACRO: empty_state
+   ---------------------------------------------------------- #}
+{% macro empty_state(title='Sin registros', description='No hay datos para mostrar', icon='') %}
+<div class="flex flex-col items-center justify-center py-12 px-4">
+    <div class="w-16 h-16 rounded-2xl bg-[#1E3A5F] flex items-center justify-center mb-4">
+        {% if icon %}
+        {{ icon|safe }}
+        {% else %}
+        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+        </svg>
+        {% endif %}
+    </div>
+    <h3 class="text-base font-semibold text-white mb-1">{{ title }}</h3>
+    <p class="text-sm text-gray-400 text-center max-w-sm">{{ description }}</p>
+</div>
 {% endmacro %}

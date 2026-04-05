@@ -5,82 +5,136 @@
 
 {% block content %}
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    {{ components.kpi_card('Total Órdenes', 'kpi-total-ordenes', kpis.total_ordenes|string, 'gray') }}
-    {{ components.kpi_card('Pendientes', 'kpi-pendientes', kpis.pendientes|string, 'amber') }}
-    {{ components.kpi_card('Recibidas', 'kpi-recibidas', kpis.recibidas|string, 'green') }}
-    {{ components.kpi_card('Canceladas', 'kpi-canceladas', kpis.canceladas|string, 'red') }}
+{{ components.page_header('Órdenes de Compra', 'Gestiona las compras de materiales e insumos') }}
+
+<!-- KPIs -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    {{ components.kpi_card(
+        'Total Órdenes',
+        'kpi-total-ordenes',
+        kpis.total_ordenes|string,
+        'slate',
+        '<svg class="w-6 h-6 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>'
+    ) }}
+    {{ components.kpi_card(
+        'Pendientes',
+        'kpi-pendientes',
+        kpis.pendientes|string,
+        'amber',
+        '<svg class="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+    ) }}
+    {{ components.kpi_card(
+        'Recibidas',
+        'kpi-recibidas',
+        kpis.recibidas|string,
+        'green',
+        '<svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+    ) }}
+    {{ components.kpi_card(
+        'Canceladas',
+        'kpi-canceladas',
+        kpis.canceladas|string,
+        'red',
+        '<svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+    ) }}
 </div>
 
+<!-- Table -->
 {{ components.crud_table(
     id_table='compras',
     api_endpoint='/compras',
-    title='Órdenes de Compra',
+    title='Registro de Compras',
     columns=[
-        {'field': 'folio', 'label': 'Folio', 'sortable': true},
+        {'field': 'folio',            'label': 'Folio',     'sortable': true},
         {'field': 'proveedor_nombre', 'label': 'Proveedor', 'sortable': true},
-        {'field': 'fecha_compra', 'label': 'Fecha', 'sortable': true},
-        {'field': 'total', 'label': 'Total', 'sortable': true},
-        {'field': 'estado', 'label': 'Estado', 'sortable': true}
+        {'field': 'fecha_compra',     'label': 'Fecha',     'sortable': true},
+        {'field': 'total',            'label': 'Total',     'sortable': true},
+        {'field': 'estado',           'label': 'Estado',    'sortable': true}
     ],
     search_placeholder='Buscar por folio o proveedor...',
     filters=[
         {'type': 'select', 'name': 'estado', 'label_default': 'Todos los estados',
          'options': [
-            {'value': 'CREADA', 'label': 'Creada'},
-            {'value': 'RECIBIDA', 'label': 'Recibida'},
-            {'value': 'CANCELADA', 'label': 'Cancelada'}
+            {'value': 'CREADA',    'label': 'Creadas'},
+            {'value': 'RECIBIDA',  'label': 'Recibidas'},
+            {'value': 'CANCELADA', 'label': 'Canceladas'}
          ]},
         {'type': 'select', 'name': 'proveedor', 'label_default': 'Todos los proveedores',
          'options': proveedores_options}
-    ]
+    ],
+    btn_new_label='Nueva Compra'
 ) }}
 
+<!-- Modal -->
 {% set form_fields = [
-    {'name': 'proveedor_id', 'label': 'Proveedor', 'type': 'select', 'required': true,
-     'options': proveedores_options},
-    {'name': 'fecha_compra', 'label': 'Fecha y hora', 'type': 'datetime-local', 'required': true}
+    {'name': 'proveedor_id',  'label': 'Proveedor',    'type': 'select',         'required': true, 'options': proveedores_options},
+    {'name': 'fecha_compra',  'label': 'Fecha y Hora', 'type': 'datetime-local', 'required': true}
 ] %}
 
-{% call components.crud_modal('compras', form_fields, id_field='id_compra', modal_size='xl') %}
+{% call components.crud_modal('compras', form_fields, id_field='id_compra', modal_title='Orden de Compra', modal_size='xl') %}
+
+<!-- Materiales Section -->
 <div class="sm:col-span-2">
-    <label class="block text-xs font-bold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">
-        Materiales <span class="text-red-500">*</span>
-    </label>
-    <div id="materiales-container">
-        <div class="material-row grid grid-cols-12 gap-2 mb-2 items-end">
-            <div class="col-span-5">
-                <select name="materia_prima_id[]" class="w-full px-3 py-2 text-sm rounded-lg border dark:bg-gray-800" required>
-                    <option value="">Seleccionar...</option>
-                    {% for m in materias_options %}
-                    <option value="{{ m.value }}">{{ m.label }}</option>
-                    {% endfor %}
-                </select>
+    <div class="flex items-center justify-between mb-3">
+        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
+            Materiales <span class="text-red-500 ml-0.5">*</span>
+        </label>
+        <button type="button" id="add-material-btn" class="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            Agregar material
+        </button>
+    </div>
+    
+    <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 p-4">
+        <!-- Header -->
+        <div class="grid grid-cols-12 gap-3 mb-3 text-xs font-bold text-slate-500 uppercase tracking-wider">
+            <div class="col-span-5">Material</div>
+            <div class="col-span-3">Cantidad</div>
+            <div class="col-span-3">Precio Unit.</div>
+            <div class="col-span-1"></div>
+        </div>
+        
+        <!-- Rows Container -->
+        <div id="materiales-container" class="space-y-3">
+            <div class="material-row grid grid-cols-12 gap-3 items-center">
+                <div class="col-span-5">
+                    <select name="materia_prima_id[]" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all" required>
+                        <option value="">Seleccionar...</option>
+                        {% for m in materias_options %}
+                        <option value="{{ m.value }}">{{ m.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-span-3">
+                    <input type="number" name="cantidad[]" step="0.001" placeholder="0.000" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all" required>
+                </div>
+                <div class="col-span-3">
+                    <input type="number" name="precio_unitario[]" step="0.01" placeholder="0.00" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all" required>
+                </div>
+                <div class="col-span-1 flex justify-center">
+                    <button type="button" class="remove-material-btn p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                </div>
             </div>
-            <div class="col-span-3">
-                <input type="number" name="cantidad[]" step="0.001" placeholder="Cantidad" class="w-full px-3 py-2 text-sm rounded-lg border dark:bg-gray-800" required>
-            </div>
-            <div class="col-span-3">
-                <input type="number" name="precio_unitario[]" step="0.01" placeholder="Precio unitario" class="w-full px-3 py-2 text-sm rounded-lg border dark:bg-gray-800" required>
-            </div>
-            <div class="col-span-1">
-                <button type="button" class="remove-material-btn text-red-500 hover:text-red-700 p-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                </button>
+        </div>
+        
+        <!-- Total -->
+        <div class="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 flex justify-end">
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-slate-600 dark:text-slate-400">Total:</span>
+                <span class="text-xl font-bold text-slate-900 dark:text-white">$<span id="total-preview">0.00</span></span>
             </div>
         </div>
     </div>
-    <button type="button" id="add-material-btn" class="mt-2 text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-        </svg>
-        Agregar material
-    </button>
-    <div class="mt-3 text-right font-bold">Total: $<span id="total-preview">0.00</span></div>
+    
     <input type="hidden" name="detalles_json" id="detalles_json">
 </div>
+
 {% endcall %}
 
 <script src="{{ url_for('static', filename='js/crud.js') }}"></script>
@@ -89,10 +143,12 @@ function actualizarTotalYJson() {
     let total = 0;
     const rows = document.querySelectorAll('#materiales-container .material-row');
     const detalles = [];
+    
     rows.forEach(row => {
         const mpSelect = row.querySelector('select[name="materia_prima_id[]"]');
         const cantidad = parseFloat(row.querySelector('input[name="cantidad[]"]').value) || 0;
         const precio = parseFloat(row.querySelector('input[name="precio_unitario[]"]').value) || 0;
+        
         if (mpSelect.value && cantidad > 0 && precio > 0) {
             const subtotal = cantidad * precio;
             total += subtotal;
@@ -103,7 +159,8 @@ function actualizarTotalYJson() {
             });
         }
     });
-    document.getElementById('total-preview').textContent = total.toFixed(2);
+    
+    document.getElementById('total-preview').textContent = total.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     document.getElementById('detalles_json').value = JSON.stringify(detalles);
 }
 
@@ -113,6 +170,7 @@ document.getElementById('add-material-btn')?.addEventListener('click', function 
     const newRow = firstRow.cloneNode(true);
     newRow.querySelectorAll('input, select').forEach(el => el.value = '');
     container.appendChild(newRow);
+    
     newRow.querySelector('.remove-material-btn').addEventListener('click', function () {
         if (container.querySelectorAll('.material-row').length > 1) {
             newRow.remove();
@@ -121,6 +179,7 @@ document.getElementById('add-material-btn')?.addEventListener('click', function 
             alert('Debe haber al menos un material.');
         }
     });
+    
     actualizarTotalYJson();
 });
 
@@ -142,12 +201,13 @@ document.getElementById('materiales-container')?.addEventListener('input', funct
 });
 
 function fillCompraForm(item) {
-    // Solo permitir editar si está CREADA
     if (item.estado !== 'CREADA') {
         alert('No se puede editar una compra que ya ha sido recibida o cancelada.');
         return false;
     }
+    
     document.getElementById('proveedor_id').value = item.proveedor_id;
+    
     if (item.fecha_compra) {
         let fecha = item.fecha_compra.replace(' ', 'T');
         if (fecha.includes(':')) {
@@ -156,12 +216,15 @@ function fillCompraForm(item) {
         }
         document.getElementById('fecha_compra').value = fecha;
     }
+    
     const container = document.getElementById('materiales-container');
     while (container.querySelectorAll('.material-row').length > 1) {
         container.querySelector('.material-row:last-child').remove();
     }
+    
     const firstRow = container.querySelector('.material-row');
     firstRow.querySelectorAll('input, select').forEach(el => el.value = '');
+    
     if (item.detalles && item.detalles.length) {
         item.detalles.forEach((det, idx) => {
             let row;
@@ -175,6 +238,7 @@ function fillCompraForm(item) {
             row.querySelector('input[name="precio_unitario[]"]').value = det.precio_unitario;
         });
     }
+    
     actualizarTotalYJson();
     return true;
 }
@@ -185,18 +249,47 @@ document.addEventListener('DOMContentLoaded', function () {
         apiEndpoint: '/compras',
         sortBy: 'fecha_compra',
         columns: [
-            { field: 'folio', label: 'Folio', sortable: true, render: (val) => `<span class="font-mono text-xs">${val}</span>` },
-            { field: 'proveedor_nombre', label: 'Proveedor', sortable: true },
-            { field: 'fecha_compra', label: 'Fecha', sortable: true },
-            { field: 'total', label: 'Total', sortable: true, render: (val) => `$${parseFloat(val).toFixed(2)}` },
-            { field: 'estado', label: 'Estado', sortable: true, render: (val) => {
-                const colors = { CREADA: 'bg-yellow-100 text-yellow-800', RECIBIDA: 'bg-green-100 text-green-800', CANCELADA: 'bg-red-100 text-red-800' };
-                return `<span class="px-2 py-1 rounded-full text-xs font-semibold ${colors[val] || 'bg-gray-100'}">${val}</span>`;
-            } }
+            { 
+                field: 'folio', 
+                label: 'Folio', 
+                sortable: true, 
+                render: (val) => `<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">${val}</span>` 
+            },
+            { 
+                field: 'proveedor_nombre', 
+                label: 'Proveedor', 
+                sortable: true,
+                render: (val) => `<span class="font-medium text-slate-900 dark:text-white">${val}</span>`
+            },
+            { 
+                field: 'fecha_compra', 
+                label: 'Fecha', 
+                sortable: true,
+                render: (val) => `<span class="text-slate-600 dark:text-slate-400">${val}</span>`
+            },
+            { 
+                field: 'total', 
+                label: 'Total', 
+                sortable: true, 
+                render: (val) => `<span class="font-semibold text-slate-900 dark:text-white">$${parseFloat(val).toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>` 
+            },
+            { 
+                field: 'estado', 
+                label: 'Estado', 
+                sortable: true, 
+                render: (val) => {
+                    const colors = { 
+                        CREADA: 'bg-amber-50 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', 
+                        RECIBIDA: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', 
+                        CANCELADA: 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400' 
+                    };
+                    return `<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${colors[val] || 'bg-slate-100 text-slate-700'}">${val}</span>`;
+                } 
+            }
         ],
         formFields: [
             { name: 'proveedor_id', label: 'Proveedor', type: 'select', required: true, options: {{ proveedores_options | tojson }} },
-            { name: 'fecha_compra', label: 'Fecha y hora', type: 'datetime-local', required: true }
+            {'name': 'fecha_compra', 'label': 'Fecha', 'type': 'date', 'required': true}
         ],
         onEdit: fillCompraForm,
         onSubmit: (formData) => {
@@ -210,28 +303,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Sobrescritura unificada de renderTabla:
-    // 1. Elimina el botón "Desactivar/Activar" (segundo botón)
-    // 2. Oculta/elimina el botón "Editar" si el estado no es CREADA
-    // 3. Agrega el botón "Recibir/Anular" si corresponde
-    // 4. Actualiza KPIs desde los items (no desde la tabla)
+    // Sobrescribir renderTabla
     const originalRender = mgr.renderTabla.bind(mgr);
     mgr.renderTabla = function(items) {
-        // Renderizar tabla original
         originalRender(items);
         if (!items || !items.length) return;
 
-        // Actualizar KPIs directamente desde los items
+        // Actualizar KPIs
         const total = items.length;
         const pendientes = items.filter(i => i.estado === 'CREADA').length;
         const recibidas = items.filter(i => i.estado === 'RECIBIDA').length;
         const canceladas = items.filter(i => i.estado === 'CANCELADA').length;
+        
         document.getElementById('kpi-total-ordenes').textContent = total;
         document.getElementById('kpi-pendientes').textContent = pendientes;
         document.getElementById('kpi-recibidas').textContent = recibidas;
         document.getElementById('kpi-canceladas').textContent = canceladas;
 
-        // Recorrer cada fila de la tabla (ya renderizada)
+        // Modificar acciones en cada fila
         const filas = document.querySelectorAll('#tabla-compras tbody tr');
         filas.forEach((fila, idx) => {
             const item = items[idx];
@@ -241,33 +330,31 @@ document.addEventListener('DOMContentLoaded', function () {
             const divAcciones = fila.querySelector('td:last-child div');
             if (!divAcciones) return;
 
-            // Los botones generados por CrudManager son:
-            // botón[0] = Editar, botón[1] = Desactivar/Activar (si existe)
             const btns = divAcciones.querySelectorAll('button');
             
-            // Eliminar el botón "Desactivar/Activar" (segundo botón) si existe
-            if (btns.length >= 2) {
-                btns[1].remove();
-            }
+            // Eliminar botón Desactivar/Activar
+            if (btns.length >= 2) btns[1].remove();
             
-            // Para el botón "Editar": si estado no es CREADA, lo eliminamos
+            // Eliminar Editar si no es CREADA
             const btnEditar = btns[0];
-            if (btnEditar && estado !== 'CREADA') {
-                btnEditar.remove();
-            }
+            if (btnEditar && estado !== 'CREADA') btnEditar.remove();
             
-            // Agregar botón "Recibir" o "Anular" si la compra no está cancelada
+            // Agregar botón Recibir/Anular
             if (estado !== 'CANCELADA') {
-                // Verificar si ya existe el botón para no duplicar
                 if (!divAcciones.querySelector('.btn-cambiar-estado')) {
                     const btnCambio = document.createElement('button');
                     btnCambio.textContent = estado === 'RECIBIDA' ? 'Anular' : 'Recibir';
-                    btnCambio.className = 'btn-cambiar-estado ml-2 text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400';
+                    btnCambio.className = `btn-cambiar-estado text-xs font-medium transition-colors ml-2 ${
+                        estado === 'RECIBIDA' 
+                            ? 'text-amber-600 hover:text-amber-700 dark:text-amber-400' 
+                            : 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400'
+                    }`;
                     btnCambio.addEventListener('click', async (e) => {
                         e.preventDefault();
                         const nuevoEstado = estado === 'RECIBIDA' ? 'CANCELADA' : 'RECIBIDA';
                         const observaciones = prompt('Observaciones (opcional):');
                         const csrf = document.querySelector('input[name="csrf_token"]')?.value;
+                        
                         try {
                             const res = await fetch(`/compras/cambiar_estado/${compraId}`, {
                                 method: 'POST',
@@ -290,7 +377,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
     
-    // Cargar datos inicialmente
     mgr.cargarDatos();
     window.crudManagers['compras'] = mgr;
 });

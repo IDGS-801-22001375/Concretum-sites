@@ -1,33 +1,59 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CRM Concretum - {% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+    <style>
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        /* Smooth transitions */
+        * { transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+    </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-900">
+<body class="bg-[#0B2239] text-white antialiased">
     
     {% include 'includes/_sidebar.html' %}
 
-    <div class="fixed top-5 right-5 z-[100] flex flex-col gap-3">
+    <!-- Botón de menú para móvil (fuera del sidebar) -->
+    <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar" aria-controls="logo-sidebar" type="button" class="fixed top-4 left-4 z-50 inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600 bg-white/10 backdrop-blur-sm shadow-md">
+        <span class="sr-only">Abrir sidebar</span>
+        <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+            <path clip-rule="evenodd" fill-rule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z"></path>
+        </svg>
+    </button>
+
+    <!-- Mensajes flash (fijos arriba derecha) -->
+    <div class="fixed top-5 right-5 z-[100] flex flex-col gap-3 pointer-events-none">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                    
-                    {% if category == 'error' %}
-                        <div id="alert-{{ loop.index }}" class="flex items-center p-4 text-red-800 bg-red-100 rounded-lg shadow-lg dark:bg-red-900 dark:text-red-100" role="alert">
-                    {% elif category == 'success' %}
-                        <div id="alert-{{ loop.index }}" class="flex items-center p-4 text-green-800 bg-green-100 rounded-lg shadow-lg dark:bg-green-900 dark:text-green-100" role="alert">
-                    {% else %}
-                        <div id="alert-{{ loop.index }}" class="flex items-center p-4 text-blue-800 bg-blue-100 rounded-lg shadow-lg dark:bg-blue-900 dark:text-blue-100" role="alert">
-                    {% endif %}
-                    
-                        <div class="ms-3 text-sm font-bold tracking-wide">{{ message }}</div>
-                        
-                        <button type="button" class="ms-auto -mx-1.5 -my-1.5 rounded-lg focus:ring-2 p-1.5 inline-flex items-center justify-center h-8 w-8 opacity-70 hover:opacity-100 transition-opacity" data-dismiss-target="#alert-{{ loop.index }}" aria-label="Close">
-                            <span class="sr-only">Cerrar</span>
-                            <svg class="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 14 14"><path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/></svg>
+                    {% set colors = {
+                        'error': 'bg-red-900/80 border-red-700 text-red-200',
+                        'success': 'bg-emerald-900/80 border-emerald-700 text-emerald-200',
+                        'warning': 'bg-amber-900/80 border-amber-700 text-amber-200',
+                        'info': 'bg-sky-900/80 border-sky-700 text-sky-200'
+                    } %}
+                    {% set icons = {
+                        'error': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>',
+                        'success': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+                        'warning': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>',
+                        'info': '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+                    } %}
+                    <div class="flash-message flex items-start gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-sm pointer-events-auto animate-slide-in {{ colors.get(category, colors['info']) }}" role="alert">
+                        <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {{ icons.get(category, icons['info'])|safe }}
+                        </svg>
+                        <span class="text-sm font-medium flex-1">{{ message }}</span>
+                        <button type="button" onclick="this.parentElement.remove()" class="opacity-60 hover:opacity-100 flex-shrink-0 -mr-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
                         </button>
                     </div>
                 {% endfor %}
@@ -35,22 +61,56 @@
         {% endwith %}
     </div>
 
-    <div class="p-4 sm:ml-64">
-        <div class="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 mt-14">
+    <!-- Contenido principal -->
+    <main class="flex-1 ml-0 sm:ml-64 bg-[#0D1F30] min-h-screen overflow-y-auto">
+        <div class="p-4 sm:p-6 lg:p-8">
             {% block content %}{% endblock %}
         </div>
-    </div>
+    </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.2.1/flowbite.min.js"></script>
     
     <script>
+        // Auto-dismiss flash messages
         setTimeout(() => {
-            document.querySelectorAll('[role="alert"]').forEach(alert => {
-                alert.style.transition = "opacity 0.5s ease";
-                alert.style.opacity = "0";
-                setTimeout(() => alert.remove(), 500);
+            document.querySelectorAll('.flash-message').forEach(alert => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateX(100%)';
+                setTimeout(() => alert.remove(), 300);
             });
         }, 5000);
     </script>
+    <script>
+    window.APP_CONFIG = {
+        moneda: "{{ config_empresa.moneda if config_empresa else 'MXN' }}",
+        zona_horaria: "{{ config_empresa.zona_horaria if config_empresa else 'America/Mexico_City' }}"
+    };
+    
+    function formatearFecha(fechaUTC, formato = 'datetime') {
+        if (!fechaUTC) return '—';
+        try {
+            let date = new Date(fechaUTC);
+            if (isNaN(date.getTime())) return fechaUTC;
+            let options = { timeZone: window.APP_CONFIG.zona_horaria };
+            if (formato === 'date') {
+                return date.toLocaleDateString('es-MX', options);
+            } else if (formato === 'time') {
+                return date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', timeZone: window.APP_CONFIG.zona_horaria });
+            } else {
+                return date.toLocaleString('es-MX', options);
+            }
+        } catch(e) {
+            return fechaUTC;
+        }
+    }
+</script>
+    
+    <style>
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(100%); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-slide-in { animation: slideIn 0.3s ease-out; }
+    </style>
 </body>
 </html>

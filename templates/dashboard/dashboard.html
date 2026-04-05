@@ -1,34 +1,176 @@
 {% extends 'base.html' %}
+{% import 'macros/crud_components.html' as components %}
 {% block title %}Dashboard General{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Panel de Control General</h2>
+
+{{ components.page_header('Panel de Control', 'Vista general del sistema CRM Concretum') }}
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    {{ components.kpi_card(
+        'Ventas del Día',
+        'kpi-ventas-dia',
+        '$0.00',
+        'green',
+        '<svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+    ) }}
+    {{ components.kpi_card(
+        'Pedidos Activos',
+        'kpi-pedidos-activos',
+        '0',
+        'blue',
+        '<svg class="w-6 h-6 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>'
+    ) }}
+    {{ components.kpi_card(
+        'Alertas de Stock',
+        'kpi-alertas-stock',
+        '0',
+        'red',
+        '<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'
+    ) }}
+    {{ components.kpi_card(
+        'Usuarios Activos',
+        'kpi-usuarios-activos',
+        usuarios_activos|default(0)|string,
+        'slate',
+        '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>'
+    ) }}
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-5 dark:bg-gray-800 dark:border-gray-700">
-            <h3 class="text-sm font-normal text-gray-500 dark:text-gray-400 uppercase">Ventas del Día</h3>
-            <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">$0.00</p>
+    <!-- Analytics Placeholder -->
+    <div class="lg:col-span-2 bg-[#0F2A44] border border-[#1E3A5F] rounded-xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-[#1E3A5F]">
+            <h3 class="text-lg font-bold text-white">Analisis de Ventas</h3>
+            <p class="text-sm text-gray-400 mt-0.5">Graficos y metricas del periodo actual</p>
         </div>
-        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-5 dark:bg-gray-800 dark:border-gray-700">
-            <h3 class="text-sm font-normal text-gray-500 dark:text-gray-400 uppercase">Pedidos Activos</h3>
-            <p class="text-3xl font-bold text-blue-600 dark:text-blue-400 mt-2">0</p>
-        </div>
-        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-5 dark:bg-gray-800 dark:border-gray-700">
-            <h3 class="text-sm font-normal text-gray-500 dark:text-gray-400 uppercase">Alertas de Stock</h3>
-            <p class="text-3xl font-bold text-red-600 dark:text-red-500 mt-2">0</p>
-        </div>
-        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-5 dark:bg-gray-800 dark:border-gray-700">
-            <h3 class="text-sm font-normal text-gray-500 dark:text-gray-400 uppercase">Usuarios Sistema</h3>
-            <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ current_user.query.filter_by(active=True).count() }}</p>
+        <div class="p-6 flex flex-col items-center justify-center h-80">
+            <div class="w-16 h-16 rounded-2xl bg-[#1E3A5F] flex items-center justify-center mb-4">
+                <svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+            </div>
+            <h4 class="text-base font-semibold text-white mb-1">Motor de Graficos</h4>
+            <p class="text-sm text-gray-400 text-center max-w-sm">
+                Los graficos analiticos se conectaran en la Fase 5 del desarrollo.
+            </p>
         </div>
     </div>
-
-    <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-5 h-96 flex flex-col justify-center items-center dark:bg-gray-800 dark:border-gray-700">
-        <svg class="w-12 h-12 text-gray-400 mb-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 16">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 8h11m0 0L8 4m4 4-4 4m4-11h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"/>
-        </svg>
-        <p class="text-gray-500 dark:text-gray-400 font-medium">El motor de gráficos analíticos se conectará en la Fase 5.</p>
+    
+    <!-- Quick Actions -->
+    <div class="bg-[#0F2A44] border border-[#1E3A5F] rounded-xl overflow-hidden">
+        <div class="px-6 py-5 border-b border-[#1E3A5F]">
+            <h3 class="text-lg font-bold text-white">Acciones Rapidas</h3>
+        </div>
+        <div class="p-4 space-y-2">
+            <a href="{{ url_for('compras.index') }}" class="flex items-center gap-4 p-4 rounded-xl hover:bg-[#123555] transition-colors group">
+                <div class="w-10 h-10 rounded-lg bg-[#008DC0]/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-white">Nueva Compra</p>
+                    <p class="text-xs text-gray-400 truncate">Registrar orden de compra</p>
+                </div>
+                <svg class="w-4 h-4 text-gray-500 group-hover:translate-x-1 group-hover:text-[#008DC0] transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+            
+            <a href="{{ url_for('materia_prima.index') }}" class="flex items-center gap-4 p-4 rounded-xl hover:bg-[#123555] transition-colors group">
+                <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-white">Gestion de Materiales</p>
+                    <p class="text-xs text-gray-400 truncate">Administrar materia prima</p>
+                </div>
+                <svg class="w-4 h-4 text-gray-500 group-hover:translate-x-1 group-hover:text-emerald-400 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+            
+            <a href="{{ url_for('inventario.index') }}" class="flex items-center gap-4 p-4 rounded-xl hover:bg-[#123555] transition-colors group">
+                <div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-white">Ver Inventario</p>
+                    <p class="text-xs text-gray-400 truncate">Estado actual del stock</p>
+                </div>
+                <svg class="w-4 h-4 text-gray-500 group-hover:translate-x-1 group-hover:text-amber-400 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+            
+            <a href="{{ url_for('proveedores.index') }}" class="flex items-center gap-4 p-4 rounded-xl hover:bg-[#123555] transition-colors group">
+                <div class="w-10 h-10 rounded-lg bg-[#008DC0]/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                    <svg class="w-5 h-5 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-white">Proveedores</p>
+                    <p class="text-xs text-gray-400 truncate">Gestionar proveedores</p>
+                </div>
+                <svg class="w-4 h-4 text-gray-500 group-hover:translate-x-1 group-hover:text-[#008DC0] transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
     </div>
 </div>
+
+<!-- Recent Activity -->
+<div class="mt-6 bg-[#0F2A44] border border-[#1E3A5F] rounded-xl overflow-hidden">
+    <div class="px-6 py-5 border-b border-[#1E3A5F]">
+        <h3 class="text-lg font-bold text-white">Actividad Reciente</h3>
+        <p class="text-sm text-gray-400 mt-0.5">Ultimos movimientos en el sistema</p>
+    </div>
+    <div class="p-6 flex flex-col items-center justify-center h-48">
+        <div class="w-12 h-12 rounded-xl bg-[#1E3A5F] flex items-center justify-center mb-3">
+            <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+        </div>
+        <p class="text-sm text-gray-400 text-center">
+            No hay actividad reciente para mostrar
+        </p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', async function() {
+    // Cargar KPIs via API si existe el endpoint
+    try {
+        const res = await fetch('/dashboard/kpis');
+        if (res.ok) {
+            const data = await res.json();
+            if (data.ventas_dia !== undefined) {
+                document.getElementById('kpi-ventas-dia').textContent = '$' + (data.ventas_dia || 0).toFixed(2);
+            }
+            if (data.pedidos_activos !== undefined) {
+                document.getElementById('kpi-pedidos-activos').textContent = data.pedidos_activos || 0;
+            }
+            if (data.alertas_stock !== undefined) {
+                document.getElementById('kpi-alertas-stock').textContent = data.alertas_stock || 0;
+            }
+            if (data.usuarios_activos !== undefined) {
+                document.getElementById('kpi-usuarios-activos').textContent = data.usuarios_activos || 0;
+            }
+        }
+    } catch (e) {
+        // Si no existe el endpoint, los valores por defecto se mantienen
+        console.log('KPIs endpoint not available, using defaults');
+    }
+});
+</script>
+
 {% endblock %}

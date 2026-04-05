@@ -1,5 +1,6 @@
 /* ============================================================
-   crud.js — CRM CONCRETUM v2
+   crud.js — CRM CONCRETUM v3
+   Rediseño con mejor UI/UX
    ============================================================ */
 
 class CrudManager {
@@ -28,8 +29,6 @@ class CrudManager {
       else console.warn('[CrudManager] closeModal no encontrado para', this.id);
     };
 
-    /* El script va al final del body, el DOM ya está listo.
-       Pero si por alguna razón no, esperamos. */
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => this._init());
     } else {
@@ -57,14 +56,14 @@ class CrudManager {
     if (tbody) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="99" class="px-5 py-8 text-center text-gray-400 dark:text-gray-500">
-            <div class="flex flex-col items-center gap-2">
-              <svg class="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <td colspan="99" class="px-6 py-16 text-center">
+            <div class="flex flex-col items-center gap-3 text-slate-400 dark:text-slate-500">
+              <svg class="w-8 h-8 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581
                      m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
               </svg>
-              <span class="text-sm">Cargando...</span>
+              <span class="text-sm font-medium">Cargando datos...</span>
             </div>
           </td>
         </tr>`;
@@ -81,8 +80,13 @@ class CrudManager {
       if (tbody) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="99" class="px-5 py-8 text-center text-sm text-red-500">
-              Error al cargar datos. Intente de nuevo.
+            <td colspan="99" class="px-6 py-16 text-center">
+              <div class="flex flex-col items-center gap-3 text-red-500">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <span class="text-sm font-medium">Error al cargar datos. Intente de nuevo.</span>
+              </div>
             </td>
           </tr>`;
       }
@@ -97,14 +101,13 @@ class CrudManager {
     if (!items || items.length === 0) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="99" class="px-5 py-6 text-center">
-            <div class="flex flex-col items-center gap-2 text-gray-400 dark:text-gray-500">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <td colspan="99" class="px-6 py-16 text-center">
+            <div class="flex flex-col items-center gap-3 text-slate-400 dark:text-slate-500">
+              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01
-                     M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
               </svg>
-              <span class="text-sm">Sin registros encontrados</span>
+              <span class="text-sm font-medium">Sin registros encontrados</span>
             </div>
           </td>
         </tr>`;
@@ -114,32 +117,38 @@ class CrudManager {
     let html = '';
     items.forEach(item => {
       const recordId = item.id ?? '';
-      html += `<tr class="hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">`;
+      html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">`;
 
       this.columns.forEach(col => {
         let value = item[col.field];
         if (col.render) {
           value = col.render(value, item);
         } else if (value === null || value === undefined) {
-          value = '—';
+          value = '<span class="text-slate-400">—</span>';
         }
-        html += `<td class="px-5 py-3.5 text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">${value}</td>`;
+        html += `<td class="px-6 py-4 text-sm text-slate-700 dark:text-slate-300 whitespace-nowrap">${value}</td>`;
       });
 
       const isActive = item.es_activo ?? true;
       html += `
-        <td class="px-5 py-3.5 text-right">
-          <div class="flex items-center justify-end gap-3">
+        <td class="px-6 py-4 text-right">
+          <div class="flex items-center justify-end gap-2">
             <button onclick="window.crudManagers['${this.id}'].editar(${recordId})"
-                    class="text-xs font-bold text-blue-600 hover:text-blue-800
-       dark:text-blue-300 dark:hover:text-blue-100 transition-colors">
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
               Editar
             </button>
             <button onclick="window.crudManagers['${this.id}'].alternarEstado(${recordId})"
-                    class="text-xs font-medium transition-colors
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all rounded-lg
                            ${isActive
-                             ? 'text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300'
-                             : 'text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300'}">
+                             ? 'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20'
+                             : 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'}">
+              ${isActive 
+                ? `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`
+                : `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+              }
               ${isActive ? 'Desactivar' : 'Activar'}
             </button>
           </div>
@@ -165,14 +174,15 @@ class CrudManager {
     if (!controls) return;
 
     const cls = (active) =>
-      `px-3 py-1.5 text-xs rounded-lg border transition-colors ` +
-      (active
-        ? 'bg-blue-600 text-white border-blue-600'
-        : 'border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700');
+      active
+        ? 'px-3 py-1.5 text-sm rounded-lg bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/25'
+        : 'px-3 py-1.5 text-sm rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors';
 
     let html = '';
     if (data.page > 1)
-      html += `<button data-page="${data.page - 1}" class="${cls(false)}">‹</button>`;
+      html += `<button data-page="${data.page - 1}" class="${cls(false)}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>`;
 
     const maxBtns = 5;
     const half    = Math.floor(maxBtns / 2);
@@ -184,7 +194,9 @@ class CrudManager {
       html += `<button data-page="${i}" class="${cls(i === data.page)}">${i}</button>`;
 
     if (data.page < data.pages)
-      html += `<button data-page="${data.page + 1}" class="${cls(false)}">›</button>`;
+      html += `<button data-page="${data.page + 1}" class="${cls(false)}">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+      </button>`;
 
     controls.innerHTML = html;
     controls.querySelectorAll('button[data-page]').forEach(btn => {
@@ -205,8 +217,6 @@ class CrudManager {
       const titleEl = document.getElementById(`modal-title-${this.id}`);
       if (titleEl) titleEl.textContent = 'Editar registro';
 
-      /* El hidden del ID puede tener distintos nombres según id_field del macro.
-         Intentamos con id_{id_modal} que es lo que genera el macro. */
       const idField = document.getElementById(`id_${this.id}`);
       if (idField) idField.value = item.id ?? id;
 
@@ -257,9 +267,14 @@ class CrudManager {
     const csrfToken = document.querySelector('input[name="csrf_token"]')?.value ?? '';
 
     const submitBtn = form.querySelector('button[type="submit"]');
+    const originalContent = submitBtn ? submitBtn.innerHTML : '';
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Guardando...';
+      submitBtn.innerHTML = `
+        <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        Guardando...`;
     }
 
     try {
@@ -284,11 +299,7 @@ class CrudManager {
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.innerHTML = `
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-          </svg>
-          Guardar`;
+        submitBtn.innerHTML = originalContent;
       }
     }
   }
@@ -310,28 +321,31 @@ class CrudManager {
 
   /* ── flash ───────────────────────────────────────────────── */
   _showFlash(message, category = 'info') {
-    const container = document.querySelector('.fixed.top-5.right-5');
+    const container = document.getElementById('flash-container') || document.querySelector('.fixed.top-5.right-5');
     if (!container) return;
 
     const colors = {
-      success: 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-      error:   'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/40 dark:text-red-300',
-      info:    'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
+      success: 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-800 dark:text-emerald-200',
+      error:   'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-800 dark:text-red-200',
+      info:    'bg-sky-50 border-sky-200 text-sky-800 dark:bg-sky-950/50 dark:border-sky-800 dark:text-sky-200',
+      warning: 'bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-200'
     };
     const icons = {
-      success: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>`,
-      error:   `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>`,
-      info:    `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`
+      success: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
+      error:   `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>`,
+      info:    `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
+      warning: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`
     };
 
     const div = document.createElement('div');
-    div.className = `flex items-start gap-3 p-4 rounded-xl border shadow-lg max-w-sm ${colors[category] ?? colors.info}`;
+    div.className = `flex items-start gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-sm pointer-events-auto max-w-sm ${colors[category] ?? colors.info}`;
+    div.style.animation = 'slideIn 0.3s ease-out';
     div.innerHTML = `
       <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         ${icons[category] ?? icons.info}
       </svg>
       <span class="text-sm font-medium flex-1">${_escHtml(message)}</span>
-      <button onclick="this.parentElement.remove()" class="opacity-60 hover:opacity-100 flex-shrink-0">
+      <button onclick="this.parentElement.remove()" class="opacity-60 hover:opacity-100 flex-shrink-0 -mr-1">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
         </svg>
@@ -339,9 +353,10 @@ class CrudManager {
 
     container.prepend(div);
     setTimeout(() => {
-      div.style.transition = 'opacity 0.4s ease';
-      div.style.opacity    = '0';
-      setTimeout(() => div.remove(), 400);
+      div.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+      div.style.opacity = '0';
+      div.style.transform = 'translateX(100%)';
+      setTimeout(() => div.remove(), 300);
     }, 4500);
   }
 
@@ -352,7 +367,7 @@ class CrudManager {
     if (btnNuevo) {
       btnNuevo.addEventListener('click', () => {
         const titleEl = document.getElementById(`modal-title-${this.id}`);
-        if (titleEl) titleEl.textContent = 'Registrar nuevo';
+        if (titleEl) titleEl.textContent = 'Nuevo registro';
         const form = document.getElementById(`form-${this.id}`);
         if (form) form.reset();
         const idField = document.getElementById(`id_${this.id}`);

@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, make_response, jsonify, session, send_file, flash
 from config import Config
-from models import db, User, Role
+from models import db, User, Role, MateriaPrima, ExistenciaMateriaPrima, Produccion, Merma
 from flask_security import Security, SQLAlchemyUserDatastore, login_required, current_user
 from flask_security.signals import user_authenticated
 from flask_login.signals import user_logged_out
@@ -24,6 +24,7 @@ from proveedores import proveedores_bp
 from compras import compras_bp
 from inventario import inventario_bp
 from mermas import mermas_bp
+from configuracion import configuracion_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -50,6 +51,7 @@ app.register_blueprint(proveedores_bp)
 app.register_blueprint(compras_bp)
 app.register_blueprint(inventario_bp)
 app.register_blueprint(mermas_bp)
+app.register_blueprint(configuracion_bp)
 
 # CORRECCIÓN: el user_loader debe buscar por fs_uniquifier, no por id numérico
 @login_manager.user_loader
@@ -259,5 +261,47 @@ def configurar_2fa():
     else:
         return render_template('security/custom_2fa.html', activado=False)
 
+# ============================================================================
+# CONTEXT PROCESSOR PARA BADGES DEL SIDEBAR (CORREGIDO)
+# ============================================================================
+@app.context_processor
+def inject_sidebar_counts():
+    from sqlalchemy import and_
+    
+    # Materiales críticos: stock_actual < stock_minimo (usando ExistenciaMateriaPrima)
+    criticos = db.session.query(MateriaPrima).join(
+        ExistenciaMateriaPrima,
+        MateriaPrima.id_materia_prima == ExistenciaMateriaPrima.materia_prima_id
+    ).filter(
+        MateriaPrima.es_activo == True,
+        MateriaPrima.stock_minimo > 0,
+        ExistenciaMateriaPrima.stock_actual < MateriaPrima.stock_minimo
+    ).count()
+    
+    # Producciones activas (en proceso)
+    producciones_activas = Produccion.query.filter_by(estado='EN_PROCESO').count()
+    
+    # Mermas recientes (últimos 7 días)
+    from datetime import datetime, timedelta
+    hace_7dias = datetime.utcnow() - timedelta(days=7)
+    mermas_recientes = Merma.query.filter(Merma.fecha_registro >= hace_7dias).count()
+    
+    return {
+        'sidebar_criticos': criticos,
+        'sidebar_pedidos': producciones_activas,
+        'sidebar_mermas': mermas_recientes
+    }
+
+@app.context_processor
+def inject_config():
+    from models import ConfiguracionEmpresa
+    config = ConfiguracionEmpresa.query.first()
+    if not config:
+        # Crear una instancia por defecto si no existe (no debería ocurrir)
+        config = ConfiguracionEmpresa()
+        db.session.add(config)
+        db.session.commit()
+    return dict(config_empresa=config)
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5001)

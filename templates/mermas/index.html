@@ -1,106 +1,111 @@
 {% extends 'base.html' %}
+{% import 'macros/crud_components.html' as components %}
+
 {% block title %}Registro de Mermas{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Registro de Mermas</h2>
 
-    <!-- KPIs -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white border rounded-lg shadow-sm p-5 dark:bg-gray-800">
-            <p class="text-xs font-bold text-gray-500 uppercase">Total Mermas (mes)</p>
-            <p id="kpi-total" class="text-3xl font-bold">0</p>
-        </div>
-        <div class="bg-white border rounded-lg shadow-sm p-5 dark:bg-gray-800">
-            <p class="text-xs font-bold text-gray-500 uppercase">Valor Económico (mes)</p>
-            <p id="kpi-valor" class="text-3xl font-bold text-red-600">$0.00</p>
-        </div>
-        <div class="bg-white border rounded-lg shadow-sm p-5 dark:bg-gray-800">
-            <p class="text-xs font-bold text-gray-500 uppercase">% Merma / Inventario</p>
-            <p id="kpi-porcentaje" class="text-3xl font-bold">0%</p>
-        </div>
-    </div>
+{{ components.page_header('Registro de Mermas', 'Control y seguimiento de pérdidas de inventario') }}
 
-    <!-- Tabla de últimas mermas -->
-    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
-        <div class="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-            <h2 class="text-lg font-bold text-gray-900 dark:text-white">Últimas Mermas Registradas</h2>
-            <button id="btn-registrar-merma" class="inline-flex items-center gap-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 px-5 py-2.5 rounded-xl transition-colors shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
-                Registrar Merma
-            </button>
-        </div>
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-            <div class="flex flex-wrap gap-3">
-                <input type="text" id="search-mermas" placeholder="Buscar por responsable..." class="px-3 py-2 border rounded-lg w-64">
-                <select id="filter-tipo" class="px-3 py-2 border rounded-lg">
-                    <option value="">Todos los tipos</option>
-                    <option value="MATERIA_PRIMA">Materia Prima</option>
-                    <option value="PRODUCTO">Producto Terminado</option>
-                </select>
-                <select id="filter-causa" class="px-3 py-2 border rounded-lg">
-                    <option value="">Todas las causas</option>
-                    <option value="ROTURA">Rotura</option>
-                    <option value="HUMEDAD">Humedad</option>
-                    <option value="CADUCIDAD">Caducidad</option>
-                    <option value="PROCESO">Proceso</option>
-                    <option value="TRANSPORTE">Transporte</option>
-                </select>
-            </div>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white dark:bg-gray-800">
-                <thead class="bg-gray-100 dark:bg-gray-700">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Material</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Cantidad</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Causa</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Responsable</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">Valor</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody-mermas" class="divide-y divide-gray-200 dark:divide-gray-700">
-                    <tr><td colspan="7" class="text-center py-4">Cargando...</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <div id="pagination-mermas" class="flex justify-between items-center px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800"></div>
-    </div>
+<!-- KPIs -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    {{ components.kpi_card(
+        'Total Mermas (mes)',
+        'kpi-total',
+        '0',
+        'slate',
+        '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>'
+    ) }}
+    {{ components.kpi_card(
+        'Valor Económico (mes)',
+        'kpi-valor',
+        '$0.00',
+        'red',
+        '<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+    ) }}
+    {{ components.kpi_card(
+        '% Merma / Inventario',
+        'kpi-porcentaje',
+        '0%',
+        'amber',
+        '<svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>'
+    ) }}
 </div>
 
-<!-- Modal para registrar merma -->
-<div id="merma-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white dark:bg-gray-800">
-        <div class="flex justify-between items-center pb-3">
-            <h3 class="text-lg font-semibold">Registrar Merma</h3>
-            <button id="close-modal" class="text-gray-400 hover:text-gray-600">&times;</button>
+{# Definimos las columnas (sin acciones) #}
+{% set mermas_columns = [
+    {'field': 'fecha_registro', 'label': 'Fecha', 'sortable': true},
+    {'field': 'tipo_material', 'label': 'Tipo', 'sortable': true},
+    {'field': 'material_nombre', 'label': 'Material', 'sortable': true},
+    {'field': 'cantidad', 'label': 'Cantidad', 'sortable': true},
+    {'field': 'causa', 'label': 'Causa', 'sortable': true},
+    {'field': 'responsable', 'label': 'Responsable', 'sortable': true},
+    {'field': 'valor_monetario', 'label': 'Valor', 'sortable': true}
+] %}
+
+{# Filtros personalizados #}
+{% set mermas_filters = [
+    {'type': 'select', 'name': 'tipo', 'label_default': 'Todos los tipos',
+     'options': [
+        {'value': 'MATERIA_PRIMA', 'label': 'Materia Prima'},
+        {'value': 'PRODUCTO', 'label': 'Producto Terminado'}
+     ]},
+    {'type': 'select', 'name': 'causa', 'label_default': 'Todas las causas',
+     'options': [
+        {'value': 'ROTURA', 'label': 'Rotura'},
+        {'value': 'HUMEDAD', 'label': 'Humedad'},
+        {'value': 'CADUCIDAD', 'label': 'Caducidad'},
+        {'value': 'PROCESO', 'label': 'Proceso'},
+        {'value': 'TRANSPORTE', 'label': 'Transporte'}
+     ]}
+] %}
+
+{{ components.crud_table(
+    id_table='mermas',
+    api_endpoint='/mermas/api',
+    title='Últimas Mermas Registradas',
+    columns=mermas_columns,
+    search_placeholder='Buscar por responsable...',
+    filters=mermas_filters,
+    btn_new_label='Registrar Merma',
+    show_actions=False
+) }}
+
+<!-- Modal para registrar merma (manual, igual que antes) -->
+<div id="merma-modal" class="hidden fixed inset-0 bg-[#0B2239]/80 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+    <div class="relative w-full max-w-md bg-[#0F2A44] border border-[#1E3A5F] rounded-2xl shadow-2xl">
+        <div class="flex justify-between items-center p-5 border-b border-[#1E3A5F]">
+            <h3 class="text-lg font-semibold text-white">Registrar Merma</h3>
+            <button id="close-modal" class="text-gray-400 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
         </div>
-        <form id="merma-form">
+        <form id="merma-form" class="p-5 space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="mb-4">
-                <label class="block mb-2">Tipo de Material</label>
-                <select id="tipo_material" class="w-full px-3 py-2 border rounded-lg" required>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Tipo de Material</label>
+                <select id="tipo_material" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none" required>
                     <option value="">Seleccione...</option>
                     <option value="MATERIA_PRIMA">Materia Prima</option>
                     <option value="PRODUCTO">Producto Terminado</option>
                 </select>
             </div>
-            <div class="mb-4">
-                <label class="block mb-2">Material</label>
-                <select id="material_id" class="w-full px-3 py-2 border rounded-lg" required>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Material</label>
+                <select id="material_id" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none" required>
                     <option value="">Primero seleccione tipo</option>
                 </select>
-                <p class="text-xs text-gray-500 mt-1" id="stock-disponible"></p>
+                <p class="text-xs text-gray-400 mt-1" id="stock-disponible"></p>
             </div>
-            <div class="mb-4">
-                <label class="block mb-2">Cantidad perdida</label>
-                <input type="number" step="any" id="cantidad" class="w-full px-3 py-2 border rounded-lg" required>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Cantidad perdida</label>
+                <input type="number" step="any" id="cantidad" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none" required>
             </div>
-            <div class="mb-4">
-                <label class="block mb-2">Causa</label>
-                <select id="causa" class="w-full px-3 py-2 border rounded-lg" required>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Causa</label>
+                <select id="causa" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none" required>
                     <option value="">Seleccione...</option>
                     <option value="ROTURA">Rotura</option>
                     <option value="HUMEDAD">Humedad</option>
@@ -109,32 +114,39 @@
                     <option value="TRANSPORTE">Transporte</option>
                 </select>
             </div>
-            <div class="mb-4">
-                <label class="block mb-2">Responsable (opcional)</label>
-                <input type="text" id="responsable" class="w-full px-3 py-2 border rounded-lg">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Responsable (opcional)</label>
+                <input type="text" id="responsable" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
             </div>
-            <div class="mb-4">
-                <label class="block mb-2">Observaciones</label>
-                <textarea id="observaciones" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Observaciones</label>
+                <textarea id="observaciones" rows="2" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none resize-none"></textarea>
             </div>
-            <div class="flex justify-end gap-2">
-                <button type="button" id="cancelar" class="px-4 py-2 bg-gray-300 rounded-lg">Cancelar</button>
-                <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-lg">Registrar Merma</button>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" id="cancelar" class="px-4 py-2.5 text-sm font-medium text-gray-300 hover:text-white bg-[#1E3A5F] hover:bg-[#2A4A6F] rounded-xl transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-4 py-2.5 text-sm font-medium text-white bg-[#008DC0] hover:bg-[#007AAD] rounded-xl transition-colors">
+                    Registrar Merma
+                </button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
+    // Copiamos la lógica completamente funcional de templatesMIO/mermas/index.html
     let currentPage = 1;
     let currentFilters = { search: '', tipo: '', causa: '' };
 
     async function cargarKPIs() {
-        const res = await fetch('/mermas/kpis');
-        const data = await res.json();
-        document.getElementById('kpi-total').textContent = data.total_registros;
-        document.getElementById('kpi-valor').textContent = '$' + data.valor_total.toFixed(2);
-        document.getElementById('kpi-porcentaje').textContent = data.porcentaje + '%';
+        try {
+            const res = await fetch('/mermas/kpis');
+            const data = await res.json();
+            document.getElementById('kpi-total').textContent = data.total_registros;
+            document.getElementById('kpi-valor').textContent = '$' + data.valor_total.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('kpi-porcentaje').textContent = data.porcentaje + '%';
+        } catch(e) { console.error(e); }
     }
 
     async function cargarMermas(page = 1) {
@@ -144,35 +156,41 @@
             tipo: currentFilters.tipo,
             causa: currentFilters.causa
         });
-        const res = await fetch(`/mermas/api?${params}`);
-        const data = await res.json();
-        const tbody = document.getElementById('tbody-mermas');
-        if (!data.items.length) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Sin registros</td></tr>';
-        } else {
-            tbody.innerHTML = data.items.map(m => `
-                <tr class="border-b dark:border-gray-700">
-                    <td class="px-4 py-2 text-sm">${m.fecha_registro}</td>
-                    <td class="px-4 py-2 text-sm">${m.tipo_material === 'MATERIA_PRIMA' ? 'Materia Prima' : 'Producto'}</td>
-                    <td class="px-4 py-2 text-sm">${m.material_nombre}</td>
-                    <td class="px-4 py-2 text-sm text-right">${m.cantidad.toFixed(3)}</td>
-                    <td class="px-4 py-2 text-sm">${m.causa}</td>
-                    <td class="px-4 py-2 text-sm">${m.responsable || '-'}</td>
-                    <td class="px-4 py-2 text-sm text-right text-red-600">$${m.valor_monetario.toFixed(2)}</td>
-                </tr>
-            `).join('');
-        }
-        renderPaginacion(data.page, data.pages);
-        currentPage = data.page;
+        try {
+            const res = await fetch(`/mermas/api?${params}`);
+            const data = await res.json();
+            const tbody = document.getElementById('tbody-mermas');
+            if (!data.items.length) {
+                tbody.innerHTML = '</table><td colspan="7" class="text-center py-8 text-gray-500">Sin registros</td></tr>';
+            } else {
+                tbody.innerHTML = data.items.map(m => `
+                    <tr class="hover:bg-[#123555]/50 transition-colors">
+                        <td class="px-4 py-3 text-sm text-gray-300">${m.fecha_registro}</td>
+                        <td class="px-4 py-3">
+                            <span class="px-2.5 py-1 rounded-lg text-xs font-semibold ${m.tipo_material === 'MATERIA_PRIMA' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'}">
+                                ${m.tipo_material === 'MATERIA_PRIMA' ? 'Materia Prima' : 'Producto'}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm font-medium text-white">${m.material_nombre}</td>
+                        <td class="px-4 py-3 text-sm text-right font-mono text-white">${m.cantidad.toFixed(3)}</td>
+                        <td class="px-4 py-3"><span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#1E3A5F] text-gray-300">${m.causa}</span></td>
+                        <td class="px-4 py-3 text-sm text-gray-400">${m.responsable || '—'}</td>
+                        <td class="px-4 py-3 text-sm text-right font-semibold text-red-400">$${m.valor_monetario.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            }
+            renderPaginacion(data.page, data.pages);
+            currentPage = data.page;
+        } catch(e) { console.error(e); }
     }
 
     function renderPaginacion(current, total) {
         const container = document.getElementById('pagination-mermas');
         if (!container) return;
         if (total <= 1) { container.innerHTML = ''; return; }
-        let html = '<div class="flex gap-2">';
+        let html = '<div class="flex gap-1">';
         for (let i = 1; i <= total; i++) {
-            html += `<button data-page="${i}" class="px-3 py-1 rounded ${i === current ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}">${i}</button>`;
+            html += `<button data-page="${i}" class="px-3 py-1.5 rounded-lg text-sm font-medium ${i === current ? 'bg-[#008DC0] text-white' : 'bg-[#1E3A5F] text-gray-300 hover:bg-[#2A4A6F]'} transition-colors">${i}</button>`;
         }
         html += '</div>';
         container.innerHTML = html;
@@ -204,7 +222,6 @@
             option.value = m.id;
             option.textContent = `${m.nombre} (Stock: ${m.stock})`;
             option.dataset.stock = m.stock;
-            option.dataset.costo = m.costo;
             select.appendChild(option);
         });
         actualizarStockDisponible();
@@ -214,7 +231,7 @@
         const select = document.getElementById('material_id');
         const selected = select.options[select.selectedIndex];
         if (selected && selected.dataset.stock) {
-            document.getElementById('stock-disponible').textContent = `Stock disponible: ${selected.dataset.stock}`;
+            document.getElementById('stock-disponible').innerHTML = `<span class="inline-flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Stock disponible: ${selected.dataset.stock}</span>`;
         } else {
             document.getElementById('stock-disponible').textContent = '';
         }
@@ -222,24 +239,28 @@
 
     // Modal
     const modal = document.getElementById('merma-modal');
-    const btnRegistrar = document.getElementById('btn-registrar-merma');
+    const btnRegistrar = document.getElementById('btn-nuevo-mermas');
     const closeModal = document.getElementById('close-modal');
     const cancelar = document.getElementById('cancelar');
     const form = document.getElementById('merma-form');
 
-    btnRegistrar.addEventListener('click', () => {
-        modal.classList.remove('hidden');
-        document.getElementById('tipo_material').value = '';
-        document.getElementById('material_id').innerHTML = '<option value="">Primero seleccione tipo</option>';
-        document.getElementById('cantidad').value = '';
-        document.getElementById('causa').value = '';
-        document.getElementById('responsable').value = '';
-        document.getElementById('observaciones').value = '';
-        document.getElementById('stock-disponible').textContent = '';
-    });
+    if (btnRegistrar) {
+        btnRegistrar.addEventListener('click', () => {
+            modal.classList.remove('hidden');
+            document.getElementById('tipo_material').value = '';
+            document.getElementById('material_id').innerHTML = '<option value="">Primero seleccione tipo</option>';
+            document.getElementById('cantidad').value = '';
+            document.getElementById('causa').value = '';
+            document.getElementById('responsable').value = '';
+            document.getElementById('observaciones').value = '';
+            document.getElementById('stock-disponible').textContent = '';
+        });
+    }
+
     function cerrarModal() { modal.classList.add('hidden'); }
-    closeModal.addEventListener('click', cerrarModal);
-    cancelar.addEventListener('click', cerrarModal);
+    if (closeModal) closeModal.addEventListener('click', cerrarModal);
+    if (cancelar) cancelar.addEventListener('click', cerrarModal);
+    if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) cerrarModal(); });
 
     document.getElementById('tipo_material').addEventListener('change', (e) => {
         cargarMateriales(e.target.value);
@@ -267,32 +288,38 @@
             alert('La cantidad de merma no puede superar el stock disponible.');
             return;
         }
-        const res = await fetch('/mermas/registrar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-            body: JSON.stringify({ tipo_material: tipo, material_id, cantidad, causa, responsable, observaciones })
-        });
-        const data = await res.json();
-        if (data.success) {
-            alert(data.message);
-            cerrarModal();
-            cargarKPIs();
-            cargarMermas(currentPage);
-        } else {
-            alert(data.message);
+        try {
+            const res = await fetch('/mermas/registrar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                body: JSON.stringify({ tipo_material: tipo, material_id, cantidad, causa, responsable, observaciones })
+            });
+            const data = await res.json();
+            if (data.success) {
+                cerrarModal();
+                cargarKPIs();
+                cargarMermas(currentPage);
+                if (window.crudManagers && window.crudManagers.mermas) {
+                    window.crudManagers.mermas.cargarDatos();
+                }
+            } else {
+                alert(data.message);
+            }
+        } catch(err) {
+            alert('Error de conexión.');
         }
     });
 
     // Filtros
-    document.getElementById('search-mermas').addEventListener('input', (e) => {
+    document.getElementById('search-input-mermas').addEventListener('input', (e) => {
         currentFilters.search = e.target.value;
         cargarMermas(1);
     });
-    document.getElementById('filter-tipo').addEventListener('change', (e) => {
+    document.getElementById('filter-mermas-tipo').addEventListener('change', (e) => {
         currentFilters.tipo = e.target.value;
         cargarMermas(1);
     });
-    document.getElementById('filter-causa').addEventListener('change', (e) => {
+    document.getElementById('filter-mermas-causa').addEventListener('change', (e) => {
         currentFilters.causa = e.target.value;
         cargarMermas(1);
     });
@@ -300,5 +327,36 @@
     // Inicializar
     cargarKPIs();
     cargarMermas(1);
+
+    // Personalizar el CrudManager de mermas para que los renderizados de columna sean los oscuros
+    setTimeout(() => {
+        if (window.crudManagers && window.crudManagers.mermas) {
+            const mgr = window.crudManagers.mermas;
+            mgr.columns = [
+                { field: 'fecha_registro', label: 'Fecha', sortable: true, render: (val) => val },
+                { field: 'tipo_material', label: 'Tipo', sortable: true, render: (val) => {
+                    return val === 'MATERIA_PRIMA' ? 
+                        '<span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-500/20 text-blue-400">Materia Prima</span>' :
+                        '<span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-500/20 text-purple-400">Producto</span>';
+                } },
+                { field: 'material_nombre', label: 'Material', sortable: true, render: (val) => `<span class="font-medium text-white">${val}</span>` },
+                { field: 'cantidad', label: 'Cantidad', sortable: true, render: (val) => `<span class="font-mono text-white">${parseFloat(val).toFixed(3)}</span>` },
+                { field: 'causa', label: 'Causa', sortable: true, render: (val) => `<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#1E3A5F] text-gray-300">${val}</span>` },
+                { field: 'responsable', label: 'Responsable', sortable: true, render: (val) => val || '—' },
+                { field: 'valor_monetario', label: 'Valor', sortable: true, render: (val) => `<span class="font-semibold text-red-400">$${parseFloat(val).toFixed(2)}</span>` }
+            ];
+            mgr.cargarDatos();
+            // Ocultar columna de acciones si existe (por si el macro no lo hizo)
+            const thead = document.querySelector('#tabla-mermas thead tr');
+            if (thead && thead.children.length > mgr.columns.length) {
+                thead.lastElementChild.remove();
+            }
+            document.querySelectorAll('#tabla-mermas tbody tr').forEach(row => {
+                if (row.children.length > mgr.columns.length) {
+                    row.lastElementChild.remove();
+                }
+            });
+        }
+    }, 500);
 </script>
 {% endblock %}

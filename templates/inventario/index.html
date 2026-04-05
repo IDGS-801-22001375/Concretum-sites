@@ -1,336 +1,388 @@
 {% extends 'base.html' %}
+{% import 'macros/crud_components.html' as components %}
+
 {% block title %}Inventario General{% endblock %}
 
 {% block content %}
-<div class="mb-4">
-    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Inventario General</h2>
 
-    <!-- KPIs -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white border rounded-lg shadow-sm p-5 dark:bg-gray-800">
-            <p class="text-xs font-bold text-gray-500 uppercase">Total Productos</p>
-            <p id="kpi-total-productos" class="text-3xl font-bold">0</p>
-        </div>
-        <div class="bg-white border rounded-lg shadow-sm p-5 dark:bg-gray-800">
-            <p class="text-xs font-bold text-gray-500 uppercase">Valor Inventario</p>
-            <p id="kpi-valor-total" class="text-3xl font-bold">$0.00</p>
-        </div>
-        <div class="bg-white border rounded-lg shadow-sm p-5 dark:bg-gray-800">
-            <p class="text-xs font-bold text-gray-500 uppercase">Alertas de Stock</p>
-            <p id="kpi-alertas" class="text-3xl font-bold text-red-600">0</p>
-        </div>
-        <div class="bg-white border rounded-lg shadow-sm p-5 dark:bg-gray-800">
-            <p class="text-xs font-bold text-gray-500 uppercase">Movimientos (mes)</p>
-            <p id="kpi-movimientos" class="text-3xl font-bold">0</p>
-        </div>
+{{ components.page_header('Inventario General', 'Control y seguimiento de todo el inventario del sistema') }}
+
+<!-- KPIs -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    {{ components.kpi_card(
+        'Total Productos',
+        'kpi-total-productos',
+        '0',
+        'slate',
+        '<svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>'
+    ) }}
+    {{ components.kpi_card(
+        'Valor Inventario',
+        'kpi-valor-total',
+        '$0.00',
+        'green',
+        '<svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+    ) }}
+    {{ components.kpi_card(
+        'Alertas de Stock',
+        'kpi-alertas',
+        '0',
+        'red',
+        '<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'
+    ) }}
+    {{ components.kpi_card(
+        'Movimientos (mes)',
+        'kpi-movimientos',
+        '0',
+        'blue',
+        '<svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>'
+    ) }}
+</div>
+
+<!-- Tabs -->
+<div class="bg-[#0F2A44] border border-[#1E3A5F] rounded-2xl overflow-hidden shadow-sm">
+    <div class="border-b border-[#1E3A5F] px-4">
+        <nav class="flex -mb-px gap-2" id="inventario-tabs">
+            <button type="button" data-tab="productos" class="tab-btn px-5 py-3 text-sm font-medium border-b-2 border-[#008DC0] text-[#008DC0]">
+                Productos Terminados
+            </button>
+            <button type="button" data-tab="materia-prima" class="tab-btn px-5 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white hover:border-gray-500">
+                Materia Prima
+            </button>
+            <button type="button" data-tab="produccion" class="tab-btn px-5 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white hover:border-gray-500">
+                En Proceso
+            </button>
+            <button type="button" data-tab="movimientos" class="tab-btn px-5 py-3 text-sm font-medium border-b-2 border-transparent text-gray-400 hover:text-white hover:border-gray-500">
+                Movimientos
+            </button>
+        </nav>
     </div>
-
-    <!-- Pestañas -->
-    <div class="border-b border-gray-200 dark:border-gray-700 mb-4">
-        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="inventario-tabs" data-tabs-toggle="#inventario-tab-content" role="tablist">
-            <li class="me-2" role="presentation">
-                <button class="inline-block p-4 border-b-2 rounded-t-lg" id="productos-tab" data-tabs-target="#productos" type="button" role="tab" aria-controls="productos" aria-selected="false">Productos Terminados</button>
-            </li>
-            <li class="me-2" role="presentation">
-                <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="materia-prima-tab" data-tabs-target="#materia-prima" type="button" role="tab" aria-controls="materia-prima" aria-selected="false">Materia Prima</button>
-            </li>
-            <li class="me-2" role="presentation">
-                <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="produccion-tab" data-tabs-target="#produccion" type="button" role="tab" aria-controls="produccion" aria-selected="false">En Proceso</button>
-            </li>
-            <li class="me-2" role="presentation">
-                <button class="inline-block p-4 border-b-2 rounded-t-lg hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="movimientos-tab" data-tabs-target="#movimientos" type="button" role="tab" aria-controls="movimientos" aria-selected="false">Movimientos</button>
-            </li>
-        </ul>
-    </div>
-
+    
     <div id="inventario-tab-content">
         <!-- Productos Terminados -->
-        <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="productos" role="tabpanel" aria-labelledby="productos-tab">
-            <div class="mb-4 flex justify-between items-center">
-                <input type="text" id="search-productos" placeholder="Buscar por SKU o nombre..." class="px-3 py-2 border rounded-lg w-64">
-                <button id="btn-movimiento" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Registrar Movimiento</button>
+        <div id="tab-productos" class="tab-panel p-5">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="search-productos" placeholder="Buscar por SKU o nombre..." class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 pl-10 text-sm text-white placeholder-gray-500 focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <button id="btn-movimiento" class="inline-flex items-center gap-2 bg-[#008DC0] hover:bg-[#007AAD] text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-lg shadow-[#008DC0]/20">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Registrar Movimiento
+                </button>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
-                    <thead class="bg-gray-100 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-4 py-2 text-left">SKU</th>
-                            <th class="px-4 py-2 text-left">Nombre</th>
-                            <th class="px-4 py-2 text-left">Unidad</th>
-                            <th class="px-4 py-2 text-right">Stock</th>
-                            <th class="px-4 py-2 text-right">Valor Inventario</th>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-[#1E3A5F]">
+                            <th class="px-4 py-3">SKU</th>
+                            <th class="px-4 py-3">Nombre</th>
+                            <th class="px-4 py-3">Unidad</th>
+                            <th class="px-4 py-3 text-right">Stock</th>
+                            <th class="px-4 py-3 text-right">Valor Inventario</th>
                         </tr>
                     </thead>
-                    <tbody id="tbody-productos">
-                        <tr><td colspan="5" class="text-center py-4">Cargando...</td></tr>
+                    <tbody id="tbody-productos" class="divide-y divide-[#1E3A5F]">
+                        <tr><td colspan="5" class="text-center py-8 text-gray-500">Cargando...</td></tr>
                     </tbody>
                 </table>
             </div>
-            <div id="pagination-productos" class="flex justify-between items-center mt-4"></div>
+            <div id="pagination-productos" class="flex justify-between items-center mt-4 pt-4 border-t border-[#1E3A5F]"></div>
         </div>
 
         <!-- Materia Prima -->
-        <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="materia-prima" role="tabpanel" aria-labelledby="materia-prima-tab">
-            <div class="mb-4">
-                <input type="text" id="search-mp" placeholder="Buscar por SKU o nombre..." class="px-3 py-2 border rounded-lg w-64">
+        <div id="tab-materia-prima" class="tab-panel p-5 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="search-mp" placeholder="Buscar por SKU o nombre..." class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 pl-10 text-sm text-white placeholder-gray-500 focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
-                    <thead class="bg-gray-100 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-4 py-2 text-left">SKU</th>
-                            <th class="px-4 py-2 text-left">Nombre</th>
-                            <th class="px-4 py-2 text-left">Unidad</th>
-                            <th class="px-4 py-2 text-right">Stock</th>
-                            <th class="px-4 py-2 text-right">Valor Inventario</th>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-[#1E3A5F]">
+                            <th class="px-4 py-3">SKU</th>
+                            <th class="px-4 py-3">Nombre</th>
+                            <th class="px-4 py-3">Unidad</th>
+                            <th class="px-4 py-3 text-right">Stock</th>
+                            <th class="px-4 py-3 text-right">Valor Inventario</th>
                         </tr>
                     </thead>
-                    <tbody id="tbody-mp">
-                        <tr><td colspan="5" class="text-center py-4">Cargando...</td></tr>
+                    <tbody id="tbody-mp" class="divide-y divide-[#1E3A5F]">
+                        <tr><td colspan="5" class="text-center py-8 text-gray-500">Cargando...</td></tr>
                     </tbody>
                 </table>
             </div>
-            <div id="pagination-mp" class="flex justify-between items-center mt-4"></div>
+            <div id="pagination-mp" class="flex justify-between items-center mt-4 pt-4 border-t border-[#1E3A5F]"></div>
         </div>
 
         <!-- En Proceso -->
-        <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="produccion" role="tabpanel" aria-labelledby="produccion-tab">
-            <div class="mb-4">
-                <input type="text" id="search-produccion" placeholder="Buscar por producto..." class="px-3 py-2 border rounded-lg w-64">
+        <div id="tab-produccion" class="tab-panel p-5 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+                <div class="relative w-full sm:w-64">
+                    <input type="text" id="search-produccion" placeholder="Buscar por producto..." class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 pl-10 text-sm text-white placeholder-gray-500 focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
-                    <thead class="bg-gray-100 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-4 py-2 text-left">Producto</th>
-                            <th class="px-4 py-2 text-right">Cantidad</th>
-                            <th class="px-4 py-2 text-left">Unidad</th>
-                            <th class="px-4 py-2 text-left">Fecha Inicio</th>
-                            <th class="px-4 py-2 text-left">Estado</th>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-[#1E3A5F]">
+                            <th class="px-4 py-3">Producto</th>
+                            <th class="px-4 py-3 text-right">Cantidad</th>
+                            <th class="px-4 py-3">Unidad</th>
+                            <th class="px-4 py-3">Fecha Inicio</th>
+                            <th class="px-4 py-3">Estado</th>
                         </tr>
                     </thead>
-                    <tbody id="tbody-produccion">
-                        <tr><td colspan="5" class="text-center py-4">Cargando...</td></tr>
+                    <tbody id="tbody-produccion" class="divide-y divide-[#1E3A5F]">
+                        <tr><td colspan="5" class="text-center py-8 text-gray-500">Cargando...</td></tr>
                     </tbody>
                 </table>
             </div>
-            <div id="pagination-produccion" class="flex justify-between items-center mt-4"></div>
+            <div id="pagination-produccion" class="flex justify-between items-center mt-4 pt-4 border-t border-[#1E3A5F]"></div>
         </div>
 
         <!-- Movimientos -->
-        <div class="hidden p-4 rounded-lg bg-gray-50 dark:bg-gray-800" id="movimientos" role="tabpanel" aria-labelledby="movimientos-tab">
-            <div class="mb-4 flex gap-2">
-                <select id="filter-tipo" class="px-3 py-2 border rounded-lg">
-                    <option value="">Todos</option>
-                    <option value="ENTRADA">Entrada</option>
-                    <option value="SALIDA">Salida</option>
-                    <option value="AJUSTE">Ajuste</option>
-                </select>
-                <input type="text" id="search-movimientos" placeholder="Buscar por producto..." class="px-3 py-2 border rounded-lg w-64">
+        <div id="tab-movimientos" class="tab-panel p-5 hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
+                <div class="flex gap-3">
+                    <select id="filter-tipo" class="bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
+                        <option value="">Todos</option>
+                        <option value="ENTRADA">Entrada</option>
+                        <option value="SALIDA">Salida</option>
+                        <option value="AJUSTE">Ajuste</option>
+                    </select>
+                    <div class="relative w-full sm:w-64">
+                        <input type="text" id="search-movimientos" placeholder="Buscar por producto..." class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 pl-10 text-sm text-white placeholder-gray-500 focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
+                        <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
             </div>
             <div class="overflow-x-auto">
-                <table class="min-w-full bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
-                    <thead class="bg-gray-100 dark:bg-gray-700">
-                        <tr>
-                            <th class="px-4 py-2 text-left">Producto</th>
-                            <th class="px-4 py-2 text-left">Tipo</th>
-                            <th class="px-4 py-2 text-right">Cantidad</th>
-                            <th class="px-4 py-2 text-left">Motivo</th>
-                            <th class="px-4 py-2 text-left">Usuario</th>
-                            <th class="px-4 py-2 text-left">Fecha</th>
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-[#1E3A5F]">
+                            <th class="px-4 py-3">Producto</th>
+                            <th class="px-4 py-3">Tipo</th>
+                            <th class="px-4 py-3 text-right">Cantidad</th>
+                            <th class="px-4 py-3">Motivo</th>
+                            <th class="px-4 py-3">Usuario</th>
+                            <th class="px-4 py-3">Fecha</th>
                         </tr>
                     </thead>
-                    <tbody id="tbody-movimientos">
-                        <tr><td colspan="6" class="text-center py-4">Cargando...</td></tr>
+                    <tbody id="tbody-movimientos" class="divide-y divide-[#1E3A5F]">
+                        <tr><td colspan="6" class="text-center py-8 text-gray-500">Cargando...</td></tr>
                     </tbody>
                 </table>
             </div>
-            <div id="pagination-movimientos" class="flex justify-between items-center mt-4"></div>
+            <div id="pagination-movimientos" class="flex justify-between items-center mt-4 pt-4 border-t border-[#1E3A5F]"></div>
         </div>
     </div>
 </div>
 
-<!-- Modal para registrar movimiento -->
-<div id="movimiento-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white dark:bg-gray-800">
-        <div class="flex justify-between items-center pb-3">
-            <h3 class="text-lg font-semibold">Registrar Movimiento</h3>
-            <button id="close-modal" class="text-gray-400 hover:text-gray-600">&times;</button>
+<!-- Modal para registrar movimiento (mismo estilo oscuro) -->
+<div id="movimiento-modal" class="hidden fixed inset-0 bg-[#0B2239]/80 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
+    <div class="relative w-full max-w-md bg-[#0F2A44] border border-[#1E3A5F] rounded-2xl shadow-2xl">
+        <div class="flex justify-between items-center p-5 border-b border-[#1E3A5F]">
+            <h3 class="text-lg font-semibold text-white">Registrar Movimiento</h3>
+            <button id="close-modal" class="text-gray-400 hover:text-white transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
         </div>
-        <form id="movimiento-form">
+        <form id="movimiento-form" class="p-5 space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="mb-4">
-                <label class="block mb-2">Producto</label>
-                <select id="producto_id" name="producto_id" class="w-full px-3 py-2 border rounded-lg" required>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Producto</label>
+                <select id="producto_id" name="producto_id" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none" required>
                     <option value="">Seleccione...</option>
                 </select>
             </div>
-            <div class="mb-4">
-                <label class="block mb-2">Tipo de Movimiento</label>
-                <select id="tipo" name="tipo" class="w-full px-3 py-2 border rounded-lg" required>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Tipo de Movimiento</label>
+                <select id="tipo" name="tipo" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none" required>
                     <option value="ENTRADA">Entrada</option>
                     <option value="SALIDA">Salida</option>
                     <option value="AJUSTE">Ajuste (establecer stock)</option>
                 </select>
             </div>
-            <div class="mb-4">
-                <label class="block mb-2">Cantidad</label>
-                <input type="number" step="any" id="cantidad" name="cantidad" class="w-full px-3 py-2 border rounded-lg" required>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Cantidad</label>
+                <input type="number" step="any" id="cantidad" name="cantidad" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none" required>
             </div>
-            <div class="mb-4">
-                <label class="block mb-2">Motivo</label>
-                <textarea id="motivo" name="motivo" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-2">Motivo</label>
+                <textarea id="motivo" name="motivo" rows="2" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none resize-none"></textarea>
             </div>
-            <div class="flex justify-end gap-2">
-                <button type="button" id="cancelar-movimiento" class="px-4 py-2 bg-gray-300 rounded-lg">Cancelar</button>
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Guardar</button>
+            <div class="flex justify-end gap-3 pt-2">
+                <button type="button" id="cancelar-movimiento" class="px-4 py-2.5 text-sm font-medium text-gray-300 hover:text-white bg-[#1E3A5F] hover:bg-[#2A4A6F] rounded-xl transition-colors">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-4 py-2.5 text-sm font-medium text-white bg-[#008DC0] hover:bg-[#007AAD] rounded-xl transition-colors">
+                    Guardar
+                </button>
             </div>
         </form>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/flowbite@2.2.1/dist/flowbite.min.js"></script>
 <script>
-    // Función para cargar KPIs
-    async function cargarKPIs() {
-        const res = await fetch('/inventario/kpis');
-        const data = await res.json();
-        document.getElementById('kpi-total-productos').textContent = data.total_productos;
-        document.getElementById('kpi-valor-total').textContent = '$' + data.valor_total.toFixed(2);
-        document.getElementById('kpi-alertas').textContent = data.alertas;
-        document.getElementById('kpi-movimientos').textContent = data.movimientos_mes;
-    }
-
-    // Cargar lista de productos para el selector del modal
-    async function cargarProductosSelector() {
-        const res = await fetch('/inventario/productos-lista');
-        const data = await res.json();
-        const select = document.getElementById('producto_id');
-        select.innerHTML = '<option value="">Seleccione...</option>';
-        data.items.forEach(p => {
-            const option = document.createElement('option');
-            option.value = p.id;
-            option.textContent = `${p.nombre} (Stock: ${p.stock})`;
-            select.appendChild(option);
+document.addEventListener('DOMContentLoaded', function() {
+    // Tabs
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetTab = btn.dataset.tab;
+            tabBtns.forEach(b => {
+                b.classList.remove('border-[#008DC0]', 'text-[#008DC0]');
+                b.classList.add('border-transparent', 'text-gray-400');
+            });
+            btn.classList.remove('border-transparent', 'text-gray-400');
+            btn.classList.add('border-[#008DC0]', 'text-[#008DC0]');
+            
+            tabPanels.forEach(panel => panel.classList.add('hidden'));
+            document.getElementById(`tab-${targetTab}`).classList.remove('hidden');
+            
+            if (targetTab === 'productos') cargarProductos();
+            else if (targetTab === 'materia-prima') cargarMateriaPrima();
+            else if (targetTab === 'produccion') cargarProduccion();
+            else if (targetTab === 'movimientos') cargarMovimientos();
         });
-    }
+    });
 
-    // Gestión de paginación y carga de tablas (simplificado)
-    let currentPage = { productos: 1, mp: 1, produccion: 1, movimientos: 1 };
-    let currentSearch = { productos: '', mp: '', produccion: '', movimientos: '' };
-    let currentTipo = '';
+    // Funciones de carga (similares a las que ya tenías, pero con manejo de errores)
+    async function cargarKPIs() {
+        try {
+            const res = await fetch('/inventario/kpis');
+            const data = await res.json();
+            document.getElementById('kpi-total-productos').textContent = data.total_productos || 0;
+            document.getElementById('kpi-valor-total').textContent = '$' + (data.valor_total || 0).toFixed(2);
+            document.getElementById('kpi-alertas').textContent = data.alertas || 0;
+            document.getElementById('kpi-movimientos').textContent = data.movimientos_mes || 0;
+        } catch(e) { console.error('Error KPIs:', e); }
+    }
 
     async function cargarProductos(page = 1) {
         const search = document.getElementById('search-productos').value;
-        currentSearch.productos = search;
         const params = new URLSearchParams({ page, per_page: 10, search, sort_by: 'nombre', sort_order: 'asc' });
-        const res = await fetch(`/inventario/api/productos?${params}`);
-        const data = await res.json();
-        const tbody = document.getElementById('tbody-productos');
-        if (!data.items.length) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Sin registros</td></tr>';
-        } else {
-            tbody.innerHTML = data.items.map(p => `
-                <tr class="border-b">
-                    <td class="px-4 py-2">${p.sku}</td>
-                    <td class="px-4 py-2">${p.nombre}</td>
-                    <td class="px-4 py-2">${p.unidad_medida}</td>
-                    <td class="px-4 py-2 text-right font-mono">${p.stock.toFixed(3)}</td>
-                    <td class="px-4 py-2 text-right">$${p.valor_inventario.toFixed(2)}</td>
-                </tr>
-            `).join('');
-        }
-        renderPaginacion('productos', data.page, data.pages);
-        currentPage.productos = page;
+        try {
+            const res = await fetch(`/inventario/api/productos?${params}`);
+            const data = await res.json();
+            const tbody = document.getElementById('tbody-productos');
+            if (!data.items?.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">Sin registros</td></tr>';
+            } else {
+                tbody.innerHTML = data.items.map(p => `
+                    <tr class="hover:bg-[#123555]/50 transition-colors">
+                        <td class="px-4 py-3 text-sm text-gray-300 font-mono">${p.sku}</td>
+                        <td class="px-4 py-3 text-sm text-white font-medium">${p.nombre}</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">${p.unidad_medida}</td>
+                        <td class="px-4 py-3 text-sm text-right font-mono text-white">${p.stock.toFixed(3)}</td>
+                        <td class="px-4 py-3 text-sm text-right font-mono text-emerald-400">$${p.valor_inventario.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            }
+            renderPaginacion('productos', data.page, data.pages);
+        } catch(e) { console.error(e); }
     }
 
     async function cargarMateriaPrima(page = 1) {
         const search = document.getElementById('search-mp').value;
-        currentSearch.mp = search;
         const params = new URLSearchParams({ page, per_page: 10, search, sort_by: 'nombre', sort_order: 'asc' });
-        const res = await fetch(`/inventario/api/materia-prima?${params}`);
-        const data = await res.json();
-        const tbody = document.getElementById('tbody-mp');
-        if (!data.items.length) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Sin registros</td></tr>';
-        } else {
-            tbody.innerHTML = data.items.map(mp => `
-                <tr class="border-b">
-                    <td class="px-4 py-2">${mp.sku}</td>
-                    <td class="px-4 py-2">${mp.nombre}</td>
-                    <td class="px-4 py-2">${mp.unidad_medida}</td>
-                    <td class="px-4 py-2 text-right font-mono">${mp.stock.toFixed(3)}</td>
-                    <td class="px-4 py-2 text-right">$${mp.valor_inventario.toFixed(2)}</td>
-                </tr>
-            `).join('');
-        }
-        renderPaginacion('mp', data.page, data.pages);
-        currentPage.mp = page;
+        try {
+            const res = await fetch(`/inventario/api/materia-prima?${params}`);
+            const data = await res.json();
+            const tbody = document.getElementById('tbody-mp');
+            if (!data.items?.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">Sin registros</td></tr>';
+            } else {
+                tbody.innerHTML = data.items.map(mp => `
+                    <tr class="hover:bg-[#123555]/50 transition-colors">
+                        <td class="px-4 py-3 text-sm text-gray-300 font-mono">${mp.sku}</td>
+                        <td class="px-4 py-3 text-sm text-white font-medium">${mp.nombre}</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">${mp.unidad_medida}</td>
+                        <td class="px-4 py-3 text-sm text-right font-mono text-white">${mp.stock.toFixed(3)}</td>
+                        <td class="px-4 py-3 text-sm text-right font-mono text-emerald-400">$${mp.valor_inventario.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            }
+            renderPaginacion('mp', data.page, data.pages);
+        } catch(e) { console.error(e); }
     }
 
     async function cargarProduccion(page = 1) {
         const search = document.getElementById('search-produccion').value;
-        currentSearch.produccion = search;
         const params = new URLSearchParams({ page, per_page: 10, search, sort_by: 'fecha_inicio', sort_order: 'desc' });
-        const res = await fetch(`/inventario/api/producciones?${params}`);
-        const data = await res.json();
-        const tbody = document.getElementById('tbody-produccion');
-        if (!data.items.length) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Sin órdenes en proceso</td></tr>';
-        } else {
-            tbody.innerHTML = data.items.map(prod => `
-                <tr class="border-b">
-                    <td class="px-4 py-2">${prod.producto_nombre}</td>
-                    <td class="px-4 py-2 text-right">${prod.cantidad_producida}</td>
-                    <td class="px-4 py-2">${prod.unidad_medida}</td>
-                    <td class="px-4 py-2">${prod.fecha_inicio}</td>
-                    <td class="px-4 py-2"><span class="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800">${prod.estado}</span></td>
-                </tr>
-            `).join('');
-        }
-        renderPaginacion('produccion', data.page, data.pages);
-        currentPage.produccion = page;
+        try {
+            const res = await fetch(`/inventario/api/producciones?${params}`);
+            const data = await res.json();
+            const tbody = document.getElementById('tbody-produccion');
+            if (!data.items?.length) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-500">Sin órdenes en proceso</td></tr>';
+            } else {
+                tbody.innerHTML = data.items.map(prod => `
+                    <tr class="hover:bg-[#123555]/50 transition-colors">
+                        <td class="px-4 py-3 text-sm text-white font-medium">${prod.producto_nombre}</td>
+                        <td class="px-4 py-3 text-sm text-right font-mono text-white">${prod.cantidad_producida}</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">${prod.unidad_medida}</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">${prod.fecha_inicio}</td>
+                        <td class="px-4 py-3"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">${prod.estado}</span></td>
+                    </tr>
+                `).join('');
+            }
+            renderPaginacion('produccion', data.page, data.pages);
+        } catch(e) { console.error(e); }
     }
 
     async function cargarMovimientos(page = 1) {
         const tipo = document.getElementById('filter-tipo').value;
         const search = document.getElementById('search-movimientos').value;
-        currentTipo = tipo;
-        currentSearch.movimientos = search;
         const params = new URLSearchParams({ page, per_page: 10, tipo, search, sort_by: 'fecha_creacion', sort_order: 'desc' });
-        const res = await fetch(`/inventario/api/movimientos?${params}`);
-        const data = await res.json();
-        const tbody = document.getElementById('tbody-movimientos');
-        if (!data.items.length) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4">Sin movimientos</td></tr>';
-        } else {
-            tbody.innerHTML = data.items.map(mov => `
-                <tr class="border-b">
-                    <td class="px-4 py-2">${mov.producto_nombre}</td>
-                    <td class="px-4 py-2">
-                        <span class="px-2 py-1 rounded-full text-xs ${mov.tipo === 'ENTRADA' ? 'bg-green-100 text-green-800' : mov.tipo === 'SALIDA' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800'}">${mov.tipo}</span>
-                    </td>
-                    <td class="px-4 py-2 text-right">${mov.cantidad.toFixed(3)}</td>
-                    <td class="px-4 py-2">${mov.motivo || '-'}</td>
-                    <td class="px-4 py-2">${mov.usuario}</td>
-                    <td class="px-4 py-2">${mov.fecha}</td>
-                </tr>
-            `).join('');
-        }
-        renderPaginacion('movimientos', data.page, data.pages);
-        currentPage.movimientos = page;
+        try {
+            const res = await fetch(`/inventario/api/movimientos?${params}`);
+            const data = await res.json();
+            const tbody = document.getElementById('tbody-movimientos');
+            if (!data.items?.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-gray-500">Sin movimientos</td></tr>';
+            } else {
+                const tipoClasses = { 'ENTRADA': 'bg-emerald-500/20 text-emerald-400', 'SALIDA': 'bg-red-500/20 text-red-400', 'AJUSTE': 'bg-blue-500/20 text-blue-400' };
+                tbody.innerHTML = data.items.map(mov => `
+                    <tr class="hover:bg-[#123555]/50 transition-colors">
+                        <td class="px-4 py-3 text-sm text-white font-medium">${mov.producto_nombre}</td>
+                        <td class="px-4 py-3"><span class="px-2.5 py-1 rounded-full text-xs font-medium ${tipoClasses[mov.tipo] || 'bg-gray-500/20 text-gray-400'}">${mov.tipo}</span></td>
+                        <td class="px-4 py-3 text-sm text-right font-mono text-white">${mov.cantidad.toFixed(3)}</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">${mov.motivo || '-'}</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">${mov.usuario}</td>
+                        <td class="px-4 py-3 text-sm text-gray-400">${mov.fecha}</td>
+                    </tr>
+                `).join('');
+            }
+            renderPaginacion('movimientos', data.page, data.pages);
+        } catch(e) { console.error(e); }
     }
 
     function renderPaginacion(tab, current, total) {
         const container = document.getElementById(`pagination-${tab}`);
         if (!container) return;
-        if (total <= 1) {
-            container.innerHTML = '';
-            return;
-        }
-        let html = '<div class="flex gap-2">';
+        if (total <= 1) { container.innerHTML = ''; return; }
+        let html = '<div class="flex gap-1">';
         for (let i = 1; i <= total; i++) {
-            html += `<button data-page="${i}" class="px-3 py-1 rounded ${i === current ? 'bg-blue-600 text-white' : 'bg-gray-200'}">${i}</button>`;
+            html += `<button data-page="${i}" class="px-3 py-1.5 rounded-lg text-sm font-medium ${i === current ? 'bg-[#008DC0] text-white' : 'bg-[#1E3A5F] text-gray-300 hover:bg-[#2A4A6F]'} transition-colors">${i}</button>`;
         }
         html += '</div>';
         container.innerHTML = html;
@@ -352,54 +404,66 @@
     const cancelar = document.getElementById('cancelar-movimiento');
     const formMovimiento = document.getElementById('movimiento-form');
 
-    btnMovimiento.addEventListener('click', async () => {
-        await cargarProductosSelector();
-        modal.classList.remove('hidden');
-    });
-    function cerrarModal() {
-        modal.classList.add('hidden');
-        formMovimiento.reset();
+    async function cargarProductosSelector() {
+        try {
+            const res = await fetch('/inventario/productos-lista');
+            const data = await res.json();
+            const select = document.getElementById('producto_id');
+            select.innerHTML = '<option value="">Seleccione...</option>';
+            (data.items || []).forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = `${p.nombre} (Stock: ${p.stock})`;
+                select.appendChild(opt);
+            });
+        } catch(e) { console.error(e); }
     }
+
+    function abrirModal() { cargarProductosSelector(); modal.classList.remove('hidden'); }
+    function cerrarModal() { modal.classList.add('hidden'); formMovimiento.reset(); }
+
+    btnMovimiento.addEventListener('click', abrirModal);
     closeModal.addEventListener('click', cerrarModal);
     cancelar.addEventListener('click', cerrarModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) cerrarModal(); });
 
     formMovimiento.addEventListener('submit', async (e) => {
         e.preventDefault();
         const producto_id = document.getElementById('producto_id').value;
         const tipo = document.getElementById('tipo').value;
-        const cantidad = document.getElementById('cantidad').value;
+        const cantidad = parseFloat(document.getElementById('cantidad').value);
         const motivo = document.getElementById('motivo').value;
-        const csrf = document.querySelector('input[name="csrf_token"]').value;
-        const res = await fetch('/inventario/movimiento', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-            body: JSON.stringify({ producto_id, tipo, cantidad: parseFloat(cantidad), motivo })
-        });
-        const data = await res.json();
-        if (data.success) {
-            alert(data.message);
-            cerrarModal();
-            cargarProductos(currentPage.productos);
-            cargarMateriaPrima(currentPage.mp);
-            cargarMovimientos(currentPage.movimientos);
-            cargarKPIs();
-        } else {
-            alert(data.message);
-        }
+        const csrf = formMovimiento.querySelector('[name="csrf_token"]').value;
+        try {
+            const res = await fetch('/inventario/movimiento', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                body: JSON.stringify({ producto_id, tipo, cantidad, motivo })
+            });
+            const data = await res.json();
+            if (data.success) {
+                cerrarModal();
+                cargarProductos();
+                cargarKPIs();
+            } else alert(data.message || 'Error');
+        } catch(e) { alert('Error de conexión'); }
     });
 
-    // Eventos de búsqueda
-    document.getElementById('search-productos').addEventListener('input', () => cargarProductos(1));
-    document.getElementById('search-mp').addEventListener('input', () => cargarMateriaPrima(1));
-    document.getElementById('search-produccion').addEventListener('input', () => cargarProduccion(1));
-    document.getElementById('search-movimientos').addEventListener('input', () => cargarMovimientos(1));
-    document.getElementById('filter-tipo').addEventListener('change', () => cargarMovimientos(1));
+    // Eventos de búsqueda con debounce
+    let debounceTimer;
+    const debounce = (fn, delay = 300) => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(fn, delay);
+    };
+    document.getElementById('search-productos').addEventListener('input', () => debounce(() => cargarProductos()));
+    document.getElementById('search-mp').addEventListener('input', () => debounce(() => cargarMateriaPrima()));
+    document.getElementById('search-produccion').addEventListener('input', () => debounce(() => cargarProduccion()));
+    document.getElementById('search-movimientos').addEventListener('input', () => debounce(() => cargarMovimientos()));
+    document.getElementById('filter-tipo').addEventListener('change', () => cargarMovimientos());
 
-    // Inicializar
+    // Carga inicial
     cargarKPIs();
-    cargarProductos(1);
-    cargarMateriaPrima(1);
-    cargarProduccion(1);
-    cargarMovimientos(1);
+    cargarProductos();
+});
 </script>
 {% endblock %}
