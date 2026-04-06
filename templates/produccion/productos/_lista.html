@@ -69,13 +69,19 @@
                         <td class="px-6 py-4 text-white font-medium">{{ p.nombre }}</td>
                         <td class="px-6 py-4">{{ p.sku }}</td>
                         <td class="px-6 py-4">{{ p.categoria.nombre }}</td>
-                        <td class="px-6 py-4">{{ p.unidad_medida }}</td>
+                        <td class="px-6 py-4">{{ p.unidad_medida.nombre }}</td>
                         <td class="px-6 py-4">{{ p.resistencia_mpa }}</td>
-                        <td class="px-6 py-4">{{ p.color }}</td>
+                        <td class="px-6 py-4">{{ p.color.nombre }}</td>
                         <td class="px-6 py-4">{{ p.precio_base }}</td>            
                         <td class="px-3 py-4">
-                            <a href="#" class="text-blue-400 hover:underline ml-2">Editar</a>
-                            <a href="#" class="text-red-400 hover:underline ml-2">Eliminar</a>
+                            <a href="{{ url_for('productos_bp.update_producto', id_producto=p.id_producto) }}" class="px-3 py-1 rounded text-decoration-none bg-blue-400 text-white hover:underline ml-2">Editar</a>                            
+                            <form action="{{ url_for('productos_bp.delete_producto', id_producto=p.id_producto) }}" 
+                                method="POST" class="inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="bg-red-500 hover:bg-red-400 text-white px-3 py-1 rounded text-sm">
+                                    Eliminar
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 {% endfor %}

@@ -1,13 +1,30 @@
 <div class="bg-[#123555] p-6 rounded-lg shadow-md">
-    <h2 class="text-lg font-semibold mb-4">Registrar Producto 
-        <span id="textForm" class="text-red-600 text-sm">
-            (Formulario desactivado por defecto, registra un nuevo producto para activarlo)
-        </span>
+    <h2 class="text-lg font-semibold mb-4">
+        {% if modo_edicion %}
+            Editar Producto
+            <span class="text-green-400 text-sm">(Modo edición activo)</span>
+        {% elif form_activo %}
+            Registrar Producto
+            <span class="text-green-400 text-sm">(Formulario activo)</span>
+        {% else %}
+            Registrar Producto
+            <span class="text-red-400 text-sm">(Formulario desactivado)</span>
+        {% endif %}
     </h2>
 
-    <form method="POST" enctype="multipart/form-data">
+    <form 
+        method="POST" 
+        enctype="multipart/form-data"
+        {% if modo_edicion and id_producto %}
+            action="{{ url_for('productos_bp.update_producto', id_producto=id_producto) }}"
+        {% else %}
+            action="{{ url_for('productos_bp.save_producto') }}"
+        {% endif %}>
 
-        <fieldset id="formBloqueado" class="grid grid-cols-3 gap-4" disabled>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {{ form.hidden_tag() }}
+
+        <fieldset id="formBloqueado" class="grid grid-cols-3 gap-4" {% if not form_activo and not modo_edicion %} disabled {% endif %}>
 
             {{ macros.campoNuevo(form.categoria_id) }}
             {{ macros.campoNuevo(form.sku) }}
@@ -22,23 +39,25 @@
             {{ macros.campoNuevo(form.enlace_fotografia) }}
 
             <!-- FECHA -->
-            <div class="col-span-3">
-                <label class="block text-sm text-gray-300 mb-1">
-                    {{ form.fecha_creacion.label.text }}
-                </label>
+            {% if modo_edicion and id_producto %}
+                <div class="col-span-3">
+                    <label class="block text-sm text-gray-300 mb-1">
+                        {{ form.fecha_creacion.label.text }}
+                    </label>
 
-                {{ form.fecha_creacion(
-                    class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white p-2",
-                    max=today,
-                    min=today
-                ) }}
+                    {{ form.fecha_creacion(
+                        class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white p-2",
+                        max=today,
+                        min=today
+                    ) }}
 
-                {% if form.fecha_creacion.errors %}
-                    {% for error in form.fecha_creacion.errors %}
-                        <p class="text-red-400 text-sm">{{ error }}</p>
-                    {% endfor %}
-                {% endif %}
-            </div>
+                    {% if form.fecha_creacion.errors %}
+                        {% for error in form.fecha_creacion.errors %}
+                            <p class="text-red-400 text-sm">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            {% endif %}
 
             <!-- BOTONES -->
             <div class="col-span-3 flex justify-end gap-3 mt-4">
@@ -49,7 +68,11 @@
 
                 <button type="submit"
                     class="bg-green-500 hover:bg-green-400 px-6 py-2 rounded text-sm font-semibold">
-                    Guardar Producto
+                    {% if modo_edicion %}
+                        Actualizar Producto
+                    {% else %}
+                        Guardar Producto
+                    {% endif %}
                 </button>
             </div>
         </fieldset>

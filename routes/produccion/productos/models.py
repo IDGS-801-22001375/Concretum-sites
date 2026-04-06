@@ -1,9 +1,7 @@
-from flask_sqlalchemy import SQLAlchemy
 import datetime
+from extensions import db
 
-db = SQLAlchemy()
-
-class categorias_producto(db.Model):
+class CategoriasProducto(db.Model):
     __tablename__ = 'categorias_producto'
     
     id_categoria = db.Column(db.Integer, primary_key=True)
@@ -13,7 +11,7 @@ class categorias_producto(db.Model):
     fecha_creacion = db.Column(db.DateTime, default=datetime.datetime.now)
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
-class productos(db.Model):
+class Productos(db.Model):
     __tablename__ = 'productos'
     
     id_producto = db.Column(db.Integer, primary_key=True)
@@ -22,15 +20,17 @@ class productos(db.Model):
     sku = db.Column(db.String(100), nullable=False, unique=True)
     nombre = db.Column(db.String(100), nullable=False, unique=True, index=True)
     descripcion = db.Column(db.String(255), nullable=False, unique=True)
-    unidad_medida = db.Column(db.String(100), nullable=False)
+    unidad_medida_id = db.Column(db.Integer, db.ForeignKey('unidades_medida.id_unidad'))    
     resistencia_mpa = db.Column(db.Float, nullable=False)
-    color = db.Column(db.String(100), nullable=False)
+    color_id = db.Column(db.Integer, db.ForeignKey('colores.id_color'))
     precio_base = db.Column(db.Float, nullable=False)
     es_active = db.Column(db.BigInteger, default=1)
     fecha_creacion = db.Column(db.DateTime, default=datetime.datetime.now)
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     
-    categoria = db.relationship('categorias_producto', backref='productos')
+    categoria = db.relationship('CategoriasProducto', backref='productos')
+    unidad_medida = db.relationship('UnidadMedida', backref='productos')
+    color = db.relationship('Color', backref='productos')
 
 class Color(db.Model):
     __tablename__ = 'colores'
