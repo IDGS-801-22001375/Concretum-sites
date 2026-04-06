@@ -1,0 +1,89 @@
+from routes.produccion.productos.models import db
+from datetime import datetime
+
+
+class Venta(db.Model):
+    __tablename__ = 'ventas'
+
+    id_venta        = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    folio           = db.Column(db.String(40), nullable=False, unique=True)
+    cliente_id      = db.Column(db.BigInteger, db.ForeignKey('clientes.id_cliente'), nullable=False)
+    usuario_id      = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario'), nullable=True)
+    metodo_pago     = db.Column(db.Enum('EFECTIVO', 'TRANSFERENCIA', 'CHEQUE', 'CREDITO'), nullable=False)
+    estado          = db.Column(db.Enum('PENDIENTE', 'COBRADO', 'CREDITO', 'CANCELADO'), nullable=False, default='PENDIENTE')
+    subtotal        = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
+    iva             = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
+    total           = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
+    fecha_venta     = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    fecha_creacion  = db.Column(db.DateTime, nullable=False, default=datetime.now)
+
+    cliente         = db.relationship('Cliente', backref='ventas')
+    detalle         = db.relationship('VentaDetalle', backref='venta', cascade='all, delete-orphan')
+
+
+class VentaDetalle(db.Model):
+    __tablename__ = 'venta_detalle'
+
+    id_detalle      = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    venta_id        = db.Column(db.BigInteger, db.ForeignKey('ventas.id_venta'), nullable=False)
+    producto_id     = db.Column(db.BigInteger, db.ForeignKey('productos.id_producto'), nullable=False)
+    cantidad        = db.Column(db.Numeric(14, 3), nullable=False)
+    precio_unitario = db.Column(db.Numeric(12, 2), nullable=False)
+    total_linea     = db.Column(db.Numeric(12, 2), nullable=False)
+
+    producto        = db.relationship('productos', backref='ventas_detalle')
+
+
+class CorteCaja(db.Model):
+    __tablename__ = 'cortes_caja'
+
+    id_corte            = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    usuario_id          = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario'), nullable=True)
+    periodo_inicio      = db.Column(db.DateTime, nullable=False)
+    periodo_fin         = db.Column(db.DateTime, nullable=True)
+    fondo_inicial       = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
+    total_ventas        = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
+    total_cobrado       = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
+    ventas_credito      = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
+    devoluciones        = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
+    salida_proveedores  = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
+    utilidad            = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
+    estado              = db.Column(db.Enum('ABIERTO', 'CERRADO'), nullable=False, default='ABIERTO')
+    fecha_creacion      = db.Column(db.DateTime, nullable=False, default=datetime.now)
+
+    usuario             = db.relationship('Usuario', backref='cortes')
+    desglose            = db.relationship('CorteDesglose', backref='corte', cascade='all, delete-orphan')
+
+
+class CorteDesglose(db.Model):
+    __tablename__ = 'corte_desglose'
+
+    id_desglose     = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    corte_id        = db.Column(db.BigInteger, db.ForeignKey('cortes_caja.id_corte'), nullable=False)
+    forma_pago      = db.Column(db.String(50), nullable=False)
+    operaciones     = db.Column(db.Integer, nullable=False, default=0)
+    monto           = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
+    es_credito      = db.Column(db.Boolean, nullable=False, default=False)
+
+
+class Cliente(db.Model):
+    __tablename__ = 'clientes'
+
+    id_cliente          = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    razon_social        = db.Column(db.String(200), nullable=False)
+    rfc                 = db.Column(db.String(20), nullable=True)
+    email               = db.Column(db.String(254), nullable=True)
+    es_activo           = db.Column(db.BigInteger, nullable=False, default=1)
+    fecha_creacion      = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    fecha_actualizacion = db.Column(db.DateTime, nullable=True)
+
+
+class Usuario(db.Model):
+    __tablename__ = 'usuarios'
+
+    id_usuario          = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    username            = db.Column(db.String(80), nullable=False, unique=True)
+    email               = db.Column(db.String(254), nullable=False, unique=True)
+    password_hash       = db.Column(db.String(255), nullable=False)
+    es_activo           = db.Column(db.BigInteger, nullable=False, default=1)
+    fecha_creacion      = db.Column(db.DateTime, nullable=False, default=datetime.now)
