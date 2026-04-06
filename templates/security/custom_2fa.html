@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}Configurar 2FA{% endblock %}
+
+{% block content %}
+
+<div class="max-w-xl mx-auto">
+    
+    <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-xl shadow-blue-600/25 mb-4">
+            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Autenticación en 2 Pasos</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Protege tu cuenta con una capa adicional de seguridad</p>
+    </div>
+    
+    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-lg">
+        
+        {% include "security/_messages.html" %}
+        
+        {% if activado %}
+        <!-- 2FA Activado -->
+        <div class="p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl mb-4">
+                <svg class="w-8 h-8 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                </svg>
+            </div>
+            
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">2FA Activado</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">
+                Tu cuenta está protegida con autenticación de dos factores mediante <strong class="text-slate-900 dark:text-white">{{ metodo }}</strong>.
+            </p>
+            
+            <div class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800 mb-6">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div class="text-left">
+                        <p class="text-sm font-medium text-amber-800 dark:text-amber-200">Advertencia</p>
+                        <p class="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                            Desactivar 2FA reducirá la seguridad de tu cuenta. Solo hazlo si es estrictamente necesario.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="disable">
+                <button type="submit" class="w-full py-3 px-4 text-sm font-bold text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 rounded-xl shadow-lg shadow-red-600/25 hover:shadow-red-600/40 transition-all">
+                    Desactivar 2FA
+                </button>
+            </form>
+        </div>
+        
+        {% elif qr_base64 %}
+        <!-- QR Code para configurar -->
+        <div class="p-8">
+            <div class="text-center mb-6">
+                <p class="text-sm text-slate-600 dark:text-slate-400">
+                    Escanea el código QR con tu aplicación autenticadora favorita
+                </p>
+            </div>
+            
+            <!-- Apps recomendadas -->
+            <div class="flex items-center justify-center gap-4 mb-6">
+                <div class="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                    <div class="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
+                        <span class="text-white text-xs font-bold">G</span>
+                    </div>
+                    <span class="text-xs text-slate-600 dark:text-slate-400">Google Authenticator</span>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                    <div class="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
+                        <span class="text-white text-xs font-bold">M</span>
+                    </div>
+                    <span class="text-xs text-slate-600 dark:text-slate-400">Microsoft</span>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                    <div class="w-6 h-6 bg-red-500 rounded flex items-center justify-center">
+                        <span class="text-white text-xs font-bold">A</span>
+                    </div>
+                    <span class="text-xs text-slate-600 dark:text-slate-400">Authy</span>
+                </div>
+            </div>
+            
+            <!-- QR Code -->
+            <div class="flex justify-center mb-6">
+                <div class="p-4 bg-white rounded-xl border border-slate-200 shadow-lg">
+                    <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR 2FA" class="w-48 h-48">
+                </div>
+            </div>
+            
+            <!-- Secret Key -->
+            <div class="mb-6">
+                <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">O ingresa este código manualmente:</p>
+                <div class="flex items-center justify-center gap-2 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                    <code class="font-mono text-sm text-slate-700 dark:text-slate-300 break-all select-all">{{ secret }}</code>
+                    <button type="button" onclick="navigator.clipboard.writeText('{{ secret }}')" class="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors" title="Copiar">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Verification Form -->
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2 text-center">
+                        Código de verificación
+                    </label>
+                    <input type="text" name="codigo" 
+                        class="w-full px-4 py-4 text-2xl text-center tracking-[0.5em] font-mono rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all"
+                        placeholder="000000"
+                        maxlength="6"
+                        autocomplete="off"
+                        required
+                        autofocus>
+                </div>
+                
+                <button type="submit" class="w-full py-3.5 px-4 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all">
+                    Verificar y Activar 2FA
+                </button>
+            </form>
+        </div>
+        
+        {% else %}
+        <!-- Generar QR -->
+        <div class="p-8 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-2xl mb-4">
+                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+            </div>
+            
+            <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">2FA No Configurado</h3>
+            <p class="text-sm text-slate-600 dark:text-slate-400 mb-6">
+                Añade una capa extra de seguridad a tu cuenta configurando la autenticación de dos factores.
+            </p>
+            
+            <!-- Beneficios -->
+            <div class="grid gap-3 mb-6 text-left">
+                <div class="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-slate-900 dark:text-white">Protección adicional</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Incluso si alguien obtiene tu contraseña, no podrá acceder</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                        <svg class="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-slate-900 dark:text-white">Fácil de usar</p>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">Solo necesitas tu teléfono y una app autenticadora</p>
+                    </div>
+                </div>
+            </div>
+            
+            <form method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="w-full py-3.5 px-4 text-sm font-bold text-white bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 rounded-xl shadow-lg shadow-emerald-600/25 hover:shadow-emerald-600/40 transition-all">
+                    Generar Código QR
+                </button>
+            </form>
+        </div>
+        {% endif %}
+        
+    </div>
+    
+    <p class="text-center text-xs text-slate-400 mt-6">
+        <a href="{{ url_for('dashboard') }}" class="hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+            &larr; Volver al Dashboard
+        </a>
+    </p>
+    
+</div>
+
+{% endblock %}

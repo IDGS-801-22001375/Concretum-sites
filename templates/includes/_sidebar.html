@@ -1,0 +1,143 @@
+<aside id="logo-sidebar"
+    class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0 bg-[#0F2A44] border-r border-[#1E3A5F] flex flex-col overflow-y-auto"
+    aria-label="Sidebar">
+
+    <!-- LOGO -->
+    <div class="flex items-center gap-3 px-6 py-5 border-b border-[#1E3A5F]">
+        {% if config_empresa and config_empresa.logo %}
+        <img src="{{ url_for('static', filename=config_empresa.logo) }}" alt="Logo" class="w-8 h-8 object-contain">
+        {% else %}
+        <div class="bg-[#008DC0] w-8 h-8 flex items-center justify-center rounded font-bold text-white">CT</div>
+        {% endif %}
+        <span class="font-semibold tracking-wide text-white">{{ config_empresa.razon_social if config_empresa else
+            'CONCRETUM' }}</span>
+    </div>
+
+    <!-- MENÚ -->
+    <nav class="flex-1 px-4 py-6 space-y-6 text-sm">
+
+        <div>
+            <p class="text-gray-400 text-xs mb-2 uppercase">Principal</p>
+            <a href="{{ url_for('dashboard') }}"
+                class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555] {% if request.endpoint == 'dashboard' %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                📊 Dashboard
+            </a>
+        </div>
+
+        <div>
+            <p class="text-gray-400 text-xs mb-2 uppercase">Inventario</p>
+            <div class="space-y-1">
+                <a href="{{ url_for('materia_prima.index') }}"
+                    class="flex items-center justify-between px-3 py-2 rounded hover:bg-[#123555] {% if request.endpoint and request.endpoint.startswith('materia_prima') %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                    <span class="flex items-center gap-3">🧱 Materia Prima</span>
+                    {% if sidebar_criticos > 0 %}
+                    <span class="bg-red-500 text-xs px-2 py-0.5 rounded-full">{{ sidebar_criticos }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('inventario.index') }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555] {% if request.endpoint and request.endpoint.startswith('inventario') %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                    📦 Inventario General
+                </a>
+                <a href="{{ url_for('compras.index') }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555] {% if request.endpoint and request.endpoint.startswith('compras') %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                    🛒 Compras
+                </a>
+            </div>
+        </div>
+
+        <div>
+            <p class="text-gray-400 text-xs mb-2 uppercase">Sistema</p>
+            <div class="space-y-1">
+                <a href="{{ url_for('usuarios.index') }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555] {% if request.endpoint and request.endpoint.startswith('usuarios') %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                    👥 Usuarios
+                </a>
+                <a href="{{ url_for('proveedores.index') }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555] {% if request.endpoint and request.endpoint.startswith('proveedores') %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                    🤝 Proveedores
+                </a>
+                <a href="{{ url_for('mermas.index') }}"
+                    class="flex items-center justify-between px-3 py-2 rounded hover:bg-[#123555] {% if request.endpoint and request.endpoint.startswith('mermas') %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                    <span class="flex items-center gap-3">⚠️ Mermas</span>
+                    {% if sidebar_mermas > 0 %}
+                    <span class="bg-yellow-500 text-xs px-2 py-0.5 rounded-full">{{ sidebar_mermas }}</span>
+                    {% endif %}
+                </a>
+                {% if current_user.has_role('ADMINISTRADOR') %}
+                <a href="{{ url_for('configuracion.index') }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555] {% if request.endpoint and request.endpoint.startswith('configuracion') %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                    ⚙️ Configuración
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+    </nav>
+
+    <!-- ÁREA DE USUARIO (dropdown) -->
+    <div class="px-4 py-4 border-t border-[#1E3A5F] relative">
+        <div class="relative" id="user-menu-container">
+            <button id="user-menu-button"
+                class="w-full bg-[#123555] p-3 rounded flex items-center gap-3 hover:bg-[#1E3A5F] transition-colors">
+                <div
+                    class="bg-[#008DC0] w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white">
+                    {{ current_user.email[0]|upper if current_user.is_authenticated else 'U' }}
+                </div>
+                <div class="flex-1 text-left">
+                    <p class="text-sm font-medium text-white">{{ current_user.username if current_user.is_authenticated
+                        else 'Invitado' }}</p>
+                    <p class="text-xs text-gray-400">
+                        {% if current_user.is_authenticated and current_user.roles %}
+                        {{ current_user.roles[0].name if current_user.roles[0] else 'Sin rol' }}
+                        {% else %}
+                        Sin rol
+                        {% endif %}
+                    </p>
+                </div>
+                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24" id="user-menu-arrow">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            <div id="user-dropdown"
+                class="hidden absolute bottom-full left-0 right-0 mb-2 bg-[#0F2A44] border border-[#1E3A5F] rounded-xl shadow-lg z-50">
+                <a href="{{ url_for('configurar_2fa') }}"
+                    class="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-[#123555] hover:text-white rounded-t-xl transition-colors">
+                    🔐 Configurar 2FA
+                </a>
+                <a href="{{ url_for('security.logout') }}"
+                    class="flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-[#123555] hover:text-red-300 rounded-b-xl transition-colors">
+                    🚪 Cerrar sesión
+                </a>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const userBtn = document.getElementById('user-menu-button');
+        const dropdown = document.getElementById('user-dropdown');
+        const arrow = document.getElementById('user-menu-arrow');
+
+        if (userBtn && dropdown) {
+            userBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('hidden');
+                arrow.classList.toggle('rotate-180');
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!userBtn.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                    arrow.classList.remove('rotate-180');
+                }
+            });
+        }
+    });
+</script>
+<style>
+    .rotate-180 {
+        transform: rotate(180deg);
+    }
+</style>
