@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CRM Concretum</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4">
+    
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl"></div>
+    </div>
+    
+    <div class="relative w-full max-w-md">
+        <div class="text-center mb-8">
+            {% if config_empresa and config_empresa.logo %}
+                <img src="{{ url_for('static', filename=config_empresa.logo) }}" alt="Logo" class="h-16 mx-auto mb-4">
+            {% else %}
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl shadow-xl shadow-blue-600/30 mb-4">
+                    <span class="text-white font-black text-2xl">C</span>
+                </div>
+            {% endif %}
+            <h1 class="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">{{ config_empresa.razon_social if config_empresa else 'CONCRETUM' }}</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Sistema de Gestión y Operaciones</p>
+        </div>
+        
+        <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-8">
+            
+            {% include "security/_messages.html" %}
+            
+            <form id="auth-form" class="space-y-5" action="{{ url_for('security.login') }}" method="POST">
+                {{ login_user_form.hidden_tag() }}
+                
+                <div>
+                    <label for="email_field" class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                        Correo electrónico
+                    </label>
+                    {{ login_user_form.email(
+                        id="email_field",
+                        class="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all",
+                        placeholder="ejemplo@concretum.com"
+                    ) }}
+                    {% if login_user_form.email.errors %}
+                    <p class="mt-1.5 text-xs text-red-500 font-medium">{{ login_user_form.email.errors[0] }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="password_field" class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                        Contraseña
+                    </label>
+                    {{ login_user_form.password(
+                        id="password_field",
+                        class="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all",
+                        placeholder="••••••••"
+                    ) }}
+                </div>
+                
+                <div class="flex justify-center py-2">
+                    {{ login_user_form.recaptcha }}
+                </div>
+                
+                <button type="submit" class="w-full py-3.5 px-4 text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all active:scale-[0.98]">
+                    Ingresar al Sistema
+                </button>
+            </form>
+            
+            <div class="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800">
+                <div class="flex flex-col items-center gap-3">
+                    <button type="button" onclick="autoLoginAdmin()" class="text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+                        ⚡ Autocompletar Admin (Desarrollo)
+                    </button>
+                    <p class="text-sm text-slate-500 dark:text-slate-400">
+                        ¿No tienes cuenta? 
+                        <a href="{{ url_for('security.register') }}" class="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">
+                            Regístrate aquí
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <p class="text-center text-xs text-slate-400 dark:text-slate-500 mt-6">
+            &copy; {{ now().year if now is defined else '2024' }} Concretum. Todos los derechos reservados.
+        </p>
+    </div>
+    
+    <script>
+        function autoLoginAdmin() {
+            document.getElementById('email_field').value = 'admin@concretum.com';
+            document.getElementById('password_field').value = '12345678';
+        }
+    </script>
+</body>
+</html>

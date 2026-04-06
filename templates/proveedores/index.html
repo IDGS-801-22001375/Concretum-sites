@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+{% import 'macros/crud_components.html' as components %}
+
+{% block title %}Proveedores{% endblock %}
+
+{% block content %}
+
+{{ components.page_header('Gestión de Proveedores', 'Administra tus proveedores y relaciones comerciales') }}
+
+<!-- KPIs -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    {{ components.kpi_card(
+    'Proveedores Activos',
+    'kpi-prov-activos',
+    kpis.total_activos|string,
+    'slate',
+    '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+    </svg>'
+    ) }}
+    {{ components.kpi_card(
+    'Volumen Mensual',
+    'kpi-prov-volumen',
+    '%.2f'|format(kpis.volumen_mensual),
+    'blue',
+    '<svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>',
+    moneda=config_empresa.moneda if config_empresa else 'MXN'
+    ) }}
+    {{ components.kpi_card(
+    'Cuentas Vencidas',
+    'kpi-prov-vencidas',
+    kpis.cuentas_vencidas|string,
+    'red',
+    '<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>'
+    ) }}
+    {{ components.kpi_card(
+    'Total Proveedores',
+    'kpi-prov-total',
+    kpis.total_activos|string,
+    'green',
+    '<svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>'
+    ) }}
+</div>
+
+<!-- Tabla CRUD -->
+{{ components.crud_table(
+id_table='proveedores',
+api_endpoint='/proveedores',
+title='Directorio de Proveedores',
+columns=[
+{'field': 'razon_social', 'label': 'Razón Social', 'sortable': true},
+{'field': 'rfc', 'label': 'RFC', 'sortable': true},
+{'field': 'email', 'label': 'Email', 'sortable': true},
+{'field': 'telefono', 'label': 'Teléfono', 'sortable': true},
+{'field': 'contacto', 'label': 'Contacto', 'sortable': true},
+{'field': 'es_activo', 'label': 'Estado', 'sortable': true}
+],
+search_placeholder='Buscar por razón social, RFC o email...',
+filters=[
+{'type': 'select', 'name': 'categoria', 'label_default': 'Todas las categorías',
+'options': [
+{'value': 'MATERIA_PRIMA', 'label': 'Materia Prima'},
+{'value': 'SERVICIOS', 'label': 'Servicios'},
+{'value': 'INSUMOS', 'label': 'Insumos'}
+]},
+{'type': 'select', 'name': 'active', 'label_default': 'Todos los estados',
+'options': [
+{'value': 'true', 'label': 'Activos'},
+{'value': 'false', 'label': 'Inactivos'}
+]}
+],
+btn_new_label='Nuevo Proveedor'
+) }}
+
+<!-- Modal para formulario de proveedores (usando crud_modal) -->
+{% set form_fields = [
+{'name': 'razon_social', 'label': 'Razón Social', 'type': 'text', 'required': true, 'placeholder': 'Ej: Cementos del
+Norte S.A.'},
+{'name': 'rfc', 'label': 'RFC', 'type': 'text', 'required': true, 'placeholder': 'Ej: CNO860507P92'},
+{'name': 'email', 'label': 'Correo Electrónico', 'type': 'email', 'required': true, 'placeholder': 'Ej:
+ventas@proveedor.com'},
+{'name': 'telefono', 'label': 'Teléfono', 'type': 'tel', 'required': true, 'placeholder': 'Ej: (614) 123-4567'},
+{'name': 'contacto', 'label': 'Persona de Contacto','type': 'text', 'required': false, 'placeholder': 'Ej: Juan Pérez'},
+{'name': 'telefono_contacto', 'label': 'Teléfono Contacto', 'type': 'tel', 'required': false, 'placeholder': 'Ej: (614)
+987-6543'},
+{'name': 'domicilio', 'label': 'Domicilio', 'type': 'text', 'required': false, 'full_width': true, 'placeholder': 'Ej:
+Av. Principal #123, Col. Centro'},
+{'name': 'categoria', 'label': 'Categoría', 'type': 'select', 'required': true,
+'options': [
+{'value': 'MATERIA_PRIMA', 'label': 'Materia Prima'},
+{'value': 'SERVICIOS', 'label': 'Servicios'},
+{'value': 'INSUMOS', 'label': 'Insumos'}
+]},
+{'name': 'dias_credito', 'label': 'Días de Crédito', 'type': 'number', 'required': false, 'placeholder': '30'},
+{'name': 'limite_credito', 'label': 'Límite de Crédito', 'type': 'number', 'required': false, 'step': '0.01',
+'placeholder': '50000.00'}
+] %}
+
+{% call components.crud_modal(
+'proveedores',
+form_fields,
+id_field='id_proveedor',
+modal_title='Proveedor',
+modal_size='lg'
+) %}
+{% endcall %}
+
+<script src="{{ url_for('static', filename='js/crud.js') }}"></script>
+<script>
+    (function () {
+        // Función para ver historial de pagos (modal con cierre mejorado)
+        window.verPagos = async function (id, razonSocial) {
+            // Eliminar modal anterior si existe (por si se abre múltiples veces)
+            const existingModal = document.getElementById(`modal-pagos-${id}`);
+            if (existingModal) existingModal.remove();
+
+            var html = `<div id="modal-pagos-${id}" class="fixed inset-0 bg-[#0B2239]/90 backdrop-blur-sm overflow-y-auto h-full w-full z-[60] flex items-center justify-center p-4">
+            <div class="relative w-full max-w-4xl mx-auto bg-[#0F2A44] rounded-2xl shadow-2xl border border-[#1E3A5F]">
+                <div class="flex justify-between items-center px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239] rounded-t-2xl">
+                    <div>
+                        <p class="text-xs font-bold text-[#008DC0] uppercase tracking-widest mb-1">Historial de Pagos</p>
+                        <h3 class="text-lg font-bold text-white">${_escHtml(razonSocial)}</h3>
+                    </div>
+                    <button class="close-payment-modal p-2 text-gray-400 hover:text-white hover:bg-[#1E3A5F] rounded-xl transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div id="pagos-content-${id}" class="p-6 max-h-96 overflow-y-auto">
+                    <div class="flex items-center justify-center py-8">
+                        <svg class="w-8 h-8 animate-spin text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+            document.body.insertAdjacentHTML('beforeend', html);
+            const modal = document.getElementById(`modal-pagos-${id}`);
+
+            // Cerrar con botón X
+            modal.querySelector('.close-payment-modal').addEventListener('click', () => modal.remove());
+            // Cerrar al hacer clic en el backdrop (fondo)
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+            // Cerrar con tecla Escape
+            const keyHandler = (e) => {
+                if (e.key === 'Escape') {
+                    modal.remove();
+                    document.removeEventListener('keydown', keyHandler);
+                }
+            };
+            document.addEventListener('keydown', keyHandler);
+
+            // Cargar datos
+            try {
+                const resp = await fetch('/proveedores/' + id + '/pagos');
+                const data = await resp.json();
+                const contentDiv = document.getElementById(`pagos-content-${id}`);
+                if (!data.pagos || data.pagos.length === 0) {
+                    contentDiv.innerHTML = `<div class="flex flex-col items-center justify-center py-8 text-gray-400">
+                    <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <p class="text-sm font-medium">No hay pagos registrados</p>
+                </div>`;
+                    return;
+                }
+                var tableHtml = `<div class="overflow-x-auto"><table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-[#0B2239] border-b border-[#1E3A5F]">
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Compra</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Vencimiento</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Pago</th>
+                        <th class="px-4 py-3 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Monto</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Forma</th>
+                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Estatus</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[#1E3A5F]">`;
+                data.pagos.forEach(function (p) {
+                    var statusClass = p.estatus === 'VENCIDO' ? 'bg-red-500/20 text-red-400'
+                        : p.estatus === 'PAGADO' ? 'bg-emerald-500/20 text-emerald-400'
+                            : 'bg-amber-500/20 text-amber-400';
+                    tableHtml += `<tr class="hover:bg-[#123555]/50 transition-colors">
+                    <td class="px-4 py-3 text-sm font-mono text-white">${_escHtml(p.compra_folio)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${p.fecha_vencimiento}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${p.fecha_pago || '—'}</td>
+                    <td class="px-4 py-3 text-sm text-right font-medium text-white">$${parseFloat(p.monto).toFixed(2)}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400">${p.forma_pago}</td>
+                    <td class="px-4 py-3"><span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${statusClass}">${p.estatus}</span></td>
+                </tr>`;
+                });
+                tableHtml += '</tbody></table></div>';
+                contentDiv.innerHTML = tableHtml;
+            } catch (e) {
+                document.getElementById(`pagos-content-${id}`).innerHTML = `<div class="text-center py-8 text-red-400">Error al cargar pagos</div>`;
+            }
+        };
+
+        var mgr = new CrudManager({
+            id: 'proveedores',
+            apiEndpoint: '/proveedores',
+            sortBy: 'razon_social',
+            columns: [
+                {
+                    field: 'razon_social',
+                    label: 'Razón Social',
+                    sortable: true,
+                    render: function (val) {
+                        return `<span class="font-semibold text-white">${_escHtml(val)}</span>`;
+                    }
+                },
+                {
+                    field: 'rfc',
+                    label: 'RFC',
+                    sortable: true,
+                    render: function (val) {
+                        return `<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[#1E3A5F] text-gray-300">${val || ''}</span>`;
+                    }
+                },
+                {
+                    field: 'email',
+                    label: 'Email',
+                    sortable: true,
+                    render: function (val) {
+                        return `<span class="text-gray-400">${val}</span>`;
+                    }
+                },
+                {
+                    field: 'telefono',
+                    label: 'Teléfono',
+                    sortable: true,
+                    render: function (val) {
+                        return `<span class="text-gray-400">${val}</span>`;
+                    }
+                },
+                {
+                    field: 'contacto',
+                    label: 'Contacto',
+                    sortable: true,
+                    render: function (val) {
+                        return val ? `<span class="text-gray-300">${val}</span>` : `<span class="text-gray-500">—</span>`;
+                    }
+                },
+                {
+                    field: 'es_activo',
+                    label: 'Estado',
+                    sortable: true,
+                    render: function (val) {
+                        if (val) {
+                            return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Activo
+                        </span>`;
+                        }
+                        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Inactivo
+                    </span>`;
+                    }
+                }
+            ],
+            formFields: [
+                { name: 'razon_social', label: 'Razón Social', type: 'text', required: true },
+                { name: 'rfc', label: 'RFC', type: 'text', required: true },
+                { name: 'email', label: 'Correo Electrónico', type: 'email', required: true },
+                { name: 'telefono', label: 'Teléfono', type: 'tel', required: true },
+                { name: 'contacto', label: 'Persona de Contacto', type: 'text', required: false },
+                { name: 'telefono_contacto', label: 'Teléfono Contacto', type: 'tel', required: false },
+                { name: 'domicilio', label: 'Domicilio', type: 'text', required: false },
+                {
+                    name: 'categoria', label: 'Categoría', type: 'select', required: true,
+                    options: [
+                        { value: 'MATERIA_PRIMA', label: 'Materia Prima' },
+                        { value: 'SERVICIOS', label: 'Servicios' },
+                        { value: 'INSUMOS', label: 'Insumos' }
+                    ]
+                },
+                { name: 'dias_credito', label: 'Días de Crédito', type: 'number', required: false },
+                { name: 'limite_credito', label: 'Límite de Crédito', type: 'number', required: false }
+            ]
+        });
+
+        // Agregar botón "Ver Pagos" en cada fila
+        var originalRender = mgr.renderTabla.bind(mgr);
+        mgr.renderTabla = function (items) {
+            originalRender(items);
+            document.querySelectorAll('#tabla-proveedores tbody tr').forEach(function (row, idx) {
+                if (!items[idx]) return;
+                var id = items[idx].id;
+                var razon = items[idx].razon_social;
+                var cell = row.querySelector('td:last-child');
+                if (!cell) return;
+
+                var btn = document.createElement('button');
+                btn.title = 'Ver historial de pagos';
+                btn.className = 'p-2 text-gray-400 hover:text-[#008DC0] hover:bg-[#1E3A5F] rounded-lg transition-colors ml-1';
+                btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>`;
+                btn.addEventListener('click', function () { window.verPagos(id, razon); });
+                cell.querySelector('div').appendChild(btn);
+            });
+        };
+
+        window.crudManagers['proveedores'] = mgr;
+    })();
+</script>
+{% endblock %}
