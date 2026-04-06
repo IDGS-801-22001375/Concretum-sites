@@ -1,7 +1,8 @@
 from routes.produccion.productos import productos_bp
 from .forms import ProductoForm
 from flask import render_template, request, redirect, url_for, flash, session
-from .models import UnidadMedida, Color, categorias_producto, db, productos
+from .models import UnidadMedida, Color, categorias_producto, productos
+from extensions import db
 
 ### Funciones ###
 
