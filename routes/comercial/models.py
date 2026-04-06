@@ -1,6 +1,10 @@
-from routes.produccion.productos.models import db
+from extensions import db
 from datetime import datetime
 
+
+# ============================================================
+# VENTAS
+# ============================================================
 
 class Venta(db.Model):
     __tablename__ = 'ventas'
@@ -31,8 +35,12 @@ class VentaDetalle(db.Model):
     precio_unitario = db.Column(db.Numeric(12, 2), nullable=False)
     total_linea     = db.Column(db.Numeric(12, 2), nullable=False)
 
-    producto        = db.relationship('productos', backref='ventas_detalle')
+    producto        = db.relationship('Producto', backref='ventas_detalle')
 
+
+# ============================================================
+# CORTE DE CAJA
+# ============================================================
 
 class CorteCaja(db.Model):
     __tablename__ = 'cortes_caja'
@@ -51,7 +59,6 @@ class CorteCaja(db.Model):
     estado              = db.Column(db.Enum('ABIERTO', 'CERRADO'), nullable=False, default='ABIERTO')
     fecha_creacion      = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
-    usuario             = db.relationship('Usuario', backref='cortes')
     desglose            = db.relationship('CorteDesglose', backref='corte', cascade='all, delete-orphan')
 
 
@@ -66,6 +73,10 @@ class CorteDesglose(db.Model):
     es_credito      = db.Column(db.Boolean, nullable=False, default=False)
 
 
+# ============================================================
+# CLIENTE (tabla existente en BD)
+# ============================================================
+
 class Cliente(db.Model):
     __tablename__ = 'clientes'
 
@@ -73,17 +84,30 @@ class Cliente(db.Model):
     razon_social        = db.Column(db.String(200), nullable=False)
     rfc                 = db.Column(db.String(20), nullable=True)
     email               = db.Column(db.String(254), nullable=True)
-    es_activo           = db.Column(db.BigInteger, nullable=False, default=1)
+    es_activo           = db.Column(db.SmallInteger, nullable=False, default=1)
     fecha_creacion      = db.Column(db.DateTime, nullable=False, default=datetime.now)
     fecha_actualizacion = db.Column(db.DateTime, nullable=True)
 
 
-class Usuario(db.Model):
-    __tablename__ = 'usuarios'
+# ============================================================
+# PRODUCTO (referencia a tabla existente — modelo de David)
+# Usamos __tablename__ para apuntar a la misma tabla
+# sin redefinir todos los campos
+# ============================================================
 
-    id_usuario          = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    username            = db.Column(db.String(80), nullable=False, unique=True)
-    email               = db.Column(db.String(254), nullable=False, unique=True)
-    password_hash       = db.Column(db.String(255), nullable=False)
-    es_activo           = db.Column(db.BigInteger, nullable=False, default=1)
+class Producto(db.Model):
+    __tablename__ = 'productos'
+
+    id_producto         = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    categoria_id        = db.Column(db.BigInteger, db.ForeignKey('categorias_producto.id_categoria'), nullable=False)
+    enlace_fotografia   = db.Column(db.String(150), nullable=False)
+    sku                 = db.Column(db.String(80), nullable=False, unique=True)
+    nombre              = db.Column(db.String(200), nullable=False)
+    descripcion         = db.Column(db.String(500), nullable=True)
+    unidad_medida_id    = db.Column(db.BigInteger, db.ForeignKey('unidades_medida.id_unidad'), nullable=False)
+    resistencia_mpa     = db.Column(db.Numeric(6, 2), nullable=True)
+    color_id            = db.Column(db.BigInteger, db.ForeignKey('colores.id_color'), nullable=False)
+    precio_base         = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
+    es_activo           = db.Column(db.SmallInteger, nullable=False, default=1)
     fecha_creacion      = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    fecha_actualizacion = db.Column(db.DateTime, nullable=True)

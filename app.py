@@ -24,7 +24,6 @@ from routes.comercial import comercial_bp
 from routes.comercial.models import Venta, VentaDetalle, CorteCaja, CorteDesglose, Cliente
 from routes.administracion.proveedores import proveedores_bp
 
-# Blueprints de Cristian
 from usuarios import usuarios_bp
 from materia_prima import materia_prima_bp
 from compras import compras_bp
