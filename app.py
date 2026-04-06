@@ -18,13 +18,13 @@ import pyotp
 
 logging.basicConfig(level=logging.DEBUG)
 
-from usuarios import usuarios_bp
-from materia_prima import materia_prima_bp
-from proveedores import proveedores_bp
-from compras import compras_bp
-from inventario import inventario_bp
-from mermas import mermas_bp
-from configuracion import configuracion_bp
+from routes.usuarios import usuarios_bp
+from routes.materia_prima import materia_prima_bp
+from routes.proveedores import proveedores_bp
+from routes.compras import compras_bp
+from routes.inventario import inventario_bp
+from routes.mermas import mermas_bp
+from routes.configuracion import configuracion_bp
 
 app = Flask(__name__)
 app.config.from_object(Config)
