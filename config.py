@@ -9,5 +9,5 @@ class DevelopmentConfig(Config):
     DEBUG = True    
     SQLALCHEMY_DATABASE_URI = os.environ.get(
     "DATABASE_URL",
-    "mysql+pymysql://root:root@127.0.0.1:3306/crm_fabrica?charset=utf8mb4",
+    "mysql+pymysql://root:3t3F5$6v/F}#M5.1f+mi;.TDXJ2*5dL7SVuxXg,RXt@127.0.0.1:3306/crm_fabrica?charset=utf8mb4",
 )
