@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — Página no encontrada | Concretum</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --concrete: #C8C4BC;
+    --dark:     #1A1A18;
+    --mid:      #3A3A36;
+    --accent:   #D97C2A;
+    --light:    #F0EDE8;
+  }
+
+  body {
+    background-color: var(--dark);
+    color: var(--light);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* === TEXTURE OVERLAY === */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+  }
+
+  /* === HEADER === */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 2rem 3rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(200,196,188,0.12);
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 0.12em;
+    color: var(--light);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    clip-path: polygon(0 0, 100% 0, 100% 65%, 65% 100%, 0 100%);
+  }
+
+  /* === MAIN === */
+  main {
+    flex: 1;
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 3rem;
+  }
+
+  .container {
+    max-width: 900px;
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    align-items: center;
+  }
+
+  /* === LEFT SIDE === */
+  .left {
+    padding-right: 5rem;
+    border-right: 1px solid rgba(200,196,188,0.15);
+  }
+
+  .error-code {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(7rem, 14vw, 11rem);
+    line-height: 0.85;
+    letter-spacing: -0.02em;
+    color: transparent;
+    -webkit-text-stroke: 2px rgba(200,196,188,0.25);
+    position: relative;
+    animation: flicker 8s ease-in-out infinite;
+    user-select: none;
+  }
+
+  .error-code::after {
+    content: '404';
+    position: absolute;
+    inset: 0;
+    color: var(--mid);
+    -webkit-text-stroke: 0;
+    clip-path: polygon(0 0, 100% 0, 100% 40%, 0 40%);
+    animation: glitch 8s ease-in-out infinite;
+  }
+
+  @keyframes flicker {
+    0%,100% { opacity: 1; }
+    94%      { opacity: 1; }
+    95%      { opacity: 0.85; }
+    96%      { opacity: 1; }
+    97%      { opacity: 0.9; }
+    98%      { opacity: 1; }
+  }
+
+  @keyframes glitch {
+    0%,89%,100% { transform: translate(0,0); opacity: 0.07; }
+    90%          { transform: translate(-3px, 1px); opacity: 0.12; }
+    91%          { transform: translate(3px, -1px); opacity: 0.08; }
+    92%          { transform: translate(0,0); opacity: 0.07; }
+  }
+
+  .divider {
+    width: 48px;
+    height: 3px;
+    background: var(--accent);
+    margin: 2rem 0 1.5rem;
+  }
+
+  .tag {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  /* === RIGHT SIDE === */
+  .right {
+    padding-left: 5rem;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    letter-spacing: 0.06em;
+    line-height: 1.1;
+    color: var(--light);
+    margin-bottom: 1.25rem;
+  }
+
+  p {
+    font-size: 0.95rem;
+    line-height: 1.75;
+    color: var(--concrete);
+    font-weight: 300;
+    margin-bottom: 2rem;
+  }
+
+  .actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.75rem 1.75rem;
+    background: var(--accent);
+    color: var(--dark);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    clip-path: polygon(0 0, 100% 0, 100% 70%, 92% 100%, 0 100%);
+    transition: filter 0.2s;
+  }
+
+  .btn-primary:hover { filter: brightness(1.1); }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.75rem 1.75rem;
+    background: transparent;
+    color: var(--concrete);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid rgba(200,196,188,0.3);
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .btn-secondary:hover {
+    border-color: rgba(200,196,188,0.65);
+    color: var(--light);
+  }
+
+  /* === REBAR DECORATION === */
+  .rebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 3px;
+    height: 100%;
+    background: repeating-linear-gradient(
+      180deg,
+      var(--accent) 0px,
+      var(--accent) 18px,
+      transparent 18px,
+      transparent 30px
+    );
+    opacity: 0.35;
+    z-index: 1;
+  }
+
+  /* === BOTTOM STATUS BAR === */
+  footer {
+    position: relative;
+    z-index: 10;
+    padding: 1rem 3rem;
+    border-top: 1px solid rgba(200,196,188,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(200,196,188,0.35);
+  }
+
+  footer span { font-variant-numeric: tabular-nums; }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 680px) {
+    header { padding: 1.5rem 1.5rem; }
+
+    .container {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+
+    .left {
+      padding-right: 0;
+      border-right: none;
+      border-bottom: 1px solid rgba(200,196,188,0.15);
+      padding-bottom: 2.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .divider { margin: 2rem auto 1.5rem; }
+
+    .right { padding-left: 0; }
+
+    .actions { justify-content: center; }
+
+    footer { padding: 1rem 1.5rem; }
+    footer .right-meta { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rebar"></div>
+
+<header>
+  <a href="/" class="logo">
+    <div class="logo-mark"></div>
+    Concretum
+  </a>
+</header>
+
+<main>
+  <div class="container">
+
+    <div class="left">
+      <div class="tag">Error de sistema</div>
+      <div class="error-code">404</div>
+      <div class="divider"></div>
+    </div>
+
+    <div class="right">
+      <h1>Página no encontrada</h1>
+      <p>
+        La página que buscas no existe o fue movida a otra ubicación.
+        Puede que la URL sea incorrecta o el contenido haya sido actualizado.
+      </p>
+      <div class="actions">
+        <a href="/" class="btn-primary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12l9-9 9 9"/><path d="M9 21V12h6v9"/></svg>
+          Inicio
+        </a>
+        <a href="/contacto" class="btn-secondary">Contacto</a>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <span>Concretum © 2025</span>
+  <span class="right-meta">ERR_404 · Recurso no disponible</span>
+</footer>
+
+</body>
+</html>

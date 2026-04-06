@@ -1,13 +1,15 @@
 from datetime import date
-from wtforms import DecimalField, Form, StringField, SelectField, ValidationError
-from wtforms import IntegerField, DateField, SubmitField, SelectMultipleField
+from flask_wtf import FlaskForm
+from wtforms import DecimalField, StringField, SelectField, ValidationError
+from wtforms import DateField
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms.validators import DataRequired, NumberRange, Length
 
 def fecha_hoy(form, field):
     if field.data != date.today():
         raise ValidationError("La fecha debe ser la de hoy")
-class ProductoForm(Form):
+
+class ProductoForm(FlaskForm):
     categoria_id = SelectField(
         'Categoria', 
         [DataRequired(message="Este campo es requerido")], 
@@ -69,5 +71,3 @@ class ProductoForm(Form):
             fecha_hoy
         ]
     )
-    
-    
