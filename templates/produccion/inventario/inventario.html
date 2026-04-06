@@ -1,0 +1,72 @@
+{% extends "layout-admin.html" %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+
+<div class="bg-[#0f2236] min-h-[400px] p-6 rounded-xl">
+
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-sm font-medium text-white uppercase tracking-widest">
+            Inventario general
+        </h1>
+        <a href="#" class="bg-[#00AEEF] hover:bg-[#0095cc] text-white text-xs font-medium px-4 py-2 rounded-md tracking-wide">
+            + Registrar movimiento
+        </a>
+    </div>
+
+    <div class="flex border-b border-[#1e3a52] mb-6">
+        <a href="#" class="text-[#00AEEF] border-b-2 border-[#00AEEF] text-xs uppercase tracking-widest px-4 py-2">
+            Producto terminado
+        </a>
+        <a href="#" class="text-gray-500 border-b-2 border-transparent text-xs uppercase tracking-widest px-4 py-2 hover:text-gray-300">
+            Materia prima
+        </a>
+        <a href="#" class="text-gray-500 border-b-2 border-transparent text-xs uppercase tracking-widest px-4 py-2 hover:text-gray-300">
+            En proceso
+        </a>
+        <a href="#" class="text-gray-500 border-b-2 border-transparent text-xs uppercase tracking-widest px-4 py-2 hover:text-gray-300">
+            Movimientos
+        </a>
+    </div>
+
+    <div class="bg-[#0d1f30] rounded-lg overflow-hidden">
+        <table class="w-full text-xs table-fixed">
+            <thead>
+                <tr class="border-b border-[#1e3a52]">
+                    <th class="px-4 py-3 text-left text-gray-500 font-medium uppercase tracking-widest w-[22%]">Producto</th>
+                    <th class="px-4 py-3 text-left text-gray-500 font-medium uppercase tracking-widest w-[16%]">SKU</th>                    
+                    <th class="px-4 py-3 text-left text-gray-500 font-medium uppercase tracking-widest w-[13%]">Disponible</th>
+                    <th class="px-4 py-3 text-left text-gray-500 font-medium uppercase tracking-widest w-[10%]">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in existencias %}
+                <tr class="border-b border-[#1a2f40] hover:bg-[#0f2a3d]">
+                    <td class="px-4 py-3 text-gray-200">{{ e.producto.nombre }}</td>
+                    <td class="px-4 py-3 text-[#00AEEF]">{{ e.producto.sku }}</td>
+                    <td class="px-4 py-3 text-gray-400">{{ e.stock_actual }} {{ e.producto.unidad_medida.clave }}</td>
+                    <td class="px-4 py-3 text-gray-400">-- </td>
+                    <td class="px-4 py-3 font-medium
+                        {% if e.stock_actual > 20 %}text-emerald-400
+                        {% elif e.stock_actual > 0 %}text-orange-400
+                        {% else %}text-red-400{% endif %}">
+                        {{ e.stock_actual }} {{ e.producto.unidad_medida.clave }}
+                    </td>
+                    <td class="px-4 py-3 text-gray-400">--</td>
+                    <td class="px-4 py-3">
+                        {% if e.stock_actual > 20 %}
+                            <span class="bg-emerald-950 text-emerald-300 px-2 py-0.5 rounded text-[10px] font-medium tracking-wide">OK</span>
+                        {% elif e.stock_actual > 0 %}
+                            <span class="bg-orange-950 text-orange-300 px-2 py-0.5 rounded text-[10px] font-medium tracking-wide">BAJO STOCK</span>
+                        {% else %}
+                            <span class="bg-red-950 text-red-300 px-2 py-0.5 rounded text-[10px] font-medium tracking-wide">SIN STOCK</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}

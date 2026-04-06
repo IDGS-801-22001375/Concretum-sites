@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, make_response, jsonify, session, send_file, flash
 from config import Config
-from models import db, User, Role, MateriaPrima, ExistenciaMateriaPrima, Produccion, Merma
+from models import db, User, Role, MateriaPrima, ExistenciaMateriaPrima, Produccion, Merma, Productos, CategoriasProducto
 from flask_security import Security, SQLAlchemyUserDatastore, login_required, current_user
 from flask_security.signals import user_authenticated
 from flask_login.signals import user_logged_out
@@ -25,6 +25,10 @@ from routes.compras import compras_bp
 from routes.inventario import inventario_bp
 from routes.mermas import mermas_bp
 from routes.configuracion import configuracion_bp
+from routes.produccion.productos import productos_bp
+from routes.produccion.inventario import inventario_bp
+from routes.produccion.recetas import recetas_bp
+
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -51,6 +55,25 @@ app.register_blueprint(compras_bp)
 app.register_blueprint(inventario_bp)
 app.register_blueprint(mermas_bp)
 app.register_blueprint(configuracion_bp)
+app.register_blueprint(productos_bp)
+app.register_blueprint(inventario_bp)
+app.register_blueprint(recetas_bp)
+
+'''
+@app.route("/admin")
+def admin():
+    return render_template("/layout-admin.html")
+'''
+@app.route("/")
+@app.route("/index")
+def index():
+    productos_lista = db.session.query(Productos)\
+        .join(CategoriasProducto, Productos.categoria_id == CategoriasProducto.id_categoria)\
+        .filter(Productos.es_active == 1)\
+        .order_by(Productos.fecha_creacion.desc())\
+        .limit(6)\
+        .all()
+    return render_template("/home/index.html", productos_lista=productos_lista)
 
 @login_manager.user_loader
 def load_user(user_id):

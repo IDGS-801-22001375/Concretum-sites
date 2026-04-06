@@ -1,0 +1,136 @@
+<div class="relative overflow-x-auto bg-[#123555] shadow rounded-xl p-6 mt-6">
+
+    <!-- Header -->
+    <div class="p-4 flex items-center justify-between space-x-4">
+
+        <!-- Search -->
+        <div class="relative">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                        d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" />
+                </svg>
+            </div>
+            <input type="text"
+                class="block w-full max-w-96 pl-9 pr-3 py-2 bg-[#0D1F30] border border-gray-600 text-white text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 placeholder-gray-400"
+                placeholder="Buscar">
+        </div>
+
+        <!-- Filter -->
+        <button data-dropdown-toggle="dropdown"
+            class="inline-flex items-center text-gray-300 bg-[#0D1F30] border border-gray-600 hover:bg-[#0D1F30]/80 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 font-medium rounded-lg text-sm px-3 py-2"
+            type="button">
+
+            <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
+                    d="M18.796 4H5.204a1 1 0 0 0-.753 1.659l5.302 6.058a1 1 0 0 1 .247.659v4.874a.5.5 0 0 0 .2.4l3 2.25a.5.5 0 0 0 .8-.4v-7.124a1 1 0 0 1 .247-.659l5.302-6.059c.566-.646.106-1.658-.753-1.658Z" />
+            </svg>
+            Filtrar
+            <svg class="w-4 h-4 ml-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="m19 9-7 7-7-7" />
+            </svg>
+        </button>
+
+        <!-- Dropdown -->
+        <div id="dropdown"
+            class="hidden absolute right-6 mt-12 bg-gray-700 border border-gray-600 rounded-lg shadow w-32 z-10">
+            <ul class="p-2 text-sm text-gray-300">
+                <li><a href="#" class="block px-2 py-1 hover:bg-gray-600 rounded">Color</a></li>
+                <li><a href="#" class="block px-2 py-1 hover:bg-gray-600 rounded">Category</a></li>
+                <li><a href="#" class="block px-2 py-1 hover:bg-gray-600 rounded">Price</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <table class="w-full text-sm text-left text-gray-400">
+        <thead class="text-sm bg-[#0D1F30] text-gray-300 border-b border-gray-600">
+            <tr>
+                <th class="px-6 py-3">Imagen</th>
+                <th class="px-6 py-3">Nombre</th>
+                <th class="px-6 py-3">SKU</th>
+                <th class="px-6 py-3">Categoría</th>
+                <th class="px-6 py-3">Unidad</th>
+                <th class="px-6 py-3">MPA</th>
+                <th class="px-6 py-3">Color</th>
+                <th class="px-6 py-3">Precio</th>
+                <th class="px-6 py-3">Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% if productos %}
+                {% for p in productos %}
+                    <tr class="border-b border-gray-700 bg-[#0D1F30]/50 hover:bg-[#0D1F30]/90">
+                        <td class="px-6 py-4">
+                            <img src="{{ url_for('static', filename=p.enlace_fotografia) }}" alt="imagen_producto" class="object-contain w-20 h-20">
+                        </td>
+                        <td class="px-6 py-4 text-white font-medium">{{ p.nombre }}</td>
+                        <td class="px-6 py-4">{{ p.sku }}</td>
+                        <td class="px-6 py-4">{{ p.categoria.nombre }}</td>
+                        <td class="px-6 py-4">{{ p.unidad_medida.nombre }}</td>
+                        <td class="px-6 py-4">{{ p.resistencia_mpa }}</td>
+                        <td class="px-6 py-4">{{ p.color.nombre }}</td>
+                        <td class="px-6 py-4">{{ p.precio_base }}</td>            
+                        <td class="px-3 py-4">
+                            <a href="{{ url_for('productos_bp.update_producto', id_producto=p.id_producto) }}" class="px-3 py-1 rounded text-decoration-none bg-blue-400 text-white hover:underline ml-2">Editar</a>                            
+                            <form action="{{ url_for('productos_bp.delete_producto', id_producto=p.id_producto) }}" 
+                                method="POST" class="inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="bg-red-500 hover:bg-red-400 text-white px-3 py-1 rounded text-sm">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="12" class="text-center py-4">
+                        No hay productos disponibles
+                    </td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <!-- Paginación -->
+    <div class="flex justify-between items-center p-4 text-gray-400">
+
+        <span>
+            Página {{ pagination.page }} de {{ pagination.pages }}
+        </span>
+    
+        <div class="flex space-x-1">
+    
+            {% if pagination.has_prev %}
+                <a href="{{ url_for('productos_bp.get_datos', page=pagination.prev_num) }}"
+                   class="px-3 py-1 bg-[#0D1F30] border border-gray-600 rounded">
+                   Anterior
+                </a>
+            {% endif %}
+    
+            {% for num in range(1, pagination.pages + 1) %}
+                <a href="{{ url_for('productos_bp.get_datos', page=num) }}"
+                   class="px-3 py-1 rounded 
+                   {% if num == pagination.page %}
+                       bg-blue-600 text-white
+                   {% else %}
+                       bg-[#0D1F30] border border-gray-600
+                   {% endif %}">
+                   {{ num }}
+                </a>
+            {% endfor %}
+    
+            {% if pagination.has_next %}
+                <a href="{{ url_for('productos_bp.get_datos', page=pagination.next_num) }}"
+                   class="px-3 py-1 bg-[#0D1F30] border border-gray-600 rounded">
+                   Siguiente
+                </a>
+            {% endif %}
+    
+        </div>
+    </div>
+
+</div>
