@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, url_for, request, make_response, jsonify, session, send_file, flash
-from config import Config
+from config import Config, DevelopmentConfig
 from models import db, User, Role, MateriaPrima, ExistenciaMateriaPrima, Produccion, Merma, Productos, CategoriasProducto
 from flask_security import Security, SQLAlchemyUserDatastore, login_required, current_user
 from flask_security.signals import user_authenticated
@@ -27,11 +27,12 @@ from routes.configuracion import configuracion_bp
 from routes.productos import productos_bp
 from routes.inventario import inventario_bp
 from routes.recetas import recetas_bp
-
+from routes.productos import productos_bp
+from routes.comercial import comercial_bp
+from models import db, User, Role, MateriaPrima, ExistenciaMateriaPrima, Produccion, Merma, Venta, VentaDetalle, CorteCaja, CorteDesglose, Cliente
 
 app = Flask(__name__)
-app.config.from_object(Config)
-
+app.config.from_object(DevelopmentConfig)
 csrf = CSRFProtect(app)
 db.init_app(app)
 
@@ -47,14 +48,16 @@ login_manager.login_view = 'security.login'
 login_manager.login_message = 'Por favor inicia sesión para acceder a esta página.'
 login_manager.login_message_category = 'info'
 
+# Registro de blueprints
+app.register_blueprint(productos_bp)
+app.register_blueprint(proveedores_bp)
+app.register_blueprint(comercial_bp)
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(materia_prima_bp)
-app.register_blueprint(proveedores_bp)
 app.register_blueprint(compras_bp)
 app.register_blueprint(inventario_bp)
 app.register_blueprint(mermas_bp)
 app.register_blueprint(configuracion_bp)
-app.register_blueprint(productos_bp)
 app.register_blueprint(recetas_bp)
 
 @login_manager.user_loader
@@ -154,14 +157,7 @@ def index():
 def admin():
     return render_template("/base.html")
 
-@app.route('/dashboard')
-@login_required
-def dashboard():
-    return render_template('dashboard/dashboard.html')
-
-# ============================================================================
-# VISTA DE LOGIN PERSONALIZADA
-# ============================================================================
+# Login y dashboard de Cristian
 def custom_login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
@@ -179,9 +175,6 @@ def custom_login():
 
 app.view_functions['security.login'] = custom_login
 
-# ============================================================================
-# RUTAS 2FA
-# ============================================================================
 @app.route('/verificar-2fa', methods=['GET', 'POST'])
 def verificar_2fa():
     user_id = session.get('pending_2fa_user_id')
@@ -255,17 +248,12 @@ def configurar_2fa():
     else:
         return render_template('security/custom_2fa.html', activado=False)
 
-# ============================================================================
-# CONTEXT PROCESSORS
-# ============================================================================
 @app.context_processor
 def inject_sidebar_counts():
     from models import ConfiguracionEmpresa
     config = ConfiguracionEmpresa.query.first()
-    
     criticos = 0
     mermas_recientes = 0
-    
     if config and config.alerta_stock_minimo:
         
         criticos = db.session.query(MateriaPrima).join(
@@ -276,14 +264,10 @@ def inject_sidebar_counts():
             MateriaPrima.stock_minimo > 0,
             ExistenciaMateriaPrima.stock_actual < MateriaPrima.stock_minimo
         ).count()
-    
     if config and config.alerta_merma_diaria:
-        from datetime import datetime, timedelta
-        hace_7dias = datetime.utcnow() - timedelta(days=7)
+        hace_7dias = datetime.datetime.utcnow() - datetime.timedelta(days=7)
         mermas_recientes = Merma.query.filter(Merma.fecha_registro >= hace_7dias).count()
-    
     producciones_activas = Produccion.query.filter_by(estado='EN_PROCESO').count()
-    
     return {
         'sidebar_criticos': criticos,
         'sidebar_pedidos': producciones_activas,

@@ -17,6 +17,7 @@ from .produccion    import Produccion
 from .configuracion import ConfiguracionEmpresa
 from .materia_prima import ExistenciaMateriaPrima, MateriaPrima
 from .recetas       import RecetaDetalle, Recetas
+from .comercial     import VentaDetalle, Cliente, CorteDesglose, CorteCaja, Venta
  
 __all__ = [
     # Core
@@ -42,5 +43,7 @@ __all__ = [
     # Recetas
     'RecetaDetalle', 'Recetas',
     # Materia prima
-    'ExistenciaMateriaPrima', 'MateriaPrima'
+    'ExistenciaMateriaPrima', 'MateriaPrima',
+    # Comercial
+    'VentaDetalle', 'Cliente', 'CorteDesglose', 'CorteCaja', 'Venta'
 ]

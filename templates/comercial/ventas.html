@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block content %}
+<div class="p-6">
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold">Módulo de Ventas</h1>
+    <button onclick="document.getElementById('modalNuevaVenta').classList.remove('hidden')"
+      class="bg-[#008DC0] hover:bg-[#0074A0] px-4 py-2 rounded text-sm transition">
+      + Nueva Venta
+    </button>
+  </div>
+
+  <!-- KPI CARDS -->
+  <div class="grid grid-cols-4 gap-4 mb-6">
+
+    <div class="bg-[#123555] p-4 rounded-lg border-t-4 border-cyan-400">
+      <p class="text-sm text-gray-400">Ventas del Mes</p>
+      <h2 class="text-2xl font-bold">${{ ventas_mes or '0.00' }}</h2>
+    </div>
+
+    <div class="bg-[#123555] p-4 rounded-lg border-t-4 border-green-400">
+      <p class="text-sm text-gray-400">Núm. de Ventas</p>
+      <h2 class="text-2xl font-bold">{{ num_ventas or 0 }}</h2>
+    </div>
+
+    <div class="bg-[#123555] p-4 rounded-lg border-t-4 border-yellow-400">
+      <p class="text-sm text-gray-400">Ticket Promedio</p>
+      <h2 class="text-2xl font-bold">${{ ticket_promedio or '0.00' }}</h2>
+    </div>
+
+    <div class="bg-[#123555] p-4 rounded-lg border-t-4 border-red-400">
+      <p class="text-sm text-gray-400">Cuentas por Cobrar</p>
+      <h2 class="text-2xl font-bold">${{ cuentas_por_cobrar or '0.00' }}</h2>
+    </div>
+
+  </div>
+
+  <!-- TABLA DE VENTAS -->
+  <div class="relative overflow-x-auto bg-[#123555] shadow rounded-xl p-6">
+
+    <!-- BUSCADOR -->
+    <div class="p-4 flex items-center justify-between space-x-4 mb-2">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-width="2"
+              d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" />
+          </svg>
+        </div>
+        <input type="text"
+          class="block w-full max-w-96 pl-9 pr-3 py-2 bg-[#0D1F30] border border-gray-600 text-white text-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          placeholder="Buscar venta...">
+      </div>
+    </div>
+
+    <table class="w-full text-sm text-left text-gray-400">
+      <thead class="text-xs bg-[#0D1F30] text-gray-300 border-b border-gray-600">
+        <tr>
+          <th class="px-6 py-3">Folio</th>
+          <th class="px-6 py-3">Cliente</th>
+          <th class="px-6 py-3">Productos</th>
+          <th class="px-6 py-3">Total</th>
+          <th class="px-6 py-3">Método de pago</th>
+          <th class="px-6 py-3">Fecha</th>
+          <th class="px-6 py-3">Estado</th>
+          <th class="px-6 py-3">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if ventas %}
+        {% for v in ventas %}
+        <tr class="border-b border-gray-700 bg-[#0D1F30]/50 hover:bg-[#0D1F30]/90">
+          <td class="px-6 py-4 text-white font-medium">{{ v.folio }}</td>
+          <td class="px-6 py-4">{{ v.cliente }}</td>
+          <td class="px-6 py-4">{{ v.num_productos }} producto(s)</td>
+          <td class="px-6 py-4 text-green-400">${{ v.total }}</td>
+          <td class="px-6 py-4">{{ v.metodo_pago }}</td>
+          <td class="px-6 py-4">{{ v.fecha }}</td>
+          <td class="px-6 py-4">
+            {% if v.estado == 'Cobrado' %}
+            <span class="bg-green-900 text-green-300 text-xs font-medium px-2.5 py-0.5 rounded">Cobrado</span>
+            {% elif v.estado == 'Pendiente' %}
+            <span class="bg-yellow-900 text-yellow-300 text-xs font-medium px-2.5 py-0.5 rounded">Pendiente</span>
+            {% elif v.estado == 'Credito' %}
+            <span class="bg-blue-900 text-blue-300 text-xs font-medium px-2.5 py-0.5 rounded">Crédito</span>
+            {% else %}
+            <span class="bg-red-900 text-red-300 text-xs font-medium px-2.5 py-0.5 rounded">{{ v.estado }}</span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4">
+            <a href="{{ url_for('comercial_bp.ticket', id=v.id) }}" class="text-[#008DC0] hover:underline text-xs">Ver
+              ticket</a>
+          </td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+          <td colspan="8" class="text-center py-6 text-gray-500">No hay ventas registradas</td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- MODAL NUEVA VENTA -->
+<div id="modalNuevaVenta" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+  <div class="bg-[#123555] rounded-xl p-6 w-full max-w-3xl max-h-screen overflow-y-auto">
+
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-semibold">Registrar Nueva Venta</h2>
+      <button onclick="document.getElementById('modalNuevaVenta').classList.add('hidden')"
+        class="text-gray-400 hover:text-white text-xl">✕</button>
+    </div>
+
+    <form method="POST" action="{{ url_for('comercial_bp.nueva_venta') }}">
+      {{ form.hidden_tag() if form }}
+
+      <div class="grid grid-cols-3 gap-4 mb-4">
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Cliente</label>
+          <select name="cliente_id"
+            class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+            {% if clientes %}
+            {% for c in clientes %}
+            <option value="{{ c.id }}">{{ c.nombre }}</option>
+            {% endfor %}
+            {% else %}
+            <option value="">Sin clientes registrados</option>
+            {% endif %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Fecha</label>
+          <input type="date" name="fecha"
+            class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+        </div>
+        <div>
+          <label class="block text-sm text-gray-300 mb-1">Método de pago</label>
+          <select name="metodo_pago"
+            class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+            <option value="Transferencia">Transferencia</option>
+            <option value="Efectivo">Efectivo</option>
+            <option value="Cheque">Cheque</option>
+            <option value="Credito">Crédito</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- DETALLE DE VENTA -->
+      <div class="mb-4">
+        <table class="w-full text-sm text-left text-gray-400" id="tablaProductos">
+          <thead class="text-xs bg-[#0D1F30] text-gray-300 border-b border-gray-600">
+            <tr>
+              <th class="px-4 py-3">Producto</th>
+              <th class="px-4 py-3">Cantidad</th>
+              <th class="px-4 py-3">Precio unit.</th>
+              <th class="px-4 py-3">Subtotal</th>
+              <th class="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody id="filas">
+            <tr>
+              <td class="px-2 py-2">
+                <select name="producto_id[]"
+                  class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                  {% if productos %}
+                  {% for p in productos %}
+                  <option value="{{ p.id }}" data-precio="{{ p.precio_base }}">{{ p.nombre }}</option>
+                  {% endfor %}
+                  {% else %}
+                  <option value="">Sin productos</option>
+                  {% endif %}
+                </select>
+              </td>
+              <td class="px-2 py-2"><input type="number" name="cantidad[]" min="1" value="1"
+                  class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
+              </td>
+              <td class="px-2 py-2"><input type="number" name="precio[]" step="0.01"
+                  class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400">
+              </td>
+              <td class="px-2 py-2 text-[#008DC0] font-bold">$0.00</td>
+              <td class="px-2 py-2 text-red-400 cursor-pointer">✕</td>
+            </tr>
+          </tbody>
+        </table>
+        <button type="button" class="mt-2 text-sm text-[#008DC0] hover:underline">+ Añadir producto</button>
+      </div>
+
+      <!-- TOTALES -->
+      <div class="flex justify-end gap-6 text-sm mb-4 pr-2">
+        <span class="text-gray-300">Subtotal: <strong class="text-white">$0.00</strong></span>
+        <span class="text-gray-300">IVA (16%): <strong class="text-white">$0.00</strong></span>
+        <span class="text-gray-300 text-base">Total: <strong class="text-[#008DC0] text-xl">$0.00</strong></span>
+      </div>
+
+      <div class="flex justify-end gap-3 border-t border-gray-600 pt-4">
+        <button type="button" onclick="document.getElementById('modalNuevaVenta').classList.add('hidden')"
+          class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded text-sm">Cancelar</button>
+        <button type="submit" class="bg-green-500 hover:bg-green-400 px-6 py-2 rounded text-sm font-semibold">Registrar
+          Venta</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+{% endblock %}

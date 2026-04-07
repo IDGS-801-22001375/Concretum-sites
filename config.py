@@ -38,3 +38,6 @@ class Config:
     WTF_CSRF_TIME_LIMIT = None
     
     SECURITY_DEBUG = True
+    
+class DevelopmentConfig(Config):
+    DEBUG = True
