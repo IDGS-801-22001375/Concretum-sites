@@ -1,6 +1,6 @@
 from flask import render_template, request, jsonify
 from flask_security import login_required, roles_accepted, current_user
-from models import db, Producto, Existencia, MovimientoInventario, MateriaPrima, ExistenciaMateriaPrima, Produccion
+from models import db, Productos, Existencias, MovimientosInventario, MateriaPrima, ExistenciaMateriaPrima, Produccion
 from . import inventario_bp
 from sqlalchemy import or_, asc, desc, func
 import datetime
@@ -42,21 +42,21 @@ def api_productos():
     sort_by = request.args.get('sort_by', 'nombre')
     sort_order = request.args.get('sort_order', 'asc')
 
-    query = Producto.query.filter_by(es_activo=True)
+    query = Productos.query.filter_by(es_activo=True)
     if search:
         query = query.filter(or_(
-            Producto.nombre.ilike(f'%{search}%'),
-            Producto.sku.ilike(f'%{search}%')
+            Productos.nombre.ilike(f'%{search}%'),
+            Productos.sku.ilike(f'%{search}%')
         ))
     if sort_order == 'asc':
-        query = query.order_by(asc(getattr(Producto, sort_by, Producto.nombre)))
+        query = query.order_by(asc(getattr(Productos, sort_by, Productos.nombre)))
     else:
-        query = query.order_by(desc(getattr(Producto, sort_by, Producto.nombre)))
+        query = query.order_by(desc(getattr(Productos, sort_by, Productos.nombre)))
 
     paginated = query.paginate(page=page, per_page=per_page, error_out=False)
     items = []
     for p in paginated.items:
-        existencia = Existencia.query.filter_by(producto_id=p.id).first()
+        existencia = Existencias.query.filter_by(producto_id=p.id).first()
         stock = float(existencia.stock_actual) if existencia else 0
         items.append({
             'id': p.id,
@@ -136,7 +136,7 @@ def api_producciones():
 
     query = Produccion.query.filter(Produccion.estado == 'EN_PROCESO')
     if search:
-        query = query.filter(Produccion.producto.has(Producto.nombre.ilike(f'%{search}%')))
+        query = query.filter(Produccion.producto.has(Productos.nombre.ilike(f'%{search}%')))
     if sort_order == 'asc':
         query = query.order_by(asc(getattr(Produccion, sort_by, Produccion.fecha_inicio)))
     else:
@@ -175,20 +175,20 @@ def api_movimientos():
     sort_by = request.args.get('sort_by', 'fecha_creacion')
     sort_order = request.args.get('sort_order', 'desc')
 
-    query = MovimientoInventario.query
+    query = MovimientosInventario.query
     if tipo:
-        query = query.filter(MovimientoInventario.tipo == tipo)
+        query = query.filter(MovimientosInventario.tipo == tipo)
     if search:
         # Buscar por nombre de producto (a través de existencia.producto)
         query = query.filter(
-            MovimientoInventario.existencia.has(
-                Producto.nombre.ilike(f'%{search}%')
+            MovimientosInventario.existencia.has(
+                Productos.nombre.ilike(f'%{search}%')
             )
         )
     if sort_order == 'asc':
-        query = query.order_by(asc(getattr(MovimientoInventario, sort_by, MovimientoInventario.fecha_creacion)))
+        query = query.order_by(asc(getattr(MovimientosInventario, sort_by, MovimientosInventario.fecha_creacion)))
     else:
-        query = query.order_by(desc(getattr(MovimientoInventario, sort_by, MovimientoInventario.fecha_creacion)))
+        query = query.order_by(desc(getattr(MovimientosInventario, sort_by, MovimientosInventario.fecha_creacion)))
 
     paginated = query.paginate(page=page, per_page=per_page, error_out=False)
     items = []
@@ -227,7 +227,7 @@ def registrar_movimiento():
         return jsonify({'success': False, 'message': 'Datos inválidos.'}), 400
 
     # Obtener existencia del producto
-    existencia = Existencia.query.filter_by(producto_id=producto_id).first()
+    existencia = Existencias.query.filter_by(producto_id=producto_id).first()
     if not existencia:
         return jsonify({'success': False, 'message': 'Producto no encontrado en inventario.'}), 404
 
@@ -244,7 +244,7 @@ def registrar_movimiento():
         existencia.stock_actual = cantidad_dec
 
     # Registrar movimiento
-    movimiento = MovimientoInventario(
+    movimiento = MovimientosInventario(
         existencia_id=existencia.id,
         usuario_id=current_user.id,
         tipo=tipo,
@@ -265,7 +265,7 @@ def registrar_movimiento():
 @login_required
 @roles_accepted('ADMINISTRADOR', 'GERENTE_INVENTARIO', 'ALMACENISTA')
 def productos_lista():
-    productos = Producto.query.filter_by(es_activo=True).all()
+    productos = Productos.query.filter_by(es_activo=True).all()
     items = [{'id': p.id, 'nombre': f"{p.sku} - {p.nombre}", 'stock': float(p.existencia.stock_actual) if p.existencia else 0} for p in productos]
     return jsonify({'items': items})
 
@@ -277,14 +277,14 @@ def productos_lista():
 @roles_accepted('ADMINISTRADOR', 'GERENTE_INVENTARIO', 'ALMACENISTA')
 def kpis():
     # Total de productos activos
-    total_productos = Producto.query.filter_by(es_activo=True).count()
+    total_productos = Productos.query.filter_by(es_activo=True).count()
     # Valor total del inventario (productos terminados)
-    valor_total = db.session.query(func.sum(Existencia.stock_actual * Producto.precio_base)).join(Producto).filter(Producto.es_activo == True).scalar() or 0
+    valor_total = db.session.query(func.sum(Existencias.stock_actual * Productos.precio_base)).join(Productos).filter(Productos.es_activo == True).scalar() or 0
     # Alertas: productos con stock menor a 10 (ejemplo)
-    alertas = Existencia.query.filter(Existencia.stock_actual < 10).count()
+    alertas = Existencias.query.filter(Existencias.stock_actual < 10).count()
     # Movimientos del mes
     inicio_mes = datetime.datetime.utcnow().replace(day=1, hour=0, minute=0, second=0)
-    movimientos_mes = MovimientoInventario.query.filter(MovimientoInventario.fecha_creacion >= inicio_mes).count()
+    movimientos_mes = MovimientosInventario.query.filter(MovimientosInventario.fecha_creacion >= inicio_mes).count()
     return jsonify({
         'total_productos': total_productos,
         'valor_total': float(valor_total),

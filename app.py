@@ -22,12 +22,11 @@ from routes.usuarios import usuarios_bp
 from routes.materia_prima import materia_prima_bp
 from routes.proveedores import proveedores_bp
 from routes.compras import compras_bp
-from routes.inventario import inventario_bp
 from routes.mermas import mermas_bp
 from routes.configuracion import configuracion_bp
-from routes.produccion.productos import productos_bp
-from routes.produccion.inventario import inventario_bp
-from routes.produccion.recetas import recetas_bp
+from routes.productos import productos_bp
+from routes.inventario import inventario_bp
+from routes.recetas import recetas_bp
 
 
 app = Flask(__name__)
@@ -56,24 +55,7 @@ app.register_blueprint(inventario_bp)
 app.register_blueprint(mermas_bp)
 app.register_blueprint(configuracion_bp)
 app.register_blueprint(productos_bp)
-app.register_blueprint(inventario_bp)
 app.register_blueprint(recetas_bp)
-
-'''
-@app.route("/admin")
-def admin():
-    return render_template("/layout-admin.html")
-'''
-@app.route("/")
-@app.route("/index")
-def index():
-    productos_lista = db.session.query(Productos)\
-        .join(CategoriasProducto, Productos.categoria_id == CategoriasProducto.id_categoria)\
-        .filter(Productos.es_active == 1)\
-        .order_by(Productos.fecha_creacion.desc())\
-        .limit(6)\
-        .all()
-    return render_template("/home/index.html", productos_lista=productos_lista)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -158,9 +140,19 @@ def refresh():
     except Exception:
         return jsonify({"error": "Token inválido o expirado"}), 401
 
-@app.route('/')
+@app.route("/")
 def index():
-    return redirect(url_for('dashboard'))
+    productos_lista = db.session.query(Productos)\
+        .join(CategoriasProducto, Productos.categoria_id == CategoriasProducto.id_categoria)\
+        .filter(Productos.es_active == 1)\
+        .order_by(Productos.fecha_creacion.desc())\
+        .limit(6)\
+        .all()
+    return render_template("/home/index.html", productos_lista=productos_lista)
+
+@app.route("/admin")
+def admin():
+    return render_template("/base.html")
 
 @app.route('/dashboard')
 @login_required
@@ -275,6 +267,7 @@ def inject_sidebar_counts():
     mermas_recientes = 0
     
     if config and config.alerta_stock_minimo:
+        
         criticos = db.session.query(MateriaPrima).join(
             ExistenciaMateriaPrima,
             MateriaPrima.id_materia_prima == ExistenciaMateriaPrima.materia_prima_id

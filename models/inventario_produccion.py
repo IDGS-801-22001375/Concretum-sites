@@ -1,5 +1,5 @@
 import datetime
-from extensions import db
+from .extensions import db
 
 class Existencias(db.Model):
     __tablename__ = 'existencias'

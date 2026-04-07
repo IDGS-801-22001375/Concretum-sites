@@ -1,7 +1,6 @@
-from routes.produccion.inventario import inventario_bp
+from routes.inventario import inventario_bp
 from flask import render_template, request
-from .models import db, Existencias
-from routes.produccion.productos.models import Productos
+from models import db, Existencias, Productos
 
 def obtener_productos(page=1):
     pagination = db.session.query(Existencias)\

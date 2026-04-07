@@ -18,7 +18,7 @@ class Merma(db.Model):
     movimiento_id  = db.Column(db.BigInteger, db.ForeignKey('movimientos_inventario.id_movimiento_in', ondelete='SET NULL'))
 
     usuario    = db.relationship('User',                backref='mermas')
-    movimiento = db.relationship('MovimientoInventario', backref='merma')
+    movimiento = db.relationship('MovimientosInventario', backref='merma')
 
     @property
     def id(self):

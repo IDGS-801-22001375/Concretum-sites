@@ -5,17 +5,18 @@ Importa desde aquí en cualquier parte del proyecto:
     from models import db, User, Compra, ...
 """
 
-from .extensions          import db
+from .extensions    import db
 from .usuarios      import Role, User, usuario_roles
 from .proveedores   import Proveedor, CategoriaProveedor
 from .compras       import Compra, CompraDetalle, HistorialCompra
 from .pagos         import PagoProveedor
-from .materia_prima import MateriaPrima, ExistenciaMateriaPrima
-from .productos     import CategoriaProducto, Producto, Existencia
-from .inventario    import MovimientoInventario
-from .produccion    import Receta, Produccion
+from .productos     import CategoriasProducto, Productos, Color, UnidadMedida
+from .inventario    import MovimientosInventario, Existencias
 from .mermas        import Merma
+from .produccion    import Produccion
 from .configuracion import ConfiguracionEmpresa
+from .materia_prima import ExistenciaMateriaPrima, MateriaPrima
+from .recetas       import RecetaDetalle, Recetas
  
 __all__ = [
     # Core
@@ -28,16 +29,18 @@ __all__ = [
     'Compra', 'CompraDetalle', 'HistorialCompra',
     # Pagos
     'PagoProveedor',
-    # Materia Prima
-    'MateriaPrima', 'ExistenciaMateriaPrima',
     # Productos
-    'CategoriaProducto', 'Producto', 'Existencia',
+    'CategoriasProducto', 'Productos', 'Color', 'UnidadMedida'
     # Inventario
-    'MovimientoInventario',
-    # Producción
-    'Receta', 'Produccion',
+    'MovimientosInventario', 'Existencias'
     # Mermas
     'Merma',
+    # Produccion
+    'Produccion',
     # Configuración
     'ConfiguracionEmpresa',
+    # Recetas
+    'RecetaDetalle', 'Recetas',
+    # Materia prima
+    'ExistenciaMateriaPrima', 'MateriaPrima'
 ]

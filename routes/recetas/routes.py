@@ -2,17 +2,15 @@ import datetime
 from sqlalchemy.orm import joinedload
 from flask import flash, redirect, render_template, request, url_for
 
-from routes.produccion.recetas import recetas_bp
-from routes.produccion.recetas.forms import RecetaForm, RecetaDetalleForm
-from routes.produccion.recetas.models import Recetas, RecetaDetalle, MateriaPrima, db
-from routes.produccion.productos.models import UnidadMedida, Productos
-
+from routes.recetas import recetas_bp
+from forms import RecetaForm, RecetaDetalleForm
+from models import Recetas, RecetaDetalle, MateriaPrima, UnidadMedida, Productos, db
 
 def get_producto():
     return [(p.id_producto, p.nombre) for p in Productos.query.filter_by(es_active=True).all()]
 
 def get_materia_prima():
-    return [(mp.id_materia_prima, mp.nombre) for mp in MateriaPrima.query.filter_by(es_active=True).all()]
+    return [(mp.id_materia_prima, mp.nombre) for mp in MateriaPrima.query.filter_by(es_activo=True).all()]
 
 def get_unidades():
     return [(u.id_unidad, u.nombre) for u in UnidadMedida.query.filter_by(es_active=True).all()]

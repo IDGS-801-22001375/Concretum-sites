@@ -25,6 +25,27 @@
         </div>
 
         <div>
+            <p class="text-gray-400 text-xs mb-2 uppercase">Producción</p>
+            <div class="space-y-1">
+                <a href="{{ url_for('productos_bp.get_datos') }}"
+                    class="flex items-center justify-between px-3 py-2 rounded hover:bg-[#123555] {% if request.endpoint and request.endpoint.startswith('materia_prima') %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                    <span class="flex items-center gap-3">🧱 Productos</span>
+                    {% if sidebar_criticos > 0 %}
+                    <span class="bg-red-500 text-xs px-2 py-0.5 rounded-full">{{ sidebar_criticos }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('inventario.index') }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555] {% if request.endpoint and request.endpoint.startswith('inventario') %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                    📦 Inventario General
+                </a>
+                <a href="{{ url_for('compras.index') }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555] {% if request.endpoint and request.endpoint.startswith('compras') %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                    🛒 Compras
+                </a>
+            </div>
+        </div>
+
+        <div>
             <p class="text-gray-400 text-xs mb-2 uppercase">Inventario</p>
             <div class="space-y-1">
                 <a href="{{ url_for('materia_prima.index') }}"

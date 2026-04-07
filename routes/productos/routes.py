@@ -1,9 +1,9 @@
 import datetime
 from werkzeug.datastructures import CombinedMultiDict
-from routes.produccion.productos import productos_bp
-from .forms import ProductoForm
+from routes.productos import productos_bp
+from forms import ProductoForm
 from flask import render_template, request, redirect, url_for, flash
-from .models import UnidadMedida, Color, CategoriasProducto, db, Productos
+from models import UnidadMedida, Color, CategoriasProducto, db, Productos
 import uuid
 import os
 from werkzeug.utils import secure_filename
