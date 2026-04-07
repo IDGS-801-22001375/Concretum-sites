@@ -12,7 +12,7 @@ with app.app_context():
         admin_user = user_datastore.create_user(
             username='admin',
             email='admin@concretum.com',
-            password=hash_password('12345678'), # <-- CORRECCIÓN
+            password=hash_password('12345678'), 
             fs_uniquifier=str(uuid.uuid4()),
             active=True
         )

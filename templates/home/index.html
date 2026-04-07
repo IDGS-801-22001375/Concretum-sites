@@ -4,283 +4,291 @@
 <script src="https://cdn.tailwindcss.com"></script>
 
 <nav class="bg-[#002F5C] border-b border-[white]">
-    {% include 'home/navbar.html' %}
+  {% include 'home/navbar.html' %}
 </nav>
 
-<section class="bg-[#002F5C] min-h-screen">
-    <div class="max-w-7xl mx-auto grid grid-cols-2 items-center min-h-screen">
-        <div class="flex flex-col gap-6">
-            <span class="text-white text-lg">Soluciones industriales de construcción</span>
+<section id="inicio" class="bg-[#002F5C] min-h-screen">
+  <div class="max-w-7xl mx-auto grid grid-cols-2 items-center min-h-screen">
+    <div class="flex flex-col gap-6">
+      <span class="text-white text-lg">Soluciones industriales de construcción</span>
 
-            <h1 class="text-white text-6xl font-bold">
-                MATERIALES <span class="text-[#008DC0]">PREFABRICADOS</span> DE ALTO RENDIMIENTO
-            </h1>
+      <h1 class="text-white text-6xl font-bold">
+        MATERIALES <span class="text-[#008DC0]">PREFABRICADOS</span> DE ALTO RENDIMIENTO
+      </h1>
 
-            <p class="text-white text-lg">
-                Proveemos soluciones estructurales prefabricadas de clase mundial para 
-                constructoras e industrias. Calidad certificada, entregas precisas y 
-                soporte técnico especializado.
-            </p>
+      <p class="text-white text-lg">
+        Proveemos soluciones estructurales prefabricadas de clase mundial para
+        constructoras e industrias. Calidad certificada, entregas precisas y
+        soporte técnico especializado.
+      </p>
 
-            <div class="flex gap-4">
-                <a href="" class="bg-[#008DC0] text-white px-6 py-4 rounded-md font-roboto font-medium">Ver Catálogo</a>
-                <a href="" class="bg-transparent text-white border border-[white] px-6 py-4 rounded-md font-roboto font-medium">Conocer más</a>
-            </div>
-        </div>
-
-        <div>
-            <img src="{{url_for('static', filename='images/logo-hero.png')}}" alt="Hero Image" class="object-cover items-center mx-auto">
-        </div>
-
-    </div>
-</section>
-
-<section class="bg-[#F4F8FC] min-h-screen flex items-center py-20">
-    <div class="max-w-7xl mx-auto">
-        <div class="grid grid-cols-2 gap-4">
-            <div class="leading-10">
-                <span class="text-[#008DC0] text-lg font-roboto font-medium">NUESTROS CATÁLOGO</span>
-                <h2 class="text-[#002F5C] text-4xl font-bold">MATERIALES <span class="text-[#008DC0]">PARA CONSTRUIR</span> EL FUTURO</h2>
-                <p class="text-gray-500 text-lg font-roboto font-medium">
-                    Proveemos soluciones estructurales prefabricadas de clase mundial para 
-                    constructoras e industrias. Calidad certificada, entregas precisas y 
-                    soporte técnico especializado.
-                </p>
-            </div>
-            <div class="flex gap-20 items-center justify-center">
-                <a href="" class="bg-[#008DC0] text-white text-center px-6 py-4 rounded-md font-roboto font-medium">
-                    Ver catálogo completo
-                 </a>
-            </div>
-        </div>
-        <div class="grid grid-cols-3 gap-4 mt-6">
-            {% include 'home/card-product.html' %}
-        </div>
-    </div>
-</section>
-
-<section class="min-h-screen bg-[#002F5C] flex items-center justify-center py-20 px-10">
-    <div class="max-w-7xl w-full grid md:grid-cols-2 gap-16">
-  
-      <!-- IZQUIERDA -->
-      <div>
-        <div class="mb-10">
-          <span class="text-[#008DC0] text-sm font-bold">¿POR QUÉ ELEGIR CONCRETUM?</span>
-  
-          <h1 class="text-white text-5xl font-bold leading-tight mt-2">
-            INGENIERÍA 
-            <span class="text-[#008DC0]">QUE</span> 
-            RESISTE TODO
-          </h1>
-  
-          <p class="text-gray-300 mt-6 leading-relaxed">
-            Con más de 25 años en la industria, combinamos tecnología de punta,
-            procesos certificados y un equipo de ingenieros especializados para
-            garantizar que cada pieza que entregamos cumpla con los más altos estándares del mercado.
-          </p>
-        </div>
-  
-        <!-- CARD IZQUIERDA -->
-        <div class="space-y-6">
-  
-          <!-- ITEM -->
-          <div class="flex gap-4 items-start p-4 rounded-lg">
-            <div class="w-10 h-10 p-10 flex items-center justify-center bg-[#002445] rounded">
-              ✔
-            </div>
-            <div>
-              <h4 class="text-white font-semibold">Certificación ISO 9001</h4>
-              <p class="text-gray-300 text-sm">
-                Procesos de calidad auditados y certificados internacionalmente en todas nuestras plantas.
-              </p>
-            </div>
-          </div>
-  
-          <div class="flex gap-4 items-start p-4 rounded-lg">
-            <div class="w-10 h-10 p-10 flex items-center justify-center bg-[#002445] rounded">
-              📏
-            </div>
-            <div>
-              <h4 class="text-white font-semibold">Ingeniería a la medida</h4>
-              <p class="text-gray-300 text-sm">
-                Diseñamos y calculamos cada elemento según los requerimientos específicos de tu proyecto.
-              </p>
-            </div>
-          </div>
-  
-          <div class="flex gap-4 items-start p-4 rounded-lg">
-            <div class="w-10 h-10 p-10 flex items-center justify-center bg-[#002445] rounded">
-              🚚
-            </div>
-            <div>
-              <h4 class="text-white font-semibold">Logística garantizada</h4>
-              <p class="text-gray-300 text-sm">
-                Flota propia de transporte especializado para entregas seguras en toda la república.
-              </p>
-            </div>
-          </div>
-  
-          <div class="flex gap-4 items-start p-4 rounded-lg">
-            <div class="w-10 h-10 p-10 flex items-center justify-center bg-[#002445] rounded">
-              🛠
-            </div>
-            <div>
-              <h4 class="text-white font-semibold">Soporte técnico</h4>
-              <p class="text-gray-300 text-sm">
-                Nuestros ingenieros te acompañan durante la instalación para garantizar el resultado.
-              </p>
-            </div>
-          </div>
-  
-        </div>
-      </div>
-  
-      <!-- DERECHA -->
-      <div class="space-y-6">
-  
-        <!-- CARD -->
-        <div class="bg-[#002445] p-6 rounded-xl flex gap-4 items-start">
-          <div class="m-5">
-            <h4 class="text-white font-semibold text-2xl">Resistencia comprobada</h4>
-            <p class="text-gray-300 text-sm mt-2">
-              Concreto f'c desde 250 hasta 500 kg/cm² con control riguroso de mezclas y curado.
-            </p>
-          </div>
-        </div>
-  
-        <div class="bg-[#002445] p-6 rounded-xl flex gap-4 items-start">
-          <div class="m-5">
-            <h4 class="text-white font-semibold text-2xl">Producción automatizada</h4>
-            <p class="text-gray-300 text-sm mt-2">
-              Planta con tecnología alemana y capacidad de producción de 3,000 ton/mes.
-            </p>
-          </div>
-        </div>
-  
-        <div class="bg-[#002445] p-6 rounded-xl flex gap-4 items-start">
-          <div class="m-5">
-            <h4 class="text-white font-semibold text-2xl">Tiempos de obra reducidos</h4>
-            <p class="text-gray-300 text-sm mt-2">
-              Los prefabricados reducen hasta un 40% el tiempo total de construcción en obra.
-            </p>
-          </div>
-        </div>
-  
-        <div class="bg-[#002445] p-6 rounded-xl flex gap-4 items-start">
-          <div class="m-5">
-            <h4 class="text-white font-semibold text-2xl">Costo total optimizado</h4>
-            <p class="text-gray-300 text-sm mt-2">
-              Menos desperdicio, menos mano de obra y menor tiempo = proyecto más rentable.
-            </p>
-          </div>
-        </div>
-  
-      </div>
-  
-    </div>
-  </section>
-
-  <section class="min-h-screen bg-[#F4F8FC] flex items-center justify-center py-20 px-10">
-    <div class="max-w-7xl w-full gap-16">
-
-      <div>
-        <div class="mb-10">
-          <span class="text-[#008DC0] text-sm font-bold">LO QUE DICEN NUESTROS CLIENTES</span>
-  
-          <h1 class="text-[#002F5C] text-5xl font-bold leading-tight mt-2">
-            CONFIANZA 
-            <span class="text-[#008DC0]">CONSTRUIDA</span> 
-          </h1>
-          <p class="text-[#002F5C] mt-6 leading-relaxed">
-            Te compartimos algunos de nuestros testimoniales de empresan que confian en nosotros,<br> demostrando nuestra calidad
-            y compromiso con las constructoras.
-          </p>
-        </div>
-  
-        <!-- TESTIMONIALS -->
-        <div class="flex flex-row gap-10">
-  
-            <figure class="max-w-3xl bg-white p-10 mx-auto border-b-4 border-[#008DC0] rounded-xl shadow-lg">
-                <div class="flex items-center space-x-1 mb-4">
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                    <svg class="w-5 h-5 text-fg-disabled" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                </div>
-                <blockquote>
-                    <p class="text-2xl font-semibold text-heading tracking-tight">"Tiene buenos productos, y hacen buen trabajo, entregaron todo correctamente y terminaron su trabajo en un día."</p>
-                </blockquote>
-                <figcaption class="flex items-center mt-6 space-x-3 rtl:space-x-reverse">
-                    <img class="w-6 h-6 rounded-full" src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/bonnie-green.png" alt="profile picture">
-                    <div class="flex items-center divide-x rtl:divide-x-reverse divide-default">
-                        <cite class="pe-3 font-medium text-heading">Gael Sánchez</cite>
-                        <cite class="ps-3 text-sm text-body">CEO Cementos Cruz Azul</cite>
-                    </div>
-                </figcaption>
-            </figure>
-
-            <figure class="max-w-3xl bg-white p-10 mx-auto border-b-4 border-[#008DC0] rounded-xl shadow-lg">
-                <div class="flex items-center space-x-1 mb-4">
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                </div>
-                <blockquote>
-                    <p class="text-2xl font-semibold text-heading tracking-tight">"Me parece un empresa 100% profesional, sus productos tienen una calidad excepcional y cumple con los plazos pactados."</p>
-                </blockquote>
-                <figcaption class="flex items-center mt-6 space-x-3 rtl:space-x-reverse">
-                    <img class="w-6 h-6 rounded-full" src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/bonnie-green.png" alt="profile picture">
-                    <div class="flex items-center divide-x rtl:divide-x-reverse divide-default">
-                        <cite class="pe-3 font-medium text-heading">Baruc Issac</cite>
-                        <cite class="ps-3 text-sm text-body">CEO The Blocks</cite>
-                    </div>
-                </figcaption>
-            </figure>
-  
-            <figure class="max-w-3xl bg-white p-10 mx-auto border-b-4 border-[#008DC0] rounded-xl shadow-lg">
-                <div class="flex items-center space-x-1 mb-4">
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                    <svg class="w-5 h-5 text-[#008DC0]" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                    <svg class="w-5 h-5 text-fg-disabled" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M13.849 4.22c-.684-1.626-3.014-1.626-3.698 0L8.397 8.387l-4.552.361c-1.775.14-2.495 2.331-1.142 3.477l3.468 2.937-1.06 4.392c-.413 1.713 1.472 3.067 2.992 2.149L12 19.35l3.897 2.354c1.52.918 3.405-.436 2.992-2.15l-1.06-4.39 3.468-2.938c1.353-1.146.633-3.336-1.142-3.477l-4.552-.36-1.754-4.17Z"/></svg>
-                </div>
-                <blockquote>
-                    <p class="text-2xl font-semibold text-heading tracking-tight">"Empresa profesional y con variedad de productos, cumpliendo en tiempo y forma el pedido ayudando a la realización de proyectos a gran escala."</p>
-                </blockquote>
-                <figcaption class="flex items-center mt-6 space-x-3 rtl:space-x-reverse">
-                    <img class="w-6 h-6 rounded-full" src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/bonnie-green.png" alt="profile picture">
-                    <div class="flex items-center divide-x rtl:divide-x-reverse divide-default">
-                        <cite class="pe-3 font-medium text-heading">Yosseline Dominguez</cite>
-                        <cite class="ps-3 text-sm text-body">CEO Infonavit</cite>
-                    </div>
-                </figcaption>
-            </figure>
-        </div>
+      <div class="flex gap-4">
+        <a href="#productos" class="bg-[#008DC0] text-white px-6 py-4 rounded-md font-roboto font-medium">Ver
+          Catálogo</a>
+        <a href="#nosotros"
+          class="bg-transparent text-white border border-[white] px-6 py-4 rounded-md font-roboto font-medium">Conocer
+          más</a>
       </div>
     </div>
-  </section>
 
-  <section class="bg-[#008DC0] min-h-screen flex flex-col items-center justify-center gap-20">
     <div>
-      <h1 class="text-6xl text-center text-[#ffffff] mb-5">¿Listo para tu proximo proyecto?</h1>
-      <p class="text-md text-center text-[#ffffff]">
-        Cuéntanos sobre tu proyecto y deja que nuestro equipo de ingenieros expertos transforme tu idea en una solución real.<br> 
-        Analizaremos cada detalle para brindarte una cotización personalizada, clara y competitiva en menos de 24 horas, <br>
-        ayudándote a tomar la mejor decisión para llevar tu proyecto al siguiente nivel.
+      <img src="{{url_for('static', filename='images/logo-hero.png')}}" alt="Hero Image"
+        class="object-cover items-center mx-auto">
+    </div>
+  </div>
+</section>
+
+<section id="productos" class="bg-[#F4F8FC] min-h-screen flex items-center py-20">
+  <div class="max-w-7xl mx-auto w-full px-6">
+    <div class="grid grid-cols-2 gap-4 mb-10">
+      <div class="leading-10">
+        <span class="text-[#008DC0] text-lg font-roboto font-medium">NUESTRO CATÁLOGO</span>
+        <h2 class="text-[#002F5C] text-4xl font-bold">MATERIALES <span class="text-[#008DC0]">PARA CONSTRUIR</span> EL
+          FUTURO</h2>
+        <p class="text-gray-500 text-lg font-roboto font-medium leading-relaxed mt-2">
+          Proveemos soluciones estructurales prefabricadas de clase mundial para
+          constructoras e industrias. Calidad certificada, entregas precisas y
+          soporte técnico especializado.
+        </p>
+      </div>
+      <div class="flex gap-20 items-center justify-end">
+        <a href="#contacto"
+          class="bg-[#008DC0] text-white text-center px-6 py-4 rounded-md font-roboto font-medium hover:bg-[#0074A0] transition">
+          Cotizar productos
+        </a>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      {% for producto in productos_lista %}
+      <div
+        class="bg-neutral-primary-soft block w-full rounded-xl shadow-lg overflow-hidden transition-transform duration-300 hover:-translate-y-2">
+        <div class="bg-[#A5CDE3] border-t-4 border-[#008DC0] flex justify-center items-center h-48">
+          <img class="max-h-full w-auto object-cover" src="{{ url_for('static', filename=producto.enlace_fotografia) }}"
+            alt="{{ producto.nombre }}">
+        </div>
+        <div class="p-6 text-center bg-white flex flex-col h-full">
+          <span
+            class="inline-block mb-3 bg-[#E5F3FA] text-[#008DC0] text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+            {{ producto.categoria.nombre }}
+          </span>
+          <h3 class="text-2xl font-bold text-[#002F5C] mb-3">{{ producto.nombre }}</h3>
+          <p class="text-gray-600 text-sm mb-6 flex-grow">{{ producto.descripcion }}</p>
+
+          <a href="#contacto"
+            class="inline-flex justify-center items-center text-[#008DC0] font-semibold hover:text-[#002F5C] transition">
+            Solicitar información
+            <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section id="nosotros" class="min-h-screen bg-[#002F5C] flex items-center justify-center py-20 px-10">
+  <div class="max-w-7xl w-full grid md:grid-cols-2 gap-16">
+
+    <div>
+      <div class="mb-10">
+        <span class="text-[#008DC0] text-sm font-bold tracking-widest">¿POR QUÉ ELEGIR CONCRETUM?</span>
+
+        <h1 class="text-white text-5xl font-bold leading-tight mt-2">
+          INGENIERÍA <span class="text-[#008DC0]">QUE</span> RESISTE TODO
+        </h1>
+
+        <p class="text-gray-300 mt-6 leading-relaxed">
+          Con más de 25 años en la industria, combinamos tecnología de punta,
+          procesos certificados y un equipo de ingenieros especializados para
+          garantizar que cada pieza que entregamos cumpla con los más altos estándares del mercado.
+        </p>
+      </div>
+
+      <div class="space-y-6">
+        <div class="flex gap-4 items-start p-4 rounded-lg bg-[#002445]">
+          <div class="text-2xl text-[#008DC0]">✔</div>
+          <div>
+            <h4 class="text-white font-semibold">Certificación ISO 9001</h4>
+            <p class="text-gray-400 text-sm mt-1">Procesos de calidad auditados y certificados internacionalmente en
+              todas nuestras plantas.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start p-4 rounded-lg bg-[#002445]">
+          <div class="text-2xl text-[#008DC0]">📏</div>
+          <div>
+            <h4 class="text-white font-semibold">Ingeniería a la medida</h4>
+            <p class="text-gray-400 text-sm mt-1">Diseñamos y calculamos cada elemento según los requerimientos
+              específicos de tu proyecto.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start p-4 rounded-lg bg-[#002445]">
+          <div class="text-2xl text-[#008DC0]">🚚</div>
+          <div>
+            <h4 class="text-white font-semibold">Logística garantizada</h4>
+            <p class="text-gray-400 text-sm mt-1">Flota propia de transporte especializado para entregas seguras en toda
+              la república.</p>
+          </div>
+        </div>
+
+        <div class="flex gap-4 items-start p-4 rounded-lg bg-[#002445]">
+          <div class="text-2xl text-[#008DC0]">🛠</div>
+          <div>
+            <h4 class="text-white font-semibold">Soporte técnico</h4>
+            <p class="text-gray-400 text-sm mt-1">Nuestros ingenieros te acompañan durante la instalación para
+              garantizar el resultado.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="space-y-6">
+      <div class="bg-[#002445] p-8 rounded-xl border-l-4 border-[#008DC0] shadow-lg">
+        <h4 class="text-white font-bold text-2xl mb-2">Resistencia comprobada</h4>
+        <p class="text-gray-400 text-sm leading-relaxed">Concreto f'c desde 250 hasta 500 kg/cm² con control riguroso de
+          mezclas y curado.</p>
+      </div>
+
+      <div class="bg-[#002445] p-8 rounded-xl border-l-4 border-[#008DC0] shadow-lg">
+        <h4 class="text-white font-bold text-2xl mb-2">Producción automatizada</h4>
+        <p class="text-gray-400 text-sm leading-relaxed">Planta con tecnología alemana y capacidad de producción de
+          3,000 ton/mes.</p>
+      </div>
+
+      <div class="bg-[#002445] p-8 rounded-xl border-l-4 border-[#008DC0] shadow-lg">
+        <h4 class="text-white font-bold text-2xl mb-2">Tiempos de obra reducidos</h4>
+        <p class="text-gray-400 text-sm leading-relaxed">Los prefabricados reducen hasta un 40% el tiempo total de
+          construcción en obra.</p>
+      </div>
+
+      <div class="bg-[#002445] p-8 rounded-xl border-l-4 border-[#008DC0] shadow-lg">
+        <h4 class="text-white font-bold text-2xl mb-2">Costo total optimizado</h4>
+        <p class="text-gray-400 text-sm leading-relaxed">Menos desperdicio, menos mano de obra y menor tiempo = proyecto
+          más rentable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bg-[#F4F8FC] flex items-center justify-center py-24 px-10">
+  <div class="max-w-7xl w-full">
+    <div class="text-center mb-16">
+      <span class="text-[#008DC0] text-sm font-bold tracking-widest">LO QUE DICEN NUESTROS CLIENTES</span>
+      <h2 class="text-[#002F5C] text-5xl font-bold mt-2">CONFIANZA <span class="text-[#008DC0]">CONSTRUIDA</span></h2>
+      <p class="text-gray-600 mt-4 max-w-2xl mx-auto">
+        Te compartimos algunos testimonios de empresas que confían en nosotros, demostrando nuestra calidad y
+        compromiso.
       </p>
     </div>
-    <div>
-      <a class="p-5 bg-[#ffffff] text-[#002445] rounded-md font-semibold" href="">Hacer pedido</a>
-      <a class="p-5 bg-transparent border border-[#ffffff] text-[#ffffff] rounded-md font-semibold" href="">Descargar catálogo</a>
-    </div>
-  </section>
 
-  <footer>
-    {% include 'home/footer.html' %}
-  </footer>
+    <div class="grid md:grid-cols-2 gap-10">
+      <figure class="bg-white p-8 border-b-4 border-[#008DC0] rounded-xl shadow-lg relative">
+        <div class="text-[#008DC0] text-4xl absolute top-6 right-8 opacity-20 font-serif">"</div>
+        <blockquote class="mb-6">
+          <p class="text-xl italic text-gray-700">"Tiene buenos productos y hacen un buen trabajo, entregaron todo
+            correctamente y terminaron la instalación en el tiempo acordado."</p>
+        </blockquote>
+        <figcaption class="flex items-center space-x-4">
+          <img class="w-12 h-12 rounded-full border-2 border-[#008DC0]"
+            src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/bonnie-green.png" alt="Gael">
+          <div>
+            <div class="font-bold text-[#002F5C]">Gael Sánchez</div>
+            <div class="text-sm text-gray-500">CEO Cementos Cruz Azul</div>
+          </div>
+        </figcaption>
+      </figure>
+
+      <figure class="bg-white p-8 border-b-4 border-[#008DC0] rounded-xl shadow-lg relative">
+        <div class="text-[#008DC0] text-4xl absolute top-6 right-8 opacity-20 font-serif">"</div>
+        <blockquote class="mb-6">
+          <p class="text-xl italic text-gray-700">"Me parece una empresa 100% profesional, sus productos tienen una
+            calidad excepcional y siempre cumplen con los plazos pactados."</p>
+        </blockquote>
+        <figcaption class="flex items-center space-x-4">
+          <img class="w-12 h-12 rounded-full border-2 border-[#008DC0]"
+            src="https://flowbite.s3.amazonaws.com/blocks/marketing-ui/avatars/jese-leos.png" alt="Baruc">
+          <div>
+            <div class="font-bold text-[#002F5C]">Baruc Issac</div>
+            <div class="text-sm text-gray-500">CEO The Blocks</div>
+          </div>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="contacto" class="bg-[#008DC0] py-24 px-6 text-center">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-5xl font-bold text-white mb-6">¿Listo para tu próximo proyecto?</h2>
+    <p class="text-lg text-blue-100 mb-10 leading-relaxed">
+      Cuéntanos sobre tu proyecto y deja que nuestro equipo de ingenieros transforme tu idea en una solución real.
+      Analizaremos cada detalle para brindarte una cotización personalizada y competitiva en menos de 24 horas.
+    </p>
+    <div class="flex flex-col sm:flex-row justify-center gap-4">
+      <a class="px-8 py-4 bg-white text-[#002F5C] rounded-lg font-bold hover:bg-gray-100 transition shadow-lg"
+        href="#">Solicitar cotización</a>
+      <a class="px-8 py-4 bg-transparent border-2 border-white text-white rounded-lg font-bold hover:bg-white hover:text-[#008DC0] transition"
+        href="#productos">Ver catálogo nuevamente</a>
+    </div>
+  </div>
+</section>
+
+<footer class="bg-[#001F3F] text-white pt-16 pb-8 border-t-4 border-[#008DC0]">
+  <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-12">
+    <div class="space-y-4">
+      <img src="{{url_for('static', filename='images/logo-concretum.png')}}" class="h-6 opacity-90">
+      <p class="text-gray-400 text-sm leading-relaxed mt-4">
+        Especialistas en materiales prefabricados de alto rendimiento para proyectos
+        industriales y de construcción. Innovación, calidad y precisión en cada entrega.
+      </p>
+    </div>
+
+    <div>
+      <h3 class="text-lg font-bold mb-4 tracking-wide">NAVEGACIÓN</h3>
+      <ul class="space-y-3 text-gray-400 text-sm">
+        <li><a href="#inicio" class="hover:text-white transition">Inicio</a></li>
+        <li><a href="#productos" class="hover:text-white transition">Productos</a></li>
+        <li><a href="#nosotros" class="hover:text-white transition">Nosotros</a></li>
+        <li><a href="#contacto" class="hover:text-white transition">Contacto</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="text-lg font-bold mb-4 tracking-wide">CONTACTO</h3>
+      <ul class="space-y-3 text-gray-400 text-sm">
+        <li class="flex items-center gap-2"><span class="text-[#008DC0]">📍</span> León, Gto., México</li>
+        <li class="flex items-center gap-2"><span class="text-[#008DC0]">📞</span> +52 477 000 0000</li>
+        <li class="flex items-center gap-2"><span class="text-[#008DC0]">✉️</span> contacto@concretum.com</li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="text-lg font-bold mb-4 tracking-wide">BOLETÍN</h3>
+      <p class="text-gray-400 text-sm mb-4">
+        Recibe novedades y promociones directamente en tu correo.
+      </p>
+      <form class="flex flex-col gap-3">
+        <input type="email" placeholder="Tu correo electrónico"
+          class="px-4 py-3 rounded-md text-black outline-none w-full focus:ring-2 focus:ring-[#008DC0]">
+        <button type="button"
+          class="bg-[#008DC0] py-3 rounded-md font-bold text-white hover:bg-[#0074A0] transition w-full">
+          Suscribirme
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div
+    class="border-t border-gray-700 mt-12 pt-6 text-center text-gray-500 text-sm flex flex-col md:flex-row justify-center items-center gap-4">
+    <span>© 2026 Concretum. Todos los derechos reservados.</span>
+    <span class="hidden md:inline">|</span>
+    <a href="#" class="hover:text-white transition">Aviso de privacidad</a>
+  </div>
+</footer>
 
 {% endblock %}

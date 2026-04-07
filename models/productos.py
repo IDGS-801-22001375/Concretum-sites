@@ -7,7 +7,8 @@ class CategoriasProducto(db.Model):
     id_categoria = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False, unique=True)
     descripcion = db.Column(db.String(255), nullable=False, unique=True)
-    es_active = db.Column(db.BigInteger, default=1)
+    # Mapeamos 'es_activo' de la BD a 'es_active' en Python
+    es_active = db.Column('es_activo', db.BigInteger, default=1) 
     fecha_creacion = db.Column(db.DateTime, default=datetime.datetime.now)
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
@@ -24,7 +25,8 @@ class Productos(db.Model):
     resistencia_mpa = db.Column(db.Float, nullable=False)
     color_id = db.Column(db.Integer, db.ForeignKey('colores.id_color'))
     precio_base = db.Column(db.Float, nullable=False)
-    es_active = db.Column(db.BigInteger, default=1)
+    # Mapeamos 'es_activo' de la BD a 'es_active' en Python
+    es_active = db.Column('es_activo', db.BigInteger, default=1)
     fecha_creacion = db.Column(db.DateTime, default=datetime.datetime.now)
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     
@@ -39,7 +41,8 @@ class Color(db.Model):
     nombre = db.Column(db.String(50), nullable=False)
     clave = db.Column(db.String(50), unique=True, nullable=False)
     codigo_hex = db.Column(db.String(7))
-    es_active = db.Column(db.Boolean, default=True)
+    # Mapeamos 'es_activo'
+    es_active = db.Column('es_activo', db.Boolean, default=True)
 
 class UnidadMedida(db.Model):
     __tablename__ = 'unidades_medida'
@@ -47,4 +50,5 @@ class UnidadMedida(db.Model):
     id_unidad = db.Column(db.Integer, primary_key=True)
     clave = db.Column(db.String(10), unique=True, nullable=False)
     nombre = db.Column(db.String(50), nullable=False)
-    es_active = db.Column(db.Boolean, default=True)
+    # Mapeamos 'es_activo'
+    es_active = db.Column('es_activo', db.Boolean, default=True)

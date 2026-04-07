@@ -1,81 +1,223 @@
-<div class="bg-[#123555] p-6 rounded-lg shadow-md">
-    <h2 class="text-lg font-semibold mb-4">
-        {% if modo_edicion %}
-            Editar Producto
-            <span class="text-green-400 text-sm">(Modo edición activo)</span>
-        {% elif form_activo %}
-            Registrar Producto
-            <span class="text-green-400 text-sm">(Formulario activo)</span>
-        {% else %}
-            Registrar Producto
-            <span class="text-red-400 text-sm">(Formulario desactivado)</span>
-        {% endif %}
-    </h2>
+{#
+Componente: Formulario de Producto
+Estilo unificado con el resto del sistema (inventario, recetas, proveedores)
+#}
 
-    <form 
-        method="POST" 
-        enctype="multipart/form-data"
-        {% if modo_edicion and id_producto %}
-            action="{{ url_for('productos_bp.update_producto', id_producto=id_producto) }}"
-        {% else %}
-            action="{{ url_for('productos_bp.save_producto') }}"
-        {% endif %}>
+<!-- Formulario de Producto -->
+<div class="bg-[#0F2A44] border border-[#1E3A5F] rounded-2xl shadow-xl overflow-hidden mb-8">
+    <div class="p-6 border-b border-[#1E3A5F]">
+        <div class="flex items-center gap-3">
+            <div
+                class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#008DC0] to-[#00A8E8] flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-white">
+                    {% if modo_edicion %}
+                    Editar Producto
+                    {% elif form_activo %}
+                    Registrar Producto
+                    {% else %}
+                    Registrar Producto
+                    {% endif %}
+                </h2>
+                <p class="text-sm text-gray-400">
+                    {% if modo_edicion %}
+                    <span class="text-[#008DC0]">Modo edición activo</span>
+                    {% elif form_activo %}
+                    <span class="text-emerald-400">Formulario activo</span>
+                    {% else %}
+                    <span class="text-red-400">Formulario desactivado - Haz clic en "Nuevo Producto" para
+                        comenzar</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
 
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <form method="POST" enctype="multipart/form-data" {% if modo_edicion and id_producto %}
+        action="{{ url_for('productos_bp.update_producto', id_producto=id_producto) }}" {% else %}
+        action="{{ url_for('productos_bp.save_producto') }}" {% endif %} class="p-6">
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         {{ form.hidden_tag() }}
 
-        <fieldset id="formBloqueado" class="grid grid-cols-3 gap-4" {% if not form_activo and not modo_edicion %} disabled {% endif %}>
+        <fieldset id="formBloqueado" {% if not form_activo and not modo_edicion %} disabled {% endif %}>
+            <!-- Datos principales - Fila 1 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Categoría -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        {{ form.categoria_id.label.text }}
+                        <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.categoria_id(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white text-sm
+                    rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                    transition-all") }}
+                    {% for error in form.categoria_id.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
 
-            {{ macros.campoNuevo(form.categoria_id) }}
-            {{ macros.campoNuevo(form.sku) }}
-            {{ macros.campoNuevo(form.nombre) }}
+                <!-- SKU -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        {{ form.sku.label.text }}
+                        <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.sku(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white text-sm
+                    rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                    transition-all", placeholder="Ej: BLK-12x20x40") }}
+                    {% for error in form.sku.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
 
-            {{ macros.campoNuevo(form.descripcion) }}
-            {{ macros.campoNuevo(form.unidad_medida) }}
-            {{ macros.campoNuevo(form.color) }}
+                <!-- Nombre -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        {{ form.nombre.label.text }}
+                        <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.nombre(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white text-sm
+                    rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                    transition-all", placeholder="Ej: Block Hueco 12x20x40") }}
+                    {% for error in form.nombre.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
 
-            {{ macros.campoNuevo(form.resistencia_mpa) }}
-            {{ macros.campoNuevo(form.precio_base) }}
-            {{ macros.campoNuevo(form.enlace_fotografia) }}
+            <!-- Fila 2 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Descripción -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        {{ form.descripcion.label.text }}
+                    </label>
+                    {{ form.descripcion(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white text-sm
+                    rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                    transition-all", placeholder="Descripción del producto") }}
+                    {% for error in form.descripcion.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
 
-            <!-- FECHA -->
+                <!-- Unidad de Medida -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        {{ form.unidad_medida.label.text }}
+                        <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.unidad_medida(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white
+                    text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                    transition-all") }}
+                    {% for error in form.unidad_medida.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Color -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        {{ form.color.label.text }}
+                        <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.color(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white text-sm
+                    rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                    transition-all") }}
+                    {% for error in form.color.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Fila 3 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Resistencia MPA -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        {{ form.resistencia_mpa.label.text }}
+                    </label>
+                    {{ form.resistencia_mpa(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white
+                    text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                    transition-all", placeholder="0.00") }}
+                    {% for error in form.resistencia_mpa.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Precio Base -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        {{ form.precio_base.label.text }}
+                        <span class="text-red-400">*</span>
+                    </label>
+                    {{ form.precio_base(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white text-sm
+                    rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                    transition-all", placeholder="0.00") }}
+                    {% for error in form.precio_base.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- Fotografía -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+                        {{ form.enlace_fotografia.label.text }}
+                        <span class="text-red-400">*</span>
+                    </label>
+                    <div class="relative">
+                        {{ form.enlace_fotografia(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F]
+                        text-white text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0]
+                        focus:border-transparent transition-all file:mr-4 file:py-1 file:px-4 file:rounded-lg
+                        file:border-0 file:text-sm file:font-semibold file:bg-[#008DC0]/20 file:text-[#008DC0]
+                        hover:file:bg-[#008DC0]/30") }}
+                    </div>
+                    {% for error in form.enlace_fotografia.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- FECHA (solo en modo edición) -->
             {% if modo_edicion and id_producto %}
-                <div class="col-span-3">
-                    <label class="block text-sm text-gray-300 mb-1">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
                         {{ form.fecha_creacion.label.text }}
                     </label>
-
-                    {{ form.fecha_creacion(
-                        class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white p-2",
-                        max=today,
-                        min=today
-                    ) }}
-
-                    {% if form.fecha_creacion.errors %}
-                        {% for error in form.fecha_creacion.errors %}
-                            <p class="text-red-400 text-sm">{{ error }}</p>
-                        {% endfor %}
-                    {% endif %}
+                    {{ form.fecha_creacion(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white
+                    text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                    transition-all", max=today, min=today) }}
+                    {% for error in form.fecha_creacion.errors %}
+                    <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
                 </div>
+            </div>
             {% endif %}
 
             <!-- BOTONES -->
-            <div class="col-span-3 flex justify-end gap-3 mt-4">
-                <button type="reset"
-                    class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded text-sm">
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#1E3A5F]">
+                <a href="{{ url_for('productos_bp.get_datos') }}"
+                    class="px-5 py-2.5 text-sm font-semibold text-gray-300 bg-[#1E3A5F] hover:bg-[#2A4A6F] rounded-xl transition-all">
                     Cancelar
-                </button>
-
+                </a>
                 <button type="submit"
-                    class="bg-green-500 hover:bg-green-400 px-6 py-2 rounded text-sm font-semibold">
+                    class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#008DC0] to-[#00A8E8] hover:from-[#007AAD] hover:to-[#0095CC] rounded-xl shadow-lg shadow-[#008DC0]/20 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
                     {% if modo_edicion %}
-                        Actualizar Producto
+                    Actualizar Producto
                     {% else %}
-                        Guardar Producto
+                    Guardar Producto
                     {% endif %}
                 </button>
             </div>
         </fieldset>
-
     </form>
 </div>

@@ -70,7 +70,7 @@ def inject_session():
 
 @app.route('/favicon.ico')
 def favicon():
-    return make_response('', 204)
+    return redirect(url_for('static', filename='images/logoConcretum.ico'))
 
 @user_authenticated.connect_via(app)
 def on_user_authenticated(app, user, **extra):
@@ -160,7 +160,7 @@ def admin():
 # Login y dashboard de Cristian
 def custom_login():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+       return redirect(url_for('comercial_bp.dashboard')) 
     form = LoginFormSimple()
     if form.validate_on_submit():
         user = form.user
@@ -169,7 +169,7 @@ def custom_login():
             return redirect(url_for('verificar_2fa'))
         else:
             login_user(user)
-            next_page = request.args.get('next') or url_for('dashboard')
+            next_page = request.args.get('next') or url_for('comercial_bp.dashboard')
             return redirect(next_page)
     return render_template('auth/login.html', login_user_form=form)
 
@@ -198,7 +198,7 @@ def verificar_2fa():
             if totp.verify(code):
                 login_user(user)
                 session.pop('pending_2fa_user_id', None)
-                next_page = request.args.get('next') or url_for('dashboard')
+                next_page = request.args.get('next') or url_for('comercial_bp.dashboard') 
                 return redirect(next_page)
             else:
                 flash('Código incorrecto. Inténtalo de nuevo.', 'error')

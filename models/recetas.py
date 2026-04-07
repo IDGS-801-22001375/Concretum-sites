@@ -10,7 +10,8 @@ class Recetas(db.Model):
     cuanto_produce = db.Column(db.Integer, nullable=False)
     tiempo_produccion = db.Column(db.Float, nullable=False)
     resistencia = db.Column(db.Float, nullable=False)
-    es_active = db.Column(db.BigInteger, default=1)
+    # En la BD la columna se llama 'es_activa', la mapeamos aquí:
+    es_active = db.Column('es_activa', db.BigInteger, default=1)
     fecha_creacion = db.Column(db.DateTime, default=datetime.datetime.now)
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     
@@ -27,4 +28,4 @@ class RecetaDetalle(db.Model):
  
     receta = db.relationship('Recetas', backref='detalles')
     unidad_medida = db.relationship('UnidadMedida', backref='recetas_detalle')
-    materia_prima = db.relationship('MateriaPrima', backref='recetas_detalle')    
+    materia_prima = db.relationship('MateriaPrima', backref='recetas_detalle')
