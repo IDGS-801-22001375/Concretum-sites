@@ -15,7 +15,7 @@ __all__ = [
     'UsuarioForm',
     'RecetaForm',
     'RecetaDetalleForm',
-    'ProductoForm'
+    'ProductoForm',
     'VentaForm',
     'CorteForm',
     'TicketForm'

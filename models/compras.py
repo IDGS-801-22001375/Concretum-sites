@@ -11,7 +11,6 @@ class Compra(db.Model):
     fecha_compra   = db.Column(db.DateTime, default=datetime.utcnow)
     total          = db.Column(db.Numeric(12, 2), nullable=False, default=0)
     estado         = db.Column(db.Enum('CREADA', 'RECIBIDA', 'CANCELADA'), default='CREADA')
-    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
 
     pagos = db.relationship('PagoProveedor', backref='compra', lazy='dynamic', cascade='all, delete-orphan')
 
@@ -22,14 +21,14 @@ class Compra(db.Model):
 
 # ====================== COMPRA DETALLE (líneas de la compra) ======================
 class CompraDetalle(db.Model):
-    __tablename__ = 'compras_detalle'
+    __tablename__ = 'compra_detalle'
 
     id_detalle       = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     compra_id        = db.Column(db.BigInteger, db.ForeignKey('compras.id_compra',              ondelete='CASCADE'),   nullable=False)
     materia_prima_id = db.Column(db.BigInteger, db.ForeignKey('materias_primas.id_materia_prima', ondelete='RESTRICT'), nullable=False)
     cantidad         = db.Column(db.Numeric(14, 3), nullable=False)
     precio_unitario  = db.Column(db.Numeric(12, 2), nullable=False)
-    subtotal         = db.Column(db.Numeric(12, 2), nullable=False)
+    total_linea      = db.Column(db.Numeric(12, 2), nullable=False)
 
     compra        = db.relationship('Compra',      backref='detalles')
     materia_prima = db.relationship('MateriaPrima')
@@ -45,11 +44,10 @@ class HistorialCompra(db.Model):
 
     id_historial    = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     compra_id       = db.Column(db.BigInteger, db.ForeignKey('compras.id_compra',    ondelete='CASCADE'),   nullable=False)
-    estado_anterior = db.Column(db.Enum('CREADA', 'RECIBIDA', 'CANCELADA'), nullable=True)
-    estado_nuevo    = db.Column(db.Enum('CREADA', 'RECIBIDA', 'CANCELADA'), nullable=False)
-    usuario_id      = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario',  ondelete='RESTRICT'),  nullable=False)
-    observaciones   = db.Column(db.Text)
-    fecha_cambio    = db.Column(db.DateTime, default=datetime.utcnow)
+    accion          = db.Column(db.Enum('CREADA', 'ACTUALIZADA', 'CANCELADA', 'RECIBIDA'), nullable=False) 
+    comentario      = db.Column(db.String(500)) 
+    modificado_por  = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario',  ondelete='RESTRICT'),  nullable=True) 
+    fecha_modificacion = db.Column(db.DateTime, default=datetime.utcnow) 
 
     compra  = db.relationship('Compra', backref='historial')
     usuario = db.relationship('User',   backref='cambios_compras')

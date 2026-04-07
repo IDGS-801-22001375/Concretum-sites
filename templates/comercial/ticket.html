@@ -1,185 +1,321 @@
 {% extends "base.html" %}
+{% import 'macros/crud_components.html' as components %}
+
+{% block title %}Ticket / Factura{% endblock %}
 
 {% block content %}
-<div class="p-6">
 
-  <!-- HEADER -->
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-semibold">Ticket / Factura</h1>
-    <div class="flex gap-2">
-      <button onclick="window.print()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded text-sm transition">
-        🖨 Imprimir
-      </button>
-      <a href="{{ url_for('comercial_bp.descargar_ticket', id=venta.id) if venta else '#' }}"
-        class="bg-[#008DC0] hover:bg-[#0074A0] px-4 py-2 rounded text-sm transition">
-        ⬇ Descargar PDF
-      </a>
-    </div>
-  </div>
+{{ components.page_header('Ticket / Factura', 'Genera y consulta documentos de venta') }}
 
-  <div class="grid grid-cols-2 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-    <!-- FORMULARIO PARA GENERAR TICKET -->
-    <div class="bg-[#123555] p-6 rounded-xl">
-      <h2 class="text-base font-semibold mb-4">Generar Ticket</h2>
-
-      <form method="GET" action="{{ url_for('comercial_bp.ticket') }}">
-        <div class="grid grid-cols-2 gap-4">
-
-          <div>
-            <label class="block text-sm text-gray-300 mb-1">Folio / Venta</label>
-            <select name="venta_id"
-              class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm">
-              {% if ventas %}
-              {% for v in ventas %}
-              <option value="{{ v.id }}" {% if venta and venta.id==v.id %}selected{% endif %}>
-                {{ v.folio }} — {{ v.cliente }}
-              </option>
-              {% endfor %}
-              {% else %}
-              <option value="">Sin ventas disponibles</option>
-              {% endif %}
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-sm text-gray-300 mb-1">Tipo de documento</label>
-            <select name="tipo"
-              class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm">
-              <option value="ticket">Ticket de remisión</option>
-              <option value="factura">Factura</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-sm text-gray-300 mb-1">RFC del cliente</label>
-            <input type="text" name="rfc" placeholder="XXXX000000XXX"
-              class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm">
-          </div>
-
-          <div>
-            <label class="block text-sm text-gray-300 mb-1">Uso de CFDI</label>
-            <select name="uso_cfdi"
-              class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm">
-              <option value="G03">G03 - Gastos en general</option>
-              <option value="P01">P01 - Por definir</option>
-            </select>
-          </div>
-
+  <!-- Panel izquierdo: Buscar Ticket -->
+  <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden">
+    <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-[#008DC0]/20 flex items-center justify-center">
+          <svg class="w-5 h-5 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
         </div>
-
-        <div class="flex justify-end mt-6 border-t border-gray-600 pt-4">
-          <button type="submit"
-            class="bg-[#008DC0] hover:bg-[#0074A0] px-6 py-2 rounded text-sm font-semibold transition">
-            Generar Documento
-          </button>
+        <div>
+          <h2 class="text-lg font-bold text-white">Buscar Ticket</h2>
+          <p class="text-xs text-gray-400">Consulta un documento existente</p>
         </div>
-      </form>
-    </div>
-
-    <!-- VISTA PREVIA DEL TICKET -->
-    <div class="flex justify-center">
-      <div class="bg-white text-gray-800 p-6 rounded-xl shadow-lg w-80 text-sm" id="ticket-print">
-
-        <!-- ENCABEZADO -->
-        <div class="text-center border-b border-dashed border-gray-300 pb-4 mb-4">
-          <p class="text-2xl font-black tracking-widest">CONCRE<span class="text-[#008DC0]">TUM</span></p>
-          <p class="text-xs text-gray-500 mt-1">León, Guanajuato, México</p>
-          <p class="text-xs text-gray-500">Tel: +52 477 000 0000</p>
-        </div>
-
-        <!-- DATOS DE LA VENTA -->
-        <div class="space-y-1 mb-3">
-          <div class="flex justify-between">
-            <span class="text-gray-500">Folio:</span>
-            <span class="font-bold">{{ venta.folio if venta else '—' }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-gray-500">Fecha:</span>
-            <span>{{ venta.fecha if venta else '—' }}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-gray-500">Cliente:</span>
-            <span>{{ venta.cliente if venta else '—' }}</span>
-          </div>
-        </div>
-
-        <hr class="border-dashed border-gray-300 my-3">
-
-        <!-- DETALLE -->
-        <div class="space-y-1 mb-3">
-          <div class="flex justify-between font-bold text-xs uppercase text-gray-500">
-            <span>Producto</span>
-            <span>Subtotal</span>
-          </div>
-          <hr class="border-dashed border-gray-300 my-1">
-          {% if venta and venta.detalle %}
-          {% for item in venta.detalle %}
-          <div class="flex justify-between">
-            <span>{{ item.cantidad }}x {{ item.producto }}</span>
-            <span>${{ item.subtotal }}</span>
-          </div>
-          {% endfor %}
-          {% else %}
-          <p class="text-center text-gray-400 text-xs py-2">Sin productos</p>
-          {% endif %}
-        </div>
-
-        <hr class="border-dashed border-gray-300 my-3">
-
-        <!-- TOTALES -->
-        <div class="space-y-1 mb-3">
-          <div class="flex justify-between text-sm">
-            <span>Subtotal</span>
-            <span>${{ venta.subtotal if venta else '0.00' }}</span>
-          </div>
-          <div class="flex justify-between text-sm">
-            <span>IVA (16%)</span>
-            <span>${{ venta.iva if venta else '0.00' }}</span>
-          </div>
-          <div class="flex justify-between font-black text-base border-t-2 border-gray-800 pt-2 mt-2">
-            <span>TOTAL</span>
-            <span>${{ venta.total if venta else '0.00' }}</span>
-          </div>
-        </div>
-
-        <hr class="border-dashed border-gray-300 my-3">
-
-        <div class="flex justify-between text-xs text-gray-500">
-          <span>Forma de pago:</span>
-          <span>{{ venta.metodo_pago if venta else '—' }}</span>
-        </div>
-
-        <!-- PIE -->
-        <div class="text-center mt-4 text-xs text-gray-400">
-          <p>¡Gracias por su preferencia!</p>
-          <p class="font-bold mt-1">concretum.mx</p>
-        </div>
-
       </div>
     </div>
+    <form method="GET" action="{{ url_for('comercial_bp.ticket') }}" class="p-6">
+      <div class="space-y-5">
+        <div>
+          <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
+            Folio / Venta <span class="text-red-500 ml-0.5">*</span>
+          </label>
+          <select name="venta_id" required
+            class="w-full px-4 py-3 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white focus:outline-none focus:ring-2 focus:ring-[#008DC0]/40 focus:border-[#008DC0] transition-all cursor-pointer">
+            {% if ventas %}
+            <option value="">Selecciona una venta...</option>
+            {% for v in ventas %}
+            <option value="{{ v.id_venta }}" {% if venta and venta.id_venta==v.id_venta %}selected{% endif %}>
+              {{ v.folio }} — {{ v.cliente.razon_social if v.cliente else 'Público General' }}
+            </option>
+            {% endfor %}
+            {% else %}
+            <option value="">Sin ventas disponibles</option>
+            {% endif %}
+          </select>
+        </div>
 
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tipo de documento</label>
+            <select name="tipo"
+              class="w-full px-4 py-3 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white focus:outline-none focus:ring-2 focus:ring-[#008DC0]/40 focus:border-[#008DC0] transition-all cursor-pointer">
+              <option value="ticket" {% if request.args.get('tipo')=='ticket' %}selected{% endif %}>Ticket de remisión
+              </option>
+              <option value="factura" {% if request.args.get('tipo')=='factura' %}selected{% endif %}>Factura</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Uso de CFDI</label>
+            <select name="uso_cfdi"
+              class="w-full px-4 py-3 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white focus:outline-none focus:ring-2 focus:ring-[#008DC0]/40 focus:border-[#008DC0] transition-all cursor-pointer">
+              <option value="G03" {% if request.args.get('uso_cfdi')=='G03' %}selected{% endif %}>G03 - Gastos en
+                general</option>
+              <option value="P01" {% if request.args.get('uso_cfdi')=='P01' %}selected{% endif %}>P01 - Por definir
+              </option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-end mt-6 pt-6 border-t border-[#1E3A5F]">
+        <button type="submit"
+          class="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-[#008DC0] hover:bg-[#007AAD] rounded-xl shadow-lg shadow-[#008DC0]/20 transition-all active:scale-[0.98]">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          Consultar Documento
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Panel derecho: Vista previa + Imprimir -->
+  <div class="flex flex-col items-center vista-pantalla">
+    <div class="flex flex-wrap gap-3 mb-6">
+      <!-- Solo botón de Imprimir -->
+      <button onclick="window.print()"
+        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-[#008DC0] hover:bg-[#007AAD] rounded-xl shadow-lg shadow-[#008DC0]/20 transition-all active:scale-[0.98]">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        Imprimir
+      </button>
+    </div>
+
+    <!-- Vista previa del ticket -->
+    <div class="relative mx-auto" style="width: 380px;">
+      <div class="flex justify-around w-full">
+        <svg width="380" height="10" viewBox="0 0 380 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {% for i in range(19) %}
+          <circle cx="{{ 10 + i * 20 }}" cy="5" r="5" fill="#0B2239" />
+          {% endfor %}
+        </svg>
+      </div>
+
+      <div
+        style="background-color: #F5F3EF; width: 380px; padding: 24px 28px; box-shadow: 0 10px 50px rgba(0,0,0,0.4);">
+        <!-- Contenido del ticket (igual que antes) -->
+        <div style="text-align: center; border-bottom: 2px dashed #d1d5db; padding-bottom: 16px; margin-bottom: 16px;">
+          <div
+            style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: linear-gradient(135deg, #008DC0, #00A8E8); border-radius: 10px; margin-bottom: 8px;">
+            <span style="font-size: 18px; font-weight: 900; color: white;">CT</span>
+          </div>
+          <p style="font-size: 18px; font-weight: 900; letter-spacing: 0.15em; color: #1f2937; margin: 0;">
+            CONCRE<span style="color: #008DC0;">TUM</span>
+          </p>
+          <p style="font-size: 11px; color: #6b7280; margin-top: 6px;">León, Guanajuato, México | Tel: +52 477 000 0000
+          </p>
+        </div>
+
+        <div style="margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span style="font-size: 11px; color: #6b7280;">Folio:</span>
+            <span style="font-weight: 700; font-family: monospace; font-size: 13px; color: #008DC0;">{{ venta.folio if
+              venta else '---' }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <span style="font-size: 11px; color: #6b7280;">Fecha:</span>
+            <span style="font-size: 11px; color: #374151;">{{ venta.fecha_venta.strftime('%d/%m/%Y %H:%M') if venta else
+              '---' }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; color: #6b7280;">Cliente:</span>
+            <span
+              style="font-size: 11px; color: #374151; text-align: right; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              {{ venta.cliente.razon_social if venta and venta.cliente else '---' }}
+            </span>
+          </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px dashed #d1d5db; margin: 12px 0;">
+
+        <div style="margin-bottom: 12px;">
+          <div
+            style="display: flex; justify-content: space-between; font-weight: 700; font-size: 10px; text-transform: uppercase; color: #9ca3af; margin-bottom: 8px; letter-spacing: 0.05em;">
+            <span>Producto</span>
+            <span>Monto</span>
+          </div>
+          <div>
+            {% if venta and venta.detalle %}
+            {% for item in venta.detalle %}
+            <div
+              style="display: flex; justify-content: space-between; align-items: flex-start; font-size: 11px; margin-bottom: 4px;">
+              <span style="padding-right: 8px; color: #4b5563; line-height: 1.3;">{{ item.cantidad|int }}x {{
+                item.producto.nombre }}</span>
+              <span style="font-family: monospace; font-weight: 600; color: #1f2937;">${{
+                '{:,.2f}'.format(item.total_linea) }}</span>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p style="text-align: center; color: #9ca3af; font-size: 11px; padding: 12px 0;">Sin productos seleccionados
+            </p>
+            {% endif %}
+          </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px dashed #d1d5db; margin: 12px 0;">
+
+        <div style="margin-bottom: 12px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+            <span style="color: #6b7280;">Subtotal</span>
+            <span style="font-family: monospace; color: #374151;">${{ '{:,.2f}'.format(venta.subtotal) if venta else
+              '0.00' }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 8px;">
+            <span style="color: #6b7280;">IVA (16%)</span>
+            <span style="font-family: monospace; color: #374151;">${{ '{:,.2f}'.format(venta.iva) if venta else '0.00'
+              }}</span>
+          </div>
+          <div
+            style="display: flex; justify-content: space-between; font-weight: 900; font-size: 16px; border-top: 1px solid #d1d5db; padding-top: 8px;">
+            <span style="color: #1f2937;">TOTAL</span>
+            <span style="color: #008DC0;">${{ '{:,.2f}'.format(venta.total) if venta else '0.00' }}</span>
+          </div>
+        </div>
+
+        <div
+          style="display: flex; justify-content: space-between; font-size: 11px; background-color: #e5e7eb; padding: 10px 12px; border-radius: 6px;">
+          <span style="color: #6b7280; text-transform: uppercase; font-size: 10px; font-weight: 700;">Método de
+            pago:</span>
+          <span style="font-weight: 700; color: #374151;">{{ venta.metodo_pago.capitalize() if venta else '---'
+            }}</span>
+        </div>
+
+        <div style="text-align: center; margin-top: 16px; padding-top: 12px; border-top: 1px dashed #d1d5db;">
+          <p style="font-size: 11px; color: #6b7280; margin: 0;">¡Gracias por su preferencia!</p>
+          <p style="font-weight: 700; font-size: 12px; margin-top: 4px; color: #008DC0;">www.concretum.mx</p>
+        </div>
+      </div>
+
+      <div class="flex justify-around w-full">
+        <svg width="380" height="10" viewBox="0 0 380 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+          {% for i in range(19) %}
+          <circle cx="{{ 10 + i * 20 }}" cy="5" r="5" fill="#0B2239" />
+          {% endfor %}
+        </svg>
+      </div>
+    </div>
   </div>
 
 </div>
 
-<!-- ESTILOS DE IMPRESIÓN -->
+<!-- Contenedor para impresión -->
+<div id="print-container" class="hidden">
+  <div id="ticket-print-full" class="bg-white text-gray-800 p-10 w-full min-h-[400px]">
+    <!-- (Mantengo el contenido de impresión igual que antes) -->
+    <div class="text-center border-b-2 border-dashed border-gray-400 pb-6 mb-8">
+      <p class="text-4xl font-black tracking-widest text-[#002F5C]">CONCRE<span class="text-[#008DC0]">TUM</span></p>
+      <p class="text-sm text-gray-500 mt-2 font-semibold">León, Guanajuato, México</p>
+      <p class="text-sm text-gray-500 font-semibold">Tel: +52 477 000 0000</p>
+    </div>
+
+    <div class="space-y-2 mb-8">
+      <div class="flex justify-between items-center text-lg">
+        <span class="text-gray-600 font-bold w-32">Folio:</span>
+        <span class="font-bold">{{ venta.folio if venta else '—' }}</span>
+      </div>
+      <div class="flex justify-between items-center text-lg">
+        <span class="text-gray-600 font-bold w-32">Fecha:</span>
+        <span>{{ venta.fecha_venta.strftime('%d/%m/%Y %H:%M') if venta else '—' }}</span>
+      </div>
+      <div class="flex justify-between items-center text-lg">
+        <span class="text-gray-600 font-bold w-32">Cliente:</span>
+        <span class="text-right truncate">{{ venta.cliente.razon_social if venta and venta.cliente else '—' }}</span>
+      </div>
+    </div>
+
+    <hr class="border-t-2 border-dashed border-gray-400 my-6">
+
+    <div class="space-y-4 mb-6">
+      <div class="flex justify-between font-black text-sm uppercase text-gray-600">
+        <span>Producto</span>
+        <span>Subtotal</span>
+      </div>
+      <hr class="border-t-2 border-dashed border-gray-400 my-2">
+
+      {% if venta and venta.detalle %}
+      {% for item in venta.detalle %}
+      <div class="flex justify-between items-center text-lg">
+        <span>{{ item.cantidad|int }}x {{ item.producto.nombre }}</span>
+        <span class="font-mono">${{ '{:,.2f}'.format(item.total_linea) }}</span>
+      </div>
+      {% endfor %}
+      {% else %}
+      <p class="text-center text-gray-500 text-sm py-4">Sin productos</p>
+      {% endif %}
+    </div>
+
+    <hr class="border-t-2 border-dashed border-gray-400 my-6">
+
+    <div class="space-y-3 mb-8">
+      <div class="flex justify-between text-lg">
+        <span class="text-gray-600 font-bold">Subtotal</span>
+        <span class="font-mono">${{ '{:,.2f}'.format(venta.subtotal) if venta else '0.00' }}</span>
+      </div>
+      <div class="flex justify-between text-lg">
+        <span class="text-gray-600 font-bold">IVA (16%)</span>
+        <span class="font-mono">${{ '{:,.2f}'.format(venta.iva) if venta else '0.00' }}</span>
+      </div>
+      <div class="flex justify-between font-black text-2xl border-t-4 border-gray-800 pt-4 mt-4">
+        <span>TOTAL</span>
+        <span class="font-mono">${{ '{:,.2f}'.format(venta.total) if venta else '0.00' }}</span>
+      </div>
+    </div>
+
+    <hr class="border-t-2 border-dashed border-gray-400 my-6">
+
+    <div class="flex justify-between text-sm text-gray-600 font-bold">
+      <span>Forma de pago:</span>
+      <span class="uppercase">{{ venta.metodo_pago if venta else '—' }}</span>
+    </div>
+
+    <div class="text-center mt-12 text-sm text-gray-500">
+      <p>¡Gracias por su preferencia!</p>
+      <p class="font-bold mt-2">concretum.mx</p>
+    </div>
+  </div>
+</div>
+
 <style>
   @media print {
     body * {
       visibility: hidden;
     }
 
-    #ticket-print,
-    #ticket-print * {
+    .vista-pantalla {
+      display: none !important;
+    }
+
+    #print-container {
+      display: block !important;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+
+    #print-container * {
       visibility: visible;
     }
 
-    #ticket-print {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
+    #ticket-print-full {
+      width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
     }
   }
 </style>

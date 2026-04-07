@@ -1,163 +1,266 @@
 {% extends "base.html" %}
+{% import 'macros/crud_components.html' as components %}
+
+{% block title %}Corte de Caja{% endblock %}
 
 {% block content %}
-<div class="p-6">
 
-  <!-- HEADER -->
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-2xl font-semibold">Corte de Caja</h1>
-    <form method="POST" action="{{ url_for('comercial_bp.realizar_corte') }}">
-      {{ form.hidden_tag() if form }}
-      <button type="submit" class="bg-[#008DC0] hover:bg-[#0074A0] px-4 py-2 rounded text-sm transition">
-        Realizar Corte
-      </button>
-    </form>
+{{ components.page_header('Corte de Caja', 'Control de ingresos y cierre diario de operaciones') }}
+
+<!-- Info del período actual -->
+<div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] p-6 mb-8">
+  <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div class="flex items-center gap-4">
+      <div class="w-12 h-12 rounded-xl bg-[#008DC0]/20 flex items-center justify-center">
+        <svg class="w-6 h-6 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Período del corte</p>
+        <p class="text-lg font-bold text-white">{{ periodo or 'Sin corte activo' }}</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="text-right">
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Cajero Asignado</p>
+        <p class="text-lg font-bold text-white">{{ cajero or 'Admin' }}</p>
+      </div>
+      <div
+        class="w-12 h-12 bg-gradient-to-br from-[#008DC0] to-[#00A8E8] rounded-xl flex items-center justify-center font-bold text-white text-lg shadow-lg shadow-[#008DC0]/25">
+        {{ cajero[0]|upper if cajero else 'A' }}
+      </div>
+    </div>
   </div>
+</div>
 
-  <!-- INFO DEL PERÍODO -->
-  <div class="bg-[#123555] rounded-xl p-4 mb-6 flex justify-between items-center border border-[#1E3A5F]">
-    <div>
-      <p class="text-xs text-gray-400 uppercase tracking-widest mb-1">Período del corte</p>
-      <p class="text-base font-semibold">{{ periodo or 'Sin corte activo' }}</p>
+<!-- KPIs -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  {{ components.kpi_card(
+  'Fondo Inicial',
+  'kpi-fondo',
+  fondo_inicial|default('0.00'),
+  'slate',
+  '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+  </svg>',
+  moneda='$'
+  ) }}
+  {{ components.kpi_card(
+  'Total Ventas del Día',
+  'kpi-ventas',
+  total_ventas|default('0.00'),
+  'green',
+  '<svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+  </svg>',
+  moneda='$'
+  ) }}
+  {{ components.kpi_card(
+  'Total Cobrado Real',
+  'kpi-cobrado',
+  total_cobrado|default('0.00'),
+  'blue',
+  '<svg class="w-6 h-6 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>',
+  moneda='$'
+  ) }}
+  {{ components.kpi_card(
+  'Ventas a Crédito',
+  'kpi-credito',
+  ventas_credito|default('0.00'),
+  'amber',
+  '<svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>',
+  moneda='$'
+  ) }}
+</div>
+
+<!-- Grid Principal -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+  <!-- Desglose por Forma de Pago -->
+  <div class="lg:col-span-2 bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden">
+    <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
+      <h2 class="text-lg font-bold text-white">Desglose por Forma de Pago</h2>
     </div>
-    <div class="text-right">
-      <p class="text-xs text-gray-400 uppercase tracking-widest mb-1">Cajero</p>
-      <p class="text-base font-semibold">{{ cajero or '—' }}</p>
-    </div>
-  </div>
-
-  <!-- KPI DEL CORTE -->
-  <div class="grid grid-cols-4 gap-4 mb-6">
-
-    <div class="bg-[#123555] p-4 rounded-lg border-t-4 border-cyan-400">
-      <p class="text-sm text-gray-400">Fondo Inicial</p>
-      <h2 class="text-2xl font-bold">${{ fondo_inicial or '0.00' }}</h2>
-    </div>
-
-    <div class="bg-[#123555] p-4 rounded-lg border-t-4 border-green-400">
-      <p class="text-sm text-gray-400">Total Ventas del Día</p>
-      <h2 class="text-2xl font-bold text-green-400">${{ total_ventas or '0.00' }}</h2>
-    </div>
-
-    <div class="bg-[#123555] p-4 rounded-lg border-t-4 border-blue-400">
-      <p class="text-sm text-gray-400">Total Cobrado</p>
-      <h2 class="text-2xl font-bold text-green-400">${{ total_cobrado or '0.00' }}</h2>
-    </div>
-
-    <div class="bg-[#123555] p-4 rounded-lg border-t-4 border-yellow-400">
-      <p class="text-sm text-gray-400">Ventas a Crédito</p>
-      <h2 class="text-2xl font-bold text-yellow-400">${{ ventas_credito or '0.00' }}</h2>
-    </div>
-
-  </div>
-
-  <div class="grid grid-cols-2 gap-6 mb-6">
-
-    <!-- DESGLOSE POR FORMA DE PAGO -->
-    <div class="bg-[#123555] p-4 rounded-xl">
-      <h2 class="text-base font-semibold mb-4">Desglose por Forma de Pago</h2>
-      <table class="w-full text-sm text-left text-gray-400">
-        <thead class="text-xs bg-[#0D1F30] text-gray-300 border-b border-gray-600">
-          <tr>
-            <th class="px-4 py-3">Forma de pago</th>
-            <th class="px-4 py-3">Operaciones</th>
-            <th class="px-4 py-3">Monto</th>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-[#0B2239] border-b border-[#1E3A5F]">
+            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Forma de pago</th>
+            <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">Operaciones</th>
+            <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Monto</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-[#1E3A5F]">
           {% if desglose_pago %}
           {% for d in desglose_pago %}
-          <tr class="border-b border-gray-700 hover:bg-[#0D1F30]/80">
-            <td class="px-4 py-3 text-white">{{ d.forma }}</td>
-            <td class="px-4 py-3">{{ d.operaciones }}</td>
-            <td class="px-4 py-3 {% if d.es_credito %}text-yellow-400{% else %}text-green-400{% endif %}">
-              ${{ d.monto }}
+          <tr class="hover:bg-[#123555]/50 transition-colors">
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-8 h-8 rounded-lg {% if d.es_credito %}bg-amber-500/20{% else %}bg-emerald-500/20{% endif %} flex items-center justify-center">
+                  {% if d.es_credito %}
+                  <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {% else %}
+                  <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  {% endif %}
+                </div>
+                <span class="font-semibold text-white">{{ d.forma }}</span>
+              </div>
+            </td>
+            <td class="px-6 py-4 text-center">
+              <span
+                class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#1E3A5F] text-gray-300">
+                {{ d.operaciones }} tickets
+              </span>
+            </td>
+            <td class="px-6 py-4 text-right">
+              <span
+                class="font-bold font-mono {% if d.es_credito %}text-amber-400{% else %}text-emerald-400{% endif %}">
+                ${{ d.monto }}
+              </span>
             </td>
           </tr>
           {% endfor %}
           {% else %}
           <tr>
-            <td colspan="3" class="text-center py-6 text-gray-500">Sin movimientos</td>
+            <td colspan="3" class="px-6 py-12 text-center">
+              <div class="flex flex-col items-center gap-3 text-gray-400">
+                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <p class="text-sm font-medium">Aún no hay movimientos de caja hoy</p>
+              </div>
+            </td>
           </tr>
           {% endif %}
         </tbody>
       </table>
     </div>
+  </div>
 
-    <!-- RESUMEN FINAL -->
-    <div class="bg-[#123555] p-4 rounded-xl flex flex-col justify-between">
-      <h2 class="text-base font-semibold mb-4">Resumen Final</h2>
-
-      <div class="space-y-3">
-        <div class="flex justify-between text-sm bg-[#0D1F30] px-4 py-3 rounded">
-          <span class="text-gray-300">Total ventas</span>
-          <span class="font-bold text-white">${{ total_ventas or '0.00' }}</span>
+  <!-- Balance General -->
+  <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden flex flex-col">
+    <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
+      <h2 class="text-lg font-bold text-white">Balance General</h2>
+    </div>
+    <div class="p-6 flex-1 flex flex-col justify-between">
+      <div class="space-y-4">
+        <div class="flex justify-between items-center p-4 bg-[#0B2239] rounded-xl border border-[#1E3A5F]">
+          <span class="text-sm text-gray-400">Total ingresos brutos</span>
+          <span class="font-bold text-white font-mono">${{ total_ventas or '0.00' }}</span>
         </div>
-        <div class="flex justify-between text-sm bg-[#0D1F30] px-4 py-3 rounded">
-          <span class="text-gray-300">Devoluciones / cancelaciones</span>
-          <span class="font-bold text-red-400">-${{ devoluciones or '0.00' }}</span>
+        <div class="flex justify-between items-center p-4 bg-[#0B2239] rounded-xl border border-[#1E3A5F]">
+          <span class="text-sm text-gray-400">Diferido a créditos</span>
+          <span class="font-bold text-amber-400 font-mono">-${{ ventas_credito or '0.00' }}</span>
         </div>
-        <div class="flex justify-between text-sm bg-[#0D1F30] px-4 py-3 rounded">
-          <span class="text-gray-300">Créditos otorgados</span>
-          <span class="font-bold text-yellow-400">-${{ ventas_credito or '0.00' }}</span>
-        </div>
-        <div class="flex justify-between text-sm bg-[#0D1F30] px-4 py-3 rounded">
-          <span class="text-gray-300">Salida por pago a proveedores</span>
-          <span class="font-bold text-red-400">-${{ salida_proveedores or '0.00' }}</span>
-        </div>
-        <div class="flex justify-between items-center bg-green-900/30 border border-green-700 px-4 py-3 rounded">
-          <span class="font-semibold text-white">Total cobrado efectivo</span>
-          <span class="font-black text-green-400 text-xl">${{ total_cobrado or '0.00' }}</span>
+        <div
+          class="flex justify-between items-center p-5 bg-emerald-500/10 rounded-xl border border-emerald-500/30 mt-6">
+          <span class="font-semibold text-white">Efectivo en Caja</span>
+          <span class="font-black text-emerald-400 text-2xl font-mono">${{ total_cobrado or '0.00' }}</span>
         </div>
       </div>
 
-      <form method="POST" action="{{ url_for('comercial_bp.cerrar_corte') }}" class="mt-4">
-        {{ form.hidden_tag() if form }}
-        <button type="submit"
-          class="w-full bg-green-600 hover:bg-green-500 py-2 rounded text-sm font-semibold transition">
-          Cerrar y Firmar Corte
-        </button>
-      </form>
+      <div class="mt-6 space-y-3">
+        <form method="POST" action="{{ url_for('comercial_bp.realizar_corte') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="fondo_inicial" value="1000">
+          <button type="submit"
+            class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-[#008DC0] hover:bg-[#007AAD] rounded-xl shadow-lg shadow-[#008DC0]/20 transition-all active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Realizar Corte Diario
+          </button>
+        </form>
+        <form method="POST" action="{{ url_for('comercial_bp.cerrar_corte') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit"
+            class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-lg shadow-emerald-600/20 transition-all active:scale-[0.98]">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Cerrar y Firmar Documento
+          </button>
+        </form>
+      </div>
     </div>
-
   </div>
+</div>
 
-  <!-- HISTORIAL DE CORTES -->
-  <div class="bg-[#123555] p-4 rounded-xl">
-    <h2 class="text-base font-semibold mb-4">Historial de Cortes</h2>
-    <table class="w-full text-sm text-left text-gray-400">
-      <thead class="text-xs bg-[#0D1F30] text-gray-300 border-b border-gray-600">
-        <tr>
-          <th class="px-4 py-3">Fecha</th>
-          <th class="px-4 py-3">Cajero</th>
-          <th class="px-4 py-3">Total Ventas</th>
-          <th class="px-4 py-3">Total Cobrado</th>
-          <th class="px-4 py-3">Utilidad</th>
-          <th class="px-4 py-3">Estado</th>
+<!-- Registro Histórico -->
+<div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden">
+  <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
+    <h2 class="text-lg font-bold text-white">Registro Histórico</h2>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="bg-[#0B2239] border-b border-[#1E3A5F]">
+          <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Fecha</th>
+          <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Cajero</th>
+          <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Venta Total</th>
+          <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Cobro Real</th>
+          <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="divide-y divide-[#1E3A5F]">
         {% if historial_cortes %}
         {% for c in historial_cortes %}
-        <tr class="border-b border-gray-700 hover:bg-[#0D1F30]/80">
-          <td class="px-4 py-3 text-white">{{ c.fecha }}</td>
-          <td class="px-4 py-3">{{ c.cajero }}</td>
-          <td class="px-4 py-3">${{ c.total_ventas }}</td>
-          <td class="px-4 py-3 text-green-400">${{ c.total_cobrado }}</td>
-          <td class="px-4 py-3 text-green-400">${{ c.utilidad }}</td>
-          <td class="px-4 py-3">
-            <span class="bg-green-900 text-green-300 text-xs font-medium px-2.5 py-0.5 rounded">Cerrado</span>
+        <tr class="hover:bg-[#123555]/50 transition-colors">
+          <td class="px-6 py-4 font-medium text-white">{{ c.fecha }}</td>
+          <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-8 h-8 rounded-lg bg-gradient-to-br from-[#008DC0] to-[#00A8E8] flex items-center justify-center text-xs font-bold text-white">
+                {{ c.cajero[0]|upper }}
+              </div>
+              <span class="text-gray-300">{{ c.cajero }}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-right font-mono text-white">${{ c.total_ventas }}</td>
+          <td class="px-6 py-4 text-right font-mono text-emerald-400">${{ c.total_cobrado }}</td>
+          <td class="px-6 py-4 text-center">
+            <span
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Validado
+            </span>
           </td>
         </tr>
         {% endfor %}
         {% else %}
         <tr>
-          <td colspan="6" class="text-center py-6 text-gray-500">Sin cortes registrados</td>
+          <td colspan="5" class="px-6 py-12 text-center">
+            <div class="flex flex-col items-center gap-3 text-gray-400">
+              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p class="text-sm font-medium">No existe historial de cortes previos</p>
+            </div>
+          </td>
         </tr>
         {% endif %}
       </tbody>
     </table>
   </div>
-
 </div>
+
 {% endblock %}
