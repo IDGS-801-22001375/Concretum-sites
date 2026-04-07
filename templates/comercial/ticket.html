@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="p-6">
+
+  <!-- HEADER -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold">Ticket / Factura</h1>
+    <div class="flex gap-2">
+      <button onclick="window.print()" class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded text-sm transition">
+        🖨 Imprimir
+      </button>
+      <a href="{{ url_for('comercial_bp.descargar_ticket', id=venta.id) if venta else '#' }}"
+        class="bg-[#008DC0] hover:bg-[#0074A0] px-4 py-2 rounded text-sm transition">
+        ⬇ Descargar PDF
+      </a>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-2 gap-6">
+
+    <!-- FORMULARIO PARA GENERAR TICKET -->
+    <div class="bg-[#123555] p-6 rounded-xl">
+      <h2 class="text-base font-semibold mb-4">Generar Ticket</h2>
+
+      <form method="GET" action="{{ url_for('comercial_bp.ticket') }}">
+        <div class="grid grid-cols-2 gap-4">
+
+          <div>
+            <label class="block text-sm text-gray-300 mb-1">Folio / Venta</label>
+            <select name="venta_id"
+              class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm">
+              {% if ventas %}
+              {% for v in ventas %}
+              <option value="{{ v.id }}" {% if venta and venta.id==v.id %}selected{% endif %}>
+                {{ v.folio }} — {{ v.cliente }}
+              </option>
+              {% endfor %}
+              {% else %}
+              <option value="">Sin ventas disponibles</option>
+              {% endif %}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm text-gray-300 mb-1">Tipo de documento</label>
+            <select name="tipo"
+              class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm">
+              <option value="ticket">Ticket de remisión</option>
+              <option value="factura">Factura</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm text-gray-300 mb-1">RFC del cliente</label>
+            <input type="text" name="rfc" placeholder="XXXX000000XXX"
+              class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm">
+          </div>
+
+          <div>
+            <label class="block text-sm text-gray-300 mb-1">Uso de CFDI</label>
+            <select name="uso_cfdi"
+              class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-sm">
+              <option value="G03">G03 - Gastos en general</option>
+              <option value="P01">P01 - Por definir</option>
+            </select>
+          </div>
+
+        </div>
+
+        <div class="flex justify-end mt-6 border-t border-gray-600 pt-4">
+          <button type="submit"
+            class="bg-[#008DC0] hover:bg-[#0074A0] px-6 py-2 rounded text-sm font-semibold transition">
+            Generar Documento
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- VISTA PREVIA DEL TICKET -->
+    <div class="flex justify-center">
+      <div class="bg-white text-gray-800 p-6 rounded-xl shadow-lg w-80 text-sm" id="ticket-print">
+
+        <!-- ENCABEZADO -->
+        <div class="text-center border-b border-dashed border-gray-300 pb-4 mb-4">
+          <p class="text-2xl font-black tracking-widest">CONCRE<span class="text-[#008DC0]">TUM</span></p>
+          <p class="text-xs text-gray-500 mt-1">León, Guanajuato, México</p>
+          <p class="text-xs text-gray-500">Tel: +52 477 000 0000</p>
+        </div>
+
+        <!-- DATOS DE LA VENTA -->
+        <div class="space-y-1 mb-3">
+          <div class="flex justify-between">
+            <span class="text-gray-500">Folio:</span>
+            <span class="font-bold">{{ venta.folio if venta else '—' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">Fecha:</span>
+            <span>{{ venta.fecha if venta else '—' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-500">Cliente:</span>
+            <span>{{ venta.cliente if venta else '—' }}</span>
+          </div>
+        </div>
+
+        <hr class="border-dashed border-gray-300 my-3">
+
+        <!-- DETALLE -->
+        <div class="space-y-1 mb-3">
+          <div class="flex justify-between font-bold text-xs uppercase text-gray-500">
+            <span>Producto</span>
+            <span>Subtotal</span>
+          </div>
+          <hr class="border-dashed border-gray-300 my-1">
+          {% if venta and venta.detalle %}
+          {% for item in venta.detalle %}
+          <div class="flex justify-between">
+            <span>{{ item.cantidad }}x {{ item.producto }}</span>
+            <span>${{ item.subtotal }}</span>
+          </div>
+          {% endfor %}
+          {% else %}
+          <p class="text-center text-gray-400 text-xs py-2">Sin productos</p>
+          {% endif %}
+        </div>
+
+        <hr class="border-dashed border-gray-300 my-3">
+
+        <!-- TOTALES -->
+        <div class="space-y-1 mb-3">
+          <div class="flex justify-between text-sm">
+            <span>Subtotal</span>
+            <span>${{ venta.subtotal if venta else '0.00' }}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span>IVA (16%)</span>
+            <span>${{ venta.iva if venta else '0.00' }}</span>
+          </div>
+          <div class="flex justify-between font-black text-base border-t-2 border-gray-800 pt-2 mt-2">
+            <span>TOTAL</span>
+            <span>${{ venta.total if venta else '0.00' }}</span>
+          </div>
+        </div>
+
+        <hr class="border-dashed border-gray-300 my-3">
+
+        <div class="flex justify-between text-xs text-gray-500">
+          <span>Forma de pago:</span>
+          <span>{{ venta.metodo_pago if venta else '—' }}</span>
+        </div>
+
+        <!-- PIE -->
+        <div class="text-center mt-4 text-xs text-gray-400">
+          <p>¡Gracias por su preferencia!</p>
+          <p class="font-bold mt-1">concretum.mx</p>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ESTILOS DE IMPRESIÓN -->
+<style>
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+
+    #ticket-print,
+    #ticket-print * {
+      visibility: visible;
+    }
+
+    #ticket-print {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+    }
+  }
+</style>
+
+{% endblock %}
