@@ -169,7 +169,9 @@
                     </svg>
                     Usuarios
                 </a>
-                {% if current_user.has_role('ADMINISTRADOR') %}
+                {% if current_user.has_role('ADMINISTRADOR')
+                or current_user.has_role('ADMIN')
+                or current_user.has_role('SUPER_ADMIN') %}
                 <a href="{{ url_for('configuracion.index') }}"
                     class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555] transition-colors {% if request.endpoint and request.endpoint.startswith('configuracion') %}bg-[#123555] text-[#70A7C7]{% endif %}">
                     <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">

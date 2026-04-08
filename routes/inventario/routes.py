@@ -25,7 +25,7 @@ def registrar_auditoria(usuario_accion, accion, detalles):
 # ----------------------------------------------------------------------
 @inventario_bp.route('/inventario')
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_INVENTARIO', 'ALMACENISTA')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO', 'ALMACENISTA')
 def index():
     return render_template('inventario/index.html')
 
@@ -34,7 +34,7 @@ def index():
 # ----------------------------------------------------------------------
 @inventario_bp.route('/inventario/api/productos', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_INVENTARIO', 'ALMACENISTA')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO', 'ALMACENISTA')
 def api_productos():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -42,7 +42,7 @@ def api_productos():
     sort_by = request.args.get('sort_by', 'nombre')
     sort_order = request.args.get('sort_order', 'asc')
 
-    query = Productos.query.filter_by(es_activo=True)
+    query = Productos.query.filter_by(es_active=1)
     if search:
         query = query.filter(or_(
             Productos.nombre.ilike(f'%{search}%'),
@@ -80,7 +80,7 @@ def api_productos():
 # ----------------------------------------------------------------------
 @inventario_bp.route('/inventario/api/materia-prima', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_INVENTARIO', 'ALMACENISTA')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO', 'ALMACENISTA')
 def api_materia_prima():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -126,7 +126,7 @@ def api_materia_prima():
 # ----------------------------------------------------------------------
 @inventario_bp.route('/inventario/api/producciones', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_INVENTARIO', 'GERENTE_PRODUCCION')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO', 'GERENTE_PRODUCCION')
 def api_producciones():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -166,7 +166,7 @@ def api_producciones():
 # ----------------------------------------------------------------------
 @inventario_bp.route('/inventario/api/movimientos', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_INVENTARIO', 'ALMACENISTA')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO', 'ALMACENISTA')
 def api_movimientos():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -215,7 +215,7 @@ def api_movimientos():
 # ----------------------------------------------------------------------
 @inventario_bp.route('/inventario/movimiento', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_INVENTARIO')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO')
 def registrar_movimiento():
     data = request.get_json()
     producto_id = data.get('producto_id')
@@ -263,9 +263,9 @@ def registrar_movimiento():
 # ----------------------------------------------------------------------
 @inventario_bp.route('/inventario/productos-lista', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_INVENTARIO', 'ALMACENISTA')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO', 'ALMACENISTA')
 def productos_lista():
-    productos = Productos.query.filter_by(es_activo=True).all()
+    productos = Productos.query.filter_by(es_active=1).all()
     items = [{'id': p.id, 'nombre': f"{p.sku} - {p.nombre}", 'stock': float(p.existencia.stock_actual) if p.existencia else 0} for p in productos]
     return jsonify({'items': items})
 
@@ -274,7 +274,7 @@ def productos_lista():
 # ----------------------------------------------------------------------
 @inventario_bp.route('/inventario/kpis', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_INVENTARIO', 'ALMACENISTA')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO', 'ALMACENISTA')
 def kpis():
     # Total de productos activos
     total_productos = Productos.query.filter_by(es_activo=True).count()

@@ -19,6 +19,7 @@ import pyotp
 
 logging.basicConfig(level=logging.DEBUG)
 
+# Importación de blueprints
 from routes.usuarios import usuarios_bp
 from routes.materia_prima import materia_prima_bp
 from routes.proveedores import proveedores_bp
@@ -28,10 +29,8 @@ from routes.configuracion import configuracion_bp
 from routes.productos import productos_bp
 from routes.inventario import inventario_bp
 from routes.recetas import recetas_bp
-from routes.productos import productos_bp
 from routes.comercial import comercial_bp
 from routes.clientes import clientes_bp
-from models import db, User, Role, MateriaPrima, ExistenciaMateriaPrima, Produccion, Merma, Venta, VentaDetalle, CorteCaja, CorteDesglose, Cliente
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -104,15 +103,19 @@ def on_user_authenticated(app, user, **extra):
 
 @user_logged_out.connect_via(app)
 def on_user_logout(app, user, **extra):
-    if user and user.is_authenticated: 
-        mongo_db.auditoria_eventos.insert_one({
-            "usuario_id": user.id,
-            "evento": "Cierre de Sesión",
-            "detalles": "Sesión finalizada por el usuario",
-            "modulo": "LOGIN",
-            "user_agent": request.headers.get('User-Agent'),
-            "fecha_creacion": datetime.datetime.utcnow()
-        })
+    # Validamos que el usuario realmente tenga un ID (que sea de base de datos)
+    if user and hasattr(user, 'id') and user.id is not None:
+        try:
+            mongo_db.auditoria_eventos.insert_one({
+                "usuario_id": user.id,
+                "evento": "Cierre de Sesión",
+                "detalles": "Sesión finalizada por el usuario",
+                "modulo": "LOGIN",
+                "user_agent": request.headers.get('User-Agent'),
+                "fecha_creacion": datetime.datetime.utcnow()
+            })
+        except Exception as e:
+            app.logger.error(f"Error registrando logout en Mongo: {e}")
 
 @app.after_request
 def attach_jwt_cookies(response):
@@ -172,6 +175,11 @@ def custom_login():
             return redirect(url_for('verificar_2fa'))
         else:
             login_user(user)
+            
+            # Actualización para guardar última sesión (agregado de versión 1)
+            user.ultima_sesion = datetime.datetime.now()
+            db.session.commit()
+
             next_page = request.args.get('next') or url_for('comercial_bp.dashboard')
             return redirect(next_page)
     return render_template('auth/login.html', login_user_form=form)
@@ -220,6 +228,11 @@ def verificar_2fa():
             totp = pyotp.TOTP(secret)
             if totp.verify(code):
                 login_user(user)
+
+                # Actualización para guardar última sesión (agregado de versión 1)
+                user.ultima_sesion = datetime.datetime.now()
+                db.session.commit()
+                
                 session.pop('pending_2fa_user_id', None)
                 next_page = request.args.get('next') or url_for('comercial_bp.dashboard') 
                 return redirect(next_page)
@@ -308,4 +321,4 @@ def inject_config():
     return dict(config_empresa=config)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5000)

@@ -184,7 +184,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', async function () {
         try {
-            const res = await fetch('/dashboard/kpis');
+            const res = await fetch('/comercial/dashboard/kpis');
             if (res.ok) {
                 const data = await res.json();
                 if (data.ventas_dia !== undefined) {
