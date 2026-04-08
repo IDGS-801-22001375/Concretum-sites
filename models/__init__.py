@@ -11,13 +11,13 @@ from .proveedores   import Proveedor, CategoriaProveedor
 from .compras       import Compra, CompraDetalle, HistorialCompra
 from .pagos         import PagoProveedor
 from .productos     import CategoriasProducto, Productos, Color, UnidadMedida
-from .inventario    import MovimientosInventario, Existencias
+from .inventario_produccion import MovimientosInventario, Existencias   
 from .mermas        import Merma
-from .produccion    import Produccion
+from .produccion    import Produccion, ProduccionConsumo, LoteProduccion 
 from .configuracion import ConfiguracionEmpresa
 from .materia_prima import ExistenciaMateriaPrima, MateriaPrima
 from .recetas       import RecetaDetalle, Recetas
-from .comercial import VentaDetalle, Cliente, ClienteDetalle, CorteDesglose, CorteCaja, Venta
+from .comercial     import VentaDetalle, Cliente, ClienteDetalle, CorteDesglose, CorteCaja, Venta
 
 __all__ = [
     # Core
@@ -31,13 +31,13 @@ __all__ = [
     # Pagos
     'PagoProveedor',
     # Productos
-    'CategoriasProducto', 'Productos', 'Color', 'UnidadMedida'
+    'CategoriasProducto', 'Productos', 'Color', 'UnidadMedida',
     # Inventario
-    'MovimientosInventario', 'Existencias'
+    'MovimientosInventario', 'Existencias',
     # Mermas
     'Merma',
     # Produccion
-    'Produccion',
+    'Produccion', 'ProduccionConsumo', 'LoteProduccion',
     # Configuración
     'ConfiguracionEmpresa',
     # Recetas

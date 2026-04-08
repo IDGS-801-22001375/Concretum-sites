@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, make_response, jsonify, session, send_file, flash
 from config import Config, DevelopmentConfig
-from models import db, User, Role, MateriaPrima, ExistenciaMateriaPrima, Produccion, Merma, Productos, CategoriasProducto
+from models import db, User, Role, MateriaPrima, ExistenciaMateriaPrima, Produccion, Merma, Productos, CategoriasProducto, Venta, VentaDetalle, CorteCaja, CorteDesglose, Cliente
 from flask_security import Security, SQLAlchemyUserDatastore, login_required, current_user
 from flask_login.signals import user_logged_out
 from flask_security.signals import user_authenticated, user_registered
@@ -31,6 +31,8 @@ from routes.inventario import inventario_bp
 from routes.recetas import recetas_bp
 from routes.comercial import comercial_bp
 from routes.clientes import clientes_bp
+from routes.inventario_produccion import stock_bp
+from routes.produccion_recetas import produccion_recetas_bp
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -61,6 +63,8 @@ app.register_blueprint(mermas_bp)
 app.register_blueprint(configuracion_bp)
 app.register_blueprint(recetas_bp)
 app.register_blueprint(clientes_bp)
+app.register_blueprint(stock_bp)
+app.register_blueprint(produccion_recetas_bp)
 
 @login_manager.user_loader
 def load_user(user_id):

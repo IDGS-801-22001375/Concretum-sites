@@ -1,125 +1,225 @@
-<div class="bg-[#123555] rounded-xl p-6 mx-auto">
-
-  <h2 class="text-base font-semibold text-white mb-6">
-    {% if modo_edicion %}
-      Editar Receta
-      <span class="text-blue-400 text-sm font-normal">(Modo edición activo)</span>
-    {% elif form_activo %}
-      Registrar Receta
-      <span class="text-green-400 text-sm font-normal">(Formulario activo)</span>
-    {% else %}
-      Registrar Receta
-      <span class="text-red-400 text-sm font-normal">(Formulario desactivado)</span>
-    {% endif %}
-  </h2>
-
-  <form
-    method="POST"
-    {% if modo_edicion and receta_editando %}
-      action="{{ url_for('recetas_bp.editar_receta', id_receta=receta_editando.id_receta) }}"
-    {% else %}
-      action="{{ url_for('recetas_bp.save_receta') }}"
-    {% endif %}>
-
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-    {{ form.hidden_tag() }}
-
-    <fieldset id="formBloqueado" {% if not form_activo and not modo_edicion %} disabled {% endif %}>
-
-      <div class="grid grid-cols-3 gap-4 mb-4">
-        {{ macros.campoNuevo(form.producto_id) }}
-        {{ macros.campoNuevo(form.descripcion) }}
-        {{ macros.campoNuevo(form.cuanto_produce) }}
-      </div>
-
-      <div class="grid grid-cols-3 gap-4 mb-6">
-        {{ macros.campoNuevo(form.resistencia) }}
-        {{ macros.campoNuevo(form.tiempo_produccion) }}
-
-        <div>
-          <label class="block text-sm text-gray-300 mb-1">{{ form.fecha_creacion.label.text }}</label>
-          {{ form.fecha_creacion(
-              class="w-full rounded-lg bg-[#0D1F30] border border-gray-600 text-white p-2 text-sm",
-              max=today,
-              min=today
-          ) }}
-          {% for error in form.fecha_creacion.errors %}
-            <p class="text-red-400 text-xs mt-1">{{ error }}</p>
-          {% endfor %}
-        </div>
-      </div>
-
-      <div class="border-t border-[#2a3347] pt-5 mb-4">
-        <p class="text-[11px] font-bold uppercase tracking-widest text-[#4e6278] mb-4">Ingredientes</p>
-
-        <div class="grid grid-cols-[1fr_1fr_1fr_36px] gap-4 mb-2 px-1">
-          <span class="text-[10px] font-semibold uppercase tracking-wider text-[#4e6278]">Materia prima</span>
-          <span class="text-[10px] font-semibold uppercase tracking-wider text-[#4e6278]">Cantidad</span>
-          <span class="text-[10px] font-semibold uppercase tracking-wider text-[#4e6278]">Unidad de medida</span>
-          <span></span>
-        </div>
-
-        {% for entrada in form.ingredientes %}
-        <div class="grid grid-cols-[1fr_1fr_1fr_36px] gap-4 mb-3 items-start">
-
+<div class="bg-[#0F2A44] border border-[#1E3A5F] rounded-2xl shadow-xl overflow-hidden">
+  <div class="p-6 border-b border-[#1E3A5F]">
+      <div class="flex items-center gap-3">
+          <div
+              class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#008DC0] to-[#00A8E8] flex items-center justify-center cursor-pointer">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+          </div>
           <div>
-            {{ entrada.materia_prima_id(class="w-full bg-[#0D1F30] border border-gray-600 rounded-lg text-white text-sm px-3 py-2 outline-none focus:border-[#1d8de0]") }}
-            {% for e in entrada.materia_prima_id.errors %}
-              <p class="text-red-400 text-xs mt-0.5">{{ e }}</p>
-            {% endfor %}
+              <h2 class="text-lg font-bold text-white">
+                  {% if modo_edicion %}
+                  Editar Receta
+                  {% elif form_activo %}
+                  Registrar Receta
+                  {% else %}
+                  Registrar Receta
+                  {% endif %}
+              </h2>
+              <p class="text-sm text-gray-400">
+                  {% if modo_edicion %}
+                  <span class="text-[#008DC0]">Modo edición activo</span>
+                  {% elif form_activo %}
+                  <span class="text-emerald-400">Formulario activo</span>
+                  {% else %}
+                  <span class="text-red-400">Formulario desactivado - Haz clic en "Nueva Receta" para comenzar</span>
+                  {% endif %}
+              </p>
+          </div>
+      </div>
+  </div>
+
+  <form method="POST" {% if modo_edicion and receta_editando %}
+      action="{{ url_for('recetas_bp.editar_receta', id_receta=receta_editando.id_receta) }}" {% else %}
+      action="{{ url_for('recetas_bp.save_receta') }}" {% endif %} class="p-6">
+
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      {{ form.hidden_tag() }}
+
+      <fieldset id="formBloqueado" {% if not form_activo and not modo_edicion %} disabled {% endif %}>
+          <!-- Datos principales -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div>
+                  <label class="block text-sm font-semibold text-gray-300 mb-2">{{ form.producto_id.label.text }}
+                      <span class="text-red-400">*</span></label>
+                  {{ form.producto_id(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white text-sm
+                  rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                  transition-all") }}
+                  {% for error in form.producto_id.errors %}
+                  <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                  {% endfor %}
+              </div>
+
+              <div>
+                  <label class="block text-sm font-semibold text-gray-300 mb-2">{{ form.descripcion.label.text
+                      }}</label>
+                  {{ form.descripcion(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white text-sm
+                  rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                  transition-all", placeholder="Descripción de la receta") }}
+                  {% for error in form.descripcion.errors %}
+                  <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                  {% endfor %}
+              </div>
+
+              <div>
+                  <label class="block text-sm font-semibold text-gray-300 mb-2">{{ form.cuanto_produce.label.text }}
+                      <span class="text-red-400">*</span></label>
+                  {{ form.cuanto_produce(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white
+                  text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                  transition-all", placeholder="0") }}
+                  {% for error in form.cuanto_produce.errors %}
+                  <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                  {% endfor %}
+              </div>
           </div>
 
-          <div>
-            {{ entrada.cantidad(class="w-full bg-[#0D1F30] border border-gray-600 rounded-lg text-white text-sm px-3 py-2 outline-none focus:border-[#1d8de0]", placeholder="0") }}
-            {% for e in entrada.cantidad.errors %}
-              <p class="text-red-400 text-xs mt-0.5">{{ e }}</p>
-            {% endfor %}
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div>
+                  <label class="block text-sm font-semibold text-gray-300 mb-2">{{ form.resistencia.label.text
+                      }}</label>
+                  {{ form.resistencia(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white text-sm
+                  rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                  transition-all", placeholder="0.00") }}
+                  {% for error in form.resistencia.errors %}
+                  <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                  {% endfor %}
+              </div>
+
+              <div>
+                  <label class="block text-sm font-semibold text-gray-300 mb-2">{{ form.tiempo_produccion.label.text
+                      }}</label>
+                  {{ form.tiempo_produccion(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white
+                  text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                  transition-all", placeholder="0") }}
+                  {% for error in form.tiempo_produccion.errors %}
+                  <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                  {% endfor %}
+              </div>
+
+              <div>
+                  <label class="block text-sm font-semibold text-gray-300 mb-2">{{ form.fecha_creacion.label.text
+                      }}</label>
+                  {{ form.fecha_creacion(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white
+                  text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
+                  transition-all", max=today, min=today) }}
+                  {% for error in form.fecha_creacion.errors %}
+                  <p class="text-red-400 text-xs mt-1">{{ error }}</p>
+                  {% endfor %}
+              </div>
           </div>
 
-          <div>
-            {{ entrada.unidad_id(class="w-full bg-[#0D1F30] border border-gray-600 rounded-lg text-white text-sm px-3 py-2 outline-none focus:border-[#1d8de0]") }}
-            {% for e in entrada.unidad_id.errors %}
-              <p class="text-red-400 text-xs mt-0.5">{{ e }}</p>
-            {% endfor %}
+          <!-- Ingredientes -->
+          <div class="border-t border-[#1E3A5F] pt-6 mb-6">
+              <p class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Ingredientes de la Receta</p>
+
+              <!-- Headers -->
+              <div class="hidden md:grid grid-cols-[1fr_1fr_1fr_48px] gap-4 mb-3 px-1">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Materia Prima</span>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Cantidad</span>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-gray-500">Unidad de Medida</span>
+                  <span></span>
+              </div>
+
+              <!-- Ingredientes dinámicos -->
+              <div class="space-y-3">
+                  {% for entrada in form.ingredientes %}
+                  <div
+                      class="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr_48px] gap-4 items-start p-4 bg-[#0B2239] rounded-xl border border-[#1E3A5F]">
+                      <div>
+                          <label class="md:hidden block text-xs font-semibold text-gray-400 mb-1">Materia
+                              Prima</label>
+                          {{ entrada.materia_prima_id(class="w-full px-4 py-3 bg-[#0F2A44] border border-[#1E3A5F]
+                          text-white text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0]
+                          focus:border-transparent transition-all") }}
+                          {% for e in entrada.materia_prima_id.errors %}
+                          <p class="text-red-400 text-xs mt-1">{{ e }}</p>
+                          {% endfor %}
+                      </div>
+
+                      <div>
+                          <label class="md:hidden block text-xs font-semibold text-gray-400 mb-1">Cantidad</label>
+                          {{ entrada.cantidad(class="w-full px-4 py-3 bg-[#0F2A44] border border-[#1E3A5F] text-white
+                          text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0]
+                          focus:border-transparent transition-all", placeholder="0") }}
+                          {% for e in entrada.cantidad.errors %}
+                          <p class="text-red-400 text-xs mt-1">{{ e }}</p>
+                          {% endfor %}
+                      </div>
+
+                      <div>
+                          <label class="md:hidden block text-xs font-semibold text-gray-400 mb-1">Unidad</label>
+                          {{ entrada.unidad_id(class="w-full px-4 py-3 bg-[#0F2A44] border border-[#1E3A5F] text-white
+                          text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0]
+                          focus:border-transparent transition-all") }}
+                          {% for e in entrada.unidad_id.errors %}
+                          <p class="text-red-400 text-xs mt-1">{{ e }}</p>
+                          {% endfor %}
+                      </div>
+
+                      <div class="flex items-center justify-center md:mt-0 mt-2">
+                          <button type="submit" name="quitar_ingrediente" value="{{ loop.index0 }}"
+                              class="w-10 h-10 flex items-center justify-center rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 text-lg transition-colors"
+                              title="Quitar ingrediente">
+                              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                          </button>
+                      </div>
+                  </div>
+                  {% endfor %}
+              </div>
+
+              <!-- Botón añadir ingrediente -->
+              <button type="submit" name="agregar_ingrediente" value="1"
+                  class="mt-4 inline-flex items-center gap-2 px-5 py-3 border-2 border-dashed border-[#1E3A5F] hover:border-[#008DC0] rounded-xl text-gray-400 hover:text-[#008DC0] text-sm font-semibold transition-all">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                  Añadir Ingrediente
+              </button>
           </div>
 
-          <button
-            type="submit"
-            name="quitar_ingrediente"
-            value="{{ loop.index0 }}"
-            class="w-9 h-9 mt-0.5 flex items-center justify-center rounded-lg bg-red-950 border border-red-900 text-red-400 hover:bg-red-900 text-lg leading-none transition-colors">
-            ×
-          </button>
-
-        </div>
-        {% endfor %}
-
-        <button
-          type="submit"
-          name="agregar_ingrediente"
-          value="1"
-          class="mt-1 flex items-center gap-2 border border-dashed border-[#2a3347] hover:border-[#1d8de0] rounded-lg px-4 py-2 text-[#4e6278] hover:text-[#1d8de0] text-xs font-semibold transition-colors">
-          <span class="text-base leading-none">+</span> Añadir ingrediente
-        </button>
-
-      </div>
-
-      <!-- Botones -->
-      <div class="flex justify-end gap-3 pt-4 border-t border-[#2a3347] mt-2">
-        <a href="{{ url_for('recetas_bp.get_recetas') }}" type="reset"
-          class="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded text-sm">
-          Cancelar
-        </a>
-        <button type="submit" name="guardar" value="1"
-          class="bg-[#22C55E] hover:bg-green-400 text-white px-6 py-2 rounded text-sm font-semibold transition-colors">
-          {% if modo_edicion %}
-            Actualizar Receta
-          {% else %}
-            Guardar Receta
-          {% endif %}
-        </button>
-      </div>
-  </fieldset>
-
+          <!-- Botones -->
+          <div class="flex items-center justify-end gap-4 pt-6 border-t border-[#1E3A5F]">
+              <a href="{{ url_for('recetas_bp.get_recetas') }}"
+                  class="px-6 py-3 text-sm font-semibold text-gray-300 bg-[#1E3A5F] hover:bg-[#2A4A6F] rounded-xl transition-all">
+                  Cancelar
+              </a>
+              <button type="submit" name="guardar" value="1"
+                  class="inline-flex items-center justify-center gap-2 min-w-[200px] px-10 py-3 text-sm font-bold text-white bg-gradient-to-br from-[#008DC0] to-[#00A8E8] rounded-xl shadow-lg shadow-emerald-500/25 transition-all active:scale-[0.98]">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  {% if modo_edicion %}
+                  Actualizar Receta
+                  {% else %}
+                  Guardar Receta
+                  {% endif %}
+              </button>
+          </div>
+      </fieldset>
   </form>
 </div>
+
+<style>
+  .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0B2239;
+      border-radius: 2px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #1E3A5F;
+      border-radius: 2px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #2A4A6F;
+  }
+</style>

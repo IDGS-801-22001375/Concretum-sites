@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+{% import 'macros/crud_components.html' as components %}
+
+{% block content %}
+
+{{ components.page_header('Control de Producción', 'Gestión de fabricación') }}
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- CARDS -->
+{% include "produccion/pedidos_produccion/_card-producciones.html" %}
+
+<!-- GRID -->
+{% include "produccion/pedidos_produccion/_form-producciones.html" %}
+
+<!-- HISTORIAL -->
+{% include "produccion/pedidos_produccion/_historial-producciones.html" %}
+
+{% endblock %}

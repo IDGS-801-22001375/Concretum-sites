@@ -3,7 +3,7 @@ from werkzeug.datastructures import CombinedMultiDict
 from routes.productos import productos_bp
 from forms import ProductoForm
 from flask import render_template, request, redirect, url_for, flash
-from models import UnidadMedida, Color, CategoriasProducto, db, Productos
+from models import UnidadMedida, Color, CategoriasProducto, db, Productos, Existencias
 import uuid
 import os
 from werkzeug.utils import secure_filename
@@ -22,14 +22,22 @@ def get_categorias():
 def obtener_productos(page=1):
     pagination = db.session.query(Productos)\
         .join(CategoriasProducto, Productos.categoria_id == CategoriasProducto.id_categoria)\
+        .join(Existencias, Productos.id_producto == Existencias.producto_id)\
         .filter(Productos.es_active == 1)\
         .paginate(page=page, per_page=5)
 
     inactivos_count = db.session.query(Productos)\
         .filter(Productos.es_active == 0)\
         .count()
+        
+    todas = db.session.query(Existencias)\
+        .join(Productos, Productos.id_producto == Existencias.producto_id)\
+        .filter(Productos.es_active == 1)\
+        .all()
 
-    return pagination, pagination.items, inactivos_count
+    bajo_stock = sum(1 for e in todas if e.estado_stock == 'BAJO')
+
+    return pagination, pagination.items, inactivos_count, bajo_stock
 
 def convertir_ruta_imagen(enlace_fotografia):
     filename = secure_filename(enlace_fotografia.filename)
@@ -57,7 +65,7 @@ def get_datos():
     page = request.args.get('page', 1, type=int)
     form_activo = request.args.get('modo') == 'nuevo'
 
-    pagination, productos_lista, inactivos_count = obtener_productos(page)
+    pagination, productos_lista, inactivos_count, bajo_stock = obtener_productos(page)
 
     return render_template(
         'produccion/productos/productos.html',
@@ -67,7 +75,8 @@ def get_datos():
         inactivos_count=inactivos_count,
         modo_edicion=False,
         form_activo=form_activo,
-        id_producto=None
+        id_producto=None,
+        bajo_stock=bajo_stock
     )
 
 # ── GUARDAR ──────────────────────────────────────────────────────────────────
@@ -153,7 +162,7 @@ def update_producto(id_producto):
         return redirect(url_for('productos_bp.get_datos'))
 
     page = request.args.get('page', 1, type=int)
-    pagination, productos_lista, inactivos_count = obtener_productos(page)
+    pagination, productos_lista, inactivos_count, bajo_stock = obtener_productos(page)
 
     return render_template(
         "produccion/productos/productos.html",
@@ -163,7 +172,8 @@ def update_producto(id_producto):
         inactivos_count=inactivos_count,
         form_activo=True,
         modo_edicion=True, 
-        id_producto=id_producto
+        id_producto=id_producto,
+        bajo_stock=bajo_stock
     )
 
 # ── ELIMINAR ───────────────────────────────────────────────────

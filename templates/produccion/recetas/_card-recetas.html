@@ -1,100 +1,45 @@
-{% set cat_colores = {
-    'Estructura':        'bg-blue-900 text-blue-300',
-    'Mampostería':       'bg-purple-900 text-purple-300',
-    'Blocks de Concreto':'bg-cyan-900 text-cyan-300',
-    'Sistemas de Losa':  'bg-amber-900 text-amber-300',
-    'Pisos':             'bg-green-900 text-green-300',
-  } %}
-  
-  <div class="max-w-7xl mx-auto px-6">
-  
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-  
-      {% for receta in recetas %}
-  
-      {% set cls = cat_colores.get(receta.producto.categoria.nombre, 'bg-slate-700 text-slate-300') %}
-  
-      <div class="bg-[#1c2230] border border-[#2a3347] rounded-xl p-5 flex flex-col gap-3 hover:border-[#3d4f6b] transition-colors">
-  
-        <div>
-          <div>
-            <h2 class="text-white font-semibold text-sm leading-snug">
-                {{ receta.producto.nombre }}
-            </h2>
-            <a href="" class="text-[#ffffff]">Editar</a>
-          </div>
-          <p class="text-[#4e6278] text-xs mt-0.5">Producción: {{ receta.cuanto_produce }} unidades</p>
-        </div>
-  
-        <span class="self-start text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider {{ cls }}">
-          {{ receta.producto.categoria.nombre }}
-        </span>
-  
-        <div class="border-t border-[#2a3347] pt-2 flex flex-col gap-1">
-          {% for detalle in receta.detalles %}
-          <div class="flex justify-between text-xs py-0.5">
-            <span class="text-[#7d90a8]">{{ detalle.materia_prima.nombre }}</span>
-            <span class="text-gray-300 font-medium">{{ detalle.cantidad }} {{ detalle.unidad_medida.nombre }}</span>
-          </div>
-          {% endfor %}
-        </div>
-  
-      </div>
-      {% endfor %}
-  
-    </div>
-  
-    <!-- PAGINACIÓN -->
-    {% if pagination.pages > 1 %}
-    <div class="flex items-center justify-between mt-4">
-  
-      <p class="text-xs text-[#4e6278]">
-        Mostrando {{ ((pagination.page - 1) * pagination.per_page) + 1 }}–{{ [pagination.page * pagination.per_page, pagination.total] | min }}
-        de {{ pagination.total }} recetas
-      </p>
-  
-      <div class="flex items-center gap-1">
-  
-        <a href="{{ url_for('recetas_bp.get_recetas', page=pagination.prev_num) if pagination.has_prev else '#' }}"
-           class="px-3 py-1.5 rounded text-xs font-medium transition
-             {% if pagination.has_prev %}
-               bg-[#1c2230] border border-[#2a3347] text-[#7d90a8] hover:border-[#3d4f6b] hover:text-white
-             {% else %}
-               bg-[#151b27] border border-[#1e2a3a] text-[#2e3f52] cursor-not-allowed
-             {% endif %}">
-          ← Anterior
-        </a>
-  
-        {% for page_num in pagination.iter_pages(left_edge=1, left_current=1, right_current=2, right_edge=1) %}
-          {% if page_num %}
-            <a href="{{ url_for('recetas_bp.get_recetas', page=page_num) }}"
-               class="px-3 py-1.5 rounded text-xs font-medium transition
-                 {% if page_num == pagination.page %}
-                   bg-blue-600 border border-blue-500 text-white
-                 {% else %}
-                   bg-[#1c2230] border border-[#2a3347] text-[#7d90a8] hover:border-[#3d4f6b] hover:text-white
-                 {% endif %}">
-              {{ page_num }}
-            </a>
-          {% else %}
-            <span class="px-2 text-[#2e3f52] text-xs">…</span>
-          {% endif %}
-        {% endfor %}
-  
-        <a href="{{ url_for('recetas_bp.get_recetas', page=pagination.next_num) if pagination.has_next else '#' }}"
-           class="px-3 py-1.5 rounded text-xs font-medium transition
-             {% if pagination.has_next %}
-               bg-[#1c2230] border border-[#2a3347] text-[#7d90a8] hover:border-[#3d4f6b] hover:text-white
-             {% else %}
-               bg-[#151b27] border border-[#1e2a3a] text-[#2e3f52] cursor-not-allowed
-             {% endif %}">
-          Siguiente →
-        </a>
-  
-      </div>
-    </div>
-    {% endif %}
-  
-  </div>
-  
-  <hr class="border-[#2a3347] my-6" />
+{{ components.page_header('Fórmulas / Recetas de Producción', 'Define las recetas y fórmulas para la fabricación de
+productos') }}
+
+<!-- KPIs -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    {{ components.kpi_card(
+    'Total Recetas',
+    'kpi-total-recetas',
+    pagination.total|string if pagination else '0',
+    'slate',
+    '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>'
+    ) }}
+    {{ components.kpi_card(
+    'Recetas Activas',
+    'kpi-recetas-activas',
+    pagination.total|string if pagination else '0',
+    'green',
+    '<svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>'
+    ) }}
+    {{ components.kpi_card(
+    'Producción Promedio',
+    'kpi-produccion-prom',
+    '0',
+    'blue',
+    '<svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+    </svg>'
+    ) }}
+    {{ components.kpi_card(
+    'Ingredientes Únicos',
+    'kpi-ingredientes',
+    '0',
+    'amber',
+    '<svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+    </svg>'
+    ) }}
+</div>

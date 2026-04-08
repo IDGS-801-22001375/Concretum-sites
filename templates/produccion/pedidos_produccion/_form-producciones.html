@@ -1,0 +1,68 @@
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+    <!-- ÓRDENES EN PROCESO -->
+    <div class="bg-[#0F2A44] rounded-2xl p-6">
+        <h3 class="text-white mb-4">Órdenes en proceso</h3>
+
+        {% for orden in ordenes_activas_list %}
+        <div class="mb-4">
+
+            <div class="flex justify-between text-sm text-gray-300">
+                <span>#{{ orden.id_produccion }} - {{ orden.producto.nombre }}</span>
+                <span class="text-yellow-400 font-bold">EN PROCESO</span>
+            </div>
+
+            <!-- BARRA -->
+            <div class="h-1.5 bg-[#1E3A5F] mt-2 rounded-full">
+                <div class="bg-yellow-400 w-1/2 h-full rounded-full"></div>
+            </div>
+
+            <!-- BOTONES -->
+            <div class="flex justify-end gap-2 mt-2">
+
+                <!-- FINALIZAR -->
+                <form method="POST"
+                      action="{{ url_for('produccion_recetas_bp.finalizar_manual', id=orden.id_produccion) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button class="text-emerald-400 text-xs hover:text-emerald-300">
+                        Finalizar
+                    </button>
+                </form>
+
+                <!-- CANCELAR -->
+                <form method="POST"
+                      action="{{ url_for('produccion_recetas_bp.cancelar_orden', id=orden.id_produccion) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                    <button class="text-red-400 text-xs hover:text-red-300">
+                        Cancelar
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- FORM -->
+    <div class="bg-[#0F2A44] rounded-2xl p-6">
+
+        <form method="POST" action="{{ url_for('produccion_recetas_bp.crear_orden') }}">
+
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {{ form.hidden_tag() }}
+
+            {{ macros.campoNuevo(form.receta_id) }}
+            {{ macros.campoNuevo(form.cantidad) }}
+            {{ macros.campoNuevo(form.fecha_inicio) }}
+            {{ macros.campoNuevo(form.observaciones) }}
+
+            <button class="w-full mt-4 bg-cyan-500 p-3 rounded-lg text-white font-bold">
+                Iniciar Producción
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
