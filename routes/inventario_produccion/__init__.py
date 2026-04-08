@@ -1,5 +1,5 @@
 from flask import Blueprint
 
-inventario_bp = Blueprint('inventario_bp', __name__, url_prefix='/produccion')
+stock_bp = Blueprint('stock_bp', __name__, url_prefix='/stock')
 
 from . import  routes

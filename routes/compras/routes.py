@@ -208,15 +208,15 @@ def guardar_compra():
                 materia_prima_id=int(d['materia_prima_id']),
                 cantidad=float(d['cantidad']),
                 precio_unitario=float(d['precio_unitario']),
-                subtotal=float(d['cantidad']) * float(d['precio_unitario'])
+                total_linea=float(d['cantidad']) * float(d['precio_unitario']) 
             )
             db.session.add(detalle)
         
         historial = HistorialCompra(
             compra_id=compra.id,
-            accion='ACTUALIZADA' if id_compra else 'CREADA',
+            accion='CREADA',
             modificado_por=current_user.id,
-            comentario='Compra editada' if id_compra else 'Compra creada'
+            comentario='Compra generada automáticamente.'
         )
 
         db.session.add(historial)

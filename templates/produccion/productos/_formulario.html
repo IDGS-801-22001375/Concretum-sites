@@ -18,8 +18,6 @@ Estilo unificado con el resto del sistema (inventario, recetas, proveedores)
                 <h2 class="text-lg font-bold text-white">
                     {% if modo_edicion %}
                     Editar Producto
-                    {% elif form_activo %}
-                    Registrar Producto
                     {% else %}
                     Registrar Producto
                     {% endif %}
@@ -38,15 +36,20 @@ Estilo unificado con el resto del sistema (inventario, recetas, proveedores)
         </div>
     </div>
 
-    <form method="POST" enctype="multipart/form-data" {% if modo_edicion and id_producto %}
-        action="{{ url_for('productos_bp.update_producto', id_producto=id_producto) }}" {% else %}
-        action="{{ url_for('productos_bp.save_producto') }}" {% endif %} class="p-6">
+    <form method="POST" enctype="multipart/form-data"
+        {% if modo_edicion and id_producto %}
+            action="{{ url_for('productos_bp.update_producto', id_producto=id_producto) }}"
+        {% else %}
+            action="{{ url_for('productos_bp.save_producto') }}"
+        {% endif %}
+        class="p-6">
 
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         {{ form.hidden_tag() }}
 
         <fieldset id="formBloqueado" {% if not form_activo and not modo_edicion %} disabled {% endif %}>
-            <!-- Datos principales - Fila 1 -->
+
+            <!-- Fila 1: Categoría / SKU / Nombre -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <!-- Categoría -->
                 <div>
@@ -91,7 +94,7 @@ Estilo unificado con el resto del sistema (inventario, recetas, proveedores)
                 </div>
             </div>
 
-            <!-- Fila 2 -->
+            <!-- Fila 2: Descripción / Unidad de Medida / Color -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <!-- Descripción -->
                 <div>
@@ -135,8 +138,8 @@ Estilo unificado con el resto del sistema (inventario, recetas, proveedores)
                 </div>
             </div>
 
-            <!-- Fila 3 -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Fila 3: Resistencia MPA / Precio Base / Fotografía -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <!-- Resistencia MPA -->
                 <div>
                     <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
@@ -183,22 +186,26 @@ Estilo unificado con el resto del sistema (inventario, recetas, proveedores)
                 </div>
             </div>
 
-            <!-- FECHA (solo en modo edición) -->
-            {% if modo_edicion and id_producto %}
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- FIX 1 y 2: Fecha en grid de 2 columnas, today pasado correctamente desde la vista -->
+            <!-- En tu view.py asegúrate de pasar: today=date.today().isoformat() -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Fecha de Creación -->
                 <div>
                     <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">
                         {{ form.fecha_creacion.label.text }}
                     </label>
-                    {{ form.fecha_creacion(class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white
-                    text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent
-                    transition-all", max=today, min=today) }}
+                    {{ form.fecha_creacion(
+                        class="w-full px-4 py-3 bg-[#0B2239] border border-[#1E3A5F] text-white text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-[#008DC0] focus:border-transparent transition-all",
+                        max=today,
+                        min=today
+                    ) }}
                     {% for error in form.fecha_creacion.errors %}
                     <p class="text-red-400 text-xs mt-1">{{ error }}</p>
                     {% endfor %}
                 </div>
+                <!-- Columna vacía para balancear el layout (puedes poner otro campo aquí si lo necesitas) -->
+                <div></div>
             </div>
-            {% endif %}
 
             <!-- BOTONES -->
             <div class="flex items-center justify-end gap-3 pt-4 border-t border-[#1E3A5F]">

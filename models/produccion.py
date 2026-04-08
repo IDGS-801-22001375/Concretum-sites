@@ -26,3 +26,47 @@ class Produccion(db.Model):
     @property
     def id(self):
         return self.id_produccion
+    
+# ====================== PRODUCCIÓN CONSUMO ======================
+class ProduccionConsumo(db.Model):
+    __tablename__ = 'produccion_consumo'
+
+    id_consumo       = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    produccion_id    = db.Column(
+        db.BigInteger,
+        db.ForeignKey('producciones.id_produccion', ondelete='CASCADE'),
+        nullable=False
+    )
+    materia_prima_id = db.Column(
+        db.BigInteger,
+        db.ForeignKey('materias_primas.id_materia_prima', ondelete='RESTRICT'),
+        nullable=False
+    )
+    cantidad_usada   = db.Column(db.Numeric(14, 3), nullable=False)
+    fecha_registro   = db.Column(db.DateTime, default=datetime.utcnow)
+
+    produccion     = db.relationship('Produccion', backref='consumos')
+    materia_prima  = db.relationship('MateriaPrima', backref='consumos')
+
+    @property
+    def id(self):
+        return self.id_consumo
+    
+# ====================== LOTES DE PRODUCCIÓN ======================
+class LoteProduccion(db.Model):
+    __tablename__ = 'lotes_produccion'
+
+    id_lote         = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    produccion_id   = db.Column(
+        db.BigInteger,
+        db.ForeignKey('producciones.id_produccion', ondelete='CASCADE'),
+        nullable=False
+    )
+    codigo_lote     = db.Column(db.String(50), nullable=False, unique=True)
+    fecha_fabricacion = db.Column(db.Date, nullable=False)
+
+    produccion = db.relationship('Produccion', backref='lotes')
+
+    @property
+    def id(self):
+        return self.id_lote

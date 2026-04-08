@@ -7,7 +7,9 @@ class Existencias(db.Model):
     id_existencias = db.Column(db.Integer, primary_key=True)
     producto_id = db.Column(db.Integer, db.ForeignKey('productos.id_producto'), nullable=False, unique=True)
     stock_actual = db.Column(db.Numeric(14, 3), nullable=False, default=0.000)
+    stock_minimo = db.Column(db.Numeric(14, 3), nullable=False)
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+    estado_stock = db.Column(db.Enum('BAJO','PRECAUCION', 'ALTO'), nullable=False, default='ALTO')
 
     producto = db.relationship('Productos', backref='existencia')
     

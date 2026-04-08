@@ -42,7 +42,7 @@ def api_productos():
     sort_by = request.args.get('sort_by', 'nombre')
     sort_order = request.args.get('sort_order', 'asc')
 
-    query = Productos.query.filter_by(es_active=1)
+    query = Productos.query.filter(Productos.es_active == 1)
     if search:
         query = query.filter(or_(
             Productos.nombre.ilike(f'%{search}%'),
@@ -265,7 +265,7 @@ def registrar_movimiento():
 @login_required
 @roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO', 'ALMACENISTA')
 def productos_lista():
-    productos = Productos.query.filter_by(es_active=1).all()
+    productos = Productos.query.filter(Productos.es_active == 1).all()
     items = [{'id': p.id, 'nombre': f"{p.sku} - {p.nombre}", 'stock': float(p.existencia.stock_actual) if p.existencia else 0} for p in productos]
     return jsonify({'items': items})
 

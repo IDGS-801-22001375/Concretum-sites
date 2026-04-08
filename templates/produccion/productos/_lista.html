@@ -22,13 +22,23 @@ Estilo unificado con el resto del sistema (inventario, recetas, proveedores)
             </div>
         </div>
 
-        <a href="{{ url_for('productos_bp.get_datos', modo='nuevo') }}"
-            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#008DC0] to-[#00A8E8] hover:from-[#007AAD] hover:to-[#0095CC] rounded-xl shadow-lg shadow-[#008DC0]/20 transition-all">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Nuevo Producto
-        </a>
+        <div class="flex gap-6">
+            <a href="{{ url_for('productos_bp.get_datos', modo='nuevo') }}"
+                class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#008DC0] to-[#00A8E8] hover:from-[#007AAD] hover:to-[#0095CC] rounded-xl shadow-lg shadow-[#008DC0]/20 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Nuevo Producto
+            </a>
+            <a href="{{ url_for('stock_bp.get_stock', modo='nuevo') }}"
+                class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-transparent border border-[#007AAD] hover:from-[#007AAD] hover:to-[#0095CC] rounded-xl shadow-lg shadow-[#008DC0]/20 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1.5 12s4.5-7.5 10.5-7.5S22.5 12 22.5 12s-4.5 7.5-10.5 7.5S1.5 12 1.5 12z" />
+                    <circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                </svg>
+                Ver stock de productos
+            </a>
+        </div>
     </div>
 
     <!-- Filters Bar -->
@@ -105,7 +115,7 @@ Estilo unificado con el resto del sistema (inventario, recetas, proveedores)
                 {% for p in productos %}
                 <tr class="hover:bg-[#123555]/50 transition-colors">
                     <td class="px-6 py-4">
-                        <div class="w-16 h-16 rounded-xl overflow-hidden bg-[#1E3A5F] flex items-center justify-center">
+                        <div class="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center">
                             <img src="{{ url_for('static', filename=p.enlace_fotografia) }}" alt="{{ p.nombre }}"
                                 class="object-cover w-full h-full"
                                 onerror="this.style.display='none'; this.parentElement.innerHTML='<svg class=\'w-6 h-6 text-gray-500\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z\'/></svg>'">
@@ -166,6 +176,16 @@ Estilo unificado con el resto del sistema (inventario, recetas, proveedores)
                                     </svg>
                                 </button>
                             </form>
+                            <button type="button"
+                                onclick="abrirModalDetalle({{ p.id_producto }}, '{{ p.nombre }}', '{{ p.sku }}', '{{ p.descripcion or '' }}', '{{ p.categoria.nombre }}', '{{ p.unidad_medida.nombre }}', '{{ p.resistencia_mpa or '—' }}', '{{ p.color.nombre }}', '{{ p.color.codigo_hex or '' }}', {{ p.precio_base }}, '{{ url_for('static', filename=p.enlace_fotografia) }}')"
+                                class="p-2 text-gray-400 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
+                                title="Ver detalle">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M1.5 12s4.5-7.5 10.5-7.5S22.5 12 22.5 12s-4.5 7.5-10.5 7.5S1.5 12 1.5 12z" />
+                                    <circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                                </svg>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -248,6 +268,134 @@ Estilo unificado con el resto del sistema (inventario, recetas, proveedores)
     </div>
     {% endif %}
 </div>
+
+<!-- Modal Detalle Producto -->
+<div id="modal-detalle-producto" class="fixed inset-0 z-50 hidden items-center justify-center p-4"
+    style="background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px);">
+    <div class="bg-[#0F2A44] border border-[#1E3A5F] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-[#1E3A5F]">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-[#008DC0]/20 to-[#008DC0]/10 flex items-center justify-center border border-[#008DC0]/30">
+                    <svg class="w-4 h-4 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M1.5 12s4.5-7.5 10.5-7.5S22.5 12 22.5 12s-4.5 7.5-10.5 7.5S1.5 12 1.5 12z" />
+                        <circle cx="12" cy="12" r="3" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+                    </svg>
+                </div>
+                <h3 class="text-base font-bold text-white">Detalle del Producto</h3>
+            </div>
+            <button onclick="cerrarModalDetalle()"
+                class="p-1.5 text-gray-400 hover:text-white hover:bg-[#1E3A5F] rounded-lg transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6">
+            <div class="flex gap-5 mb-6">
+                <!-- Imagen -->
+                <div class="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-[#0B2239] border border-[#1E3A5F] flex items-center justify-center">
+                    <img id="modal-imagen" src="" alt=""
+                        class="object-cover w-full h-full"
+                        onerror="this.style.display='none'; this.parentElement.querySelector('.modal-img-fallback').style.display='flex'">
+                    <div class="modal-img-fallback hidden w-full h-full items-center justify-center">
+                        <svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                    </div>
+                </div>
+                <!-- Nombre y SKU -->
+                <div class="flex flex-col justify-center gap-1.5">
+                    <h4 id="modal-nombre" class="text-lg font-bold text-white leading-tight"></h4>
+                    <span id="modal-sku" class="inline-flex w-fit items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[#1E3A5F] text-gray-300"></span>
+                    <p id="modal-descripcion" class="text-sm text-gray-400 mt-0.5"></p>
+                </div>
+            </div>
+
+            <!-- Grid de detalles -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-[#0B2239] rounded-xl p-3.5 border border-[#1E3A5F]">
+                    <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Categoría</p>
+                    <span id="modal-categoria" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-cyan-500/20 text-cyan-400"></span>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-3.5 border border-[#1E3A5F]">
+                    <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Unidad de Medida</p>
+                    <p id="modal-unidad" class="text-sm text-white font-medium"></p>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-3.5 border border-[#1E3A5F]">
+                    <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Resistencia MPA</p>
+                    <p id="modal-mpa" class="text-sm text-white font-medium font-mono"></p>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-3.5 border border-[#1E3A5F]">
+                    <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Color</p>
+                    <div class="flex items-center gap-2">
+                        <span id="modal-color-dot" class="w-3.5 h-3.5 rounded-full border border-gray-600 flex-shrink-0"></span>
+                        <p id="modal-color" class="text-sm text-white font-medium"></p>
+                    </div>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-3.5 border border-[#1E3A5F] col-span-2">
+                    <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Precio Base</p>
+                    <p id="modal-precio" class="text-xl font-bold text-white"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 border-t border-[#1E3A5F] flex justify-end gap-3">
+            <button onclick="cerrarModalDetalle()"
+                class="px-4 py-2 text-sm font-medium text-gray-300 bg-[#1E3A5F] hover:bg-[#2A4A6F] rounded-xl transition-colors">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalDetalle(id, nombre, sku, descripcion, categoria, unidad, mpa, color, colorHex, precio, imagenUrl) {
+        document.getElementById('modal-nombre').textContent = nombre;
+        document.getElementById('modal-sku').textContent = sku;
+        document.getElementById('modal-descripcion').textContent = descripcion || '';
+        document.getElementById('modal-categoria').textContent = categoria;
+        document.getElementById('modal-unidad').textContent = unidad;
+        document.getElementById('modal-mpa').textContent = mpa;
+        document.getElementById('modal-color').textContent = color;
+        document.getElementById('modal-precio').textContent = '$' + parseFloat(precio).toFixed(2);
+
+        const colorDot = document.getElementById('modal-color-dot');
+        colorDot.style.backgroundColor = colorHex || 'transparent';
+        colorDot.style.display = colorHex ? 'inline-block' : 'none';
+
+        const img = document.getElementById('modal-imagen');
+        img.style.display = 'block';
+        img.src = imagenUrl;
+        img.parentElement.querySelector('.modal-img-fallback').style.display = 'none';
+
+        const modal = document.getElementById('modal-detalle-producto');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function cerrarModalDetalle() {
+        const modal = document.getElementById('modal-detalle-producto');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        document.body.style.overflow = '';
+    }
+
+    document.getElementById('modal-detalle-producto').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModalDetalle();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') cerrarModalDetalle();
+    });
+</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
