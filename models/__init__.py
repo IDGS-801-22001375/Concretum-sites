@@ -17,8 +17,8 @@ from .produccion    import Produccion
 from .configuracion import ConfiguracionEmpresa
 from .materia_prima import ExistenciaMateriaPrima, MateriaPrima
 from .recetas       import RecetaDetalle, Recetas
-from .comercial     import VentaDetalle, Cliente, CorteDesglose, CorteCaja, Venta
- 
+from .comercial import VentaDetalle, Cliente, ClienteDetalle, CorteDesglose, CorteCaja, Venta
+
 __all__ = [
     # Core
     'db',
@@ -45,5 +45,5 @@ __all__ = [
     # Materia prima
     'ExistenciaMateriaPrima', 'MateriaPrima',
     # Comercial
-    'VentaDetalle', 'Cliente', 'CorteDesglose', 'CorteCaja', 'Venta'
+    'VentaDetalle', 'Cliente', 'ClienteDetalle', 'CorteDesglose', 'CorteCaja', 'Venta'
 ]

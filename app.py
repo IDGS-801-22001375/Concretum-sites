@@ -2,12 +2,13 @@ from flask import Flask, render_template, redirect, url_for, request, make_respo
 from config import Config, DevelopmentConfig
 from models import db, User, Role, MateriaPrima, ExistenciaMateriaPrima, Produccion, Merma, Productos, CategoriasProducto
 from flask_security import Security, SQLAlchemyUserDatastore, login_required, current_user
-from flask_security.signals import user_authenticated
 from flask_login.signals import user_logged_out
+from flask_security.signals import user_authenticated, user_registered
 from flask_login import login_user, logout_user, LoginManager
 from pymongo import MongoClient
 from flask_wtf.csrf import CSRFProtect
-from forms import LoginFormSimple
+from forms import LoginFormSimple, ExtendedRegisterForm
+from flask_security.registerable import register_user
 import jwt
 import datetime
 import logging
@@ -29,6 +30,7 @@ from routes.inventario import inventario_bp
 from routes.recetas import recetas_bp
 from routes.productos import productos_bp
 from routes.comercial import comercial_bp
+from routes.clientes import clientes_bp
 from models import db, User, Role, MateriaPrima, ExistenciaMateriaPrima, Produccion, Merma, Venta, VentaDetalle, CorteCaja, CorteDesglose, Cliente
 
 app = Flask(__name__)
@@ -40,7 +42,7 @@ mongo_client = MongoClient(app.config['MONGO_URI'])
 mongo_db = mongo_client.get_database()
 
 user_datastore = SQLAlchemyUserDatastore(db, User, Role)
-security = Security(app, user_datastore, login_form=LoginFormSimple)
+security = Security(app, user_datastore, login_form=LoginFormSimple, register_form=ExtendedRegisterForm)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -59,6 +61,7 @@ app.register_blueprint(inventario_bp)
 app.register_blueprint(mermas_bp)
 app.register_blueprint(configuracion_bp)
 app.register_blueprint(recetas_bp)
+app.register_blueprint(clientes_bp)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -101,7 +104,7 @@ def on_user_authenticated(app, user, **extra):
 
 @user_logged_out.connect_via(app)
 def on_user_logout(app, user, **extra):
-    if user:
+    if user and user.is_authenticated: 
         mongo_db.auditoria_eventos.insert_one({
             "usuario_id": user.id,
             "evento": "Cierre de Sesión",
@@ -174,6 +177,26 @@ def custom_login():
     return render_template('auth/login.html', login_user_form=form)
 
 app.view_functions['security.login'] = custom_login
+
+# Registro personalizado para evitar el auto-login
+def custom_register():
+    if current_user.is_authenticated:
+        return redirect(url_for('comercial_bp.dashboard'))
+    
+    form = ExtendedRegisterForm()
+    if form.validate_on_submit():
+        # Esto crea al usuario, encripta su contraseña y lo guarda
+        user = register_user(form)
+        db.session.commit()
+        
+        flash('¡Cuenta creada exitosamente! Por favor, inicia sesión con tus nuevas credenciales.', 'success')
+        # Lo redirigimos AL LOGIN a la fuerza
+        return redirect(url_for('security.login'))
+        
+    return render_template('auth/register.html', register_user_form=form)
+
+# Sobrescribimos la ruta original de Flask-Security
+app.view_functions['security.register'] = custom_register
 
 @app.route('/verificar-2fa', methods=['GET', 'POST'])
 def verificar_2fa():

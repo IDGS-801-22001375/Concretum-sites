@@ -3,6 +3,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, SelectField, HiddenField, SelectMultipleField, BooleanField
 from wtforms.validators import DataRequired, Email, Length, EqualTo, ValidationError, Optional
 from flask_wtf.recaptcha import RecaptchaField
+from flask_security.forms import RegisterForm
 from models import db, User, Role
 import datetime
 
@@ -82,3 +83,7 @@ class UsuarioForm(FlaskForm):
             self.password.validators = [Optional()]
             self.confirm_password.validators = [Optional()]
         return super().validate(extra_validators)
+    
+
+class ExtendedRegisterForm(RegisterForm):
+    username = StringField('Nombre de Usuario', validators=[DataRequired(), Length(min=4, max=80)])

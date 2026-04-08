@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% import 'macros/crud_components.html' as components %}
+
+{% block title %}Clientes{% endblock %}
+
+{% block content %}
+
+{{ components.page_header('Directorio de Clientes', 'Administra tu cartera de clientes y prospectos comerciales') }}
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    {{ components.kpi_card(
+    'Clientes Activos',
+    'kpi-cli-activos',
+    kpis.total_activos|string,
+    'blue',
+    '<svg class="w-6 h-6 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>'
+    ) }}
+    {{ components.kpi_card(
+    'Nuevos este mes',
+    'kpi-cli-nuevos',
+    kpis.nuevos_mes|string,
+    'green',
+    '<svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+    </svg>'
+    ) }}
+</div>
+
+{{ components.crud_table(
+id_table='clientes',
+api_endpoint='/clientes/api',
+title='Directorio de Clientes',
+columns=[
+{'field': 'razon_social', 'label': 'Razón Social / Nombre', 'sortable': true},
+{'field': 'rfc', 'label': 'RFC', 'sortable': true},
+{'field': 'email', 'label': 'Email', 'sortable': true},
+{'field': 'telefono', 'label': 'Teléfono', 'sortable': true},
+{'field': 'ciudad', 'label': 'Ciudad', 'sortable': true},
+{'field': 'es_activo', 'label': 'Estado', 'sortable': true}
+],
+search_placeholder='Buscar por nombre, RFC o email...',
+filters=[
+{'type': 'select', 'name': 'active', 'label_default': 'Todos los estados',
+'options': [
+{'value': 'true', 'label': 'Activos'},
+{'value': 'false', 'label': 'Inactivos'}
+]}
+],
+btn_new_label='Nuevo Cliente'
+) }}
+
+{% set form_fields = [
+{'name': 'razon_social', 'label': 'Nombre Completo o Razón Social', 'type': 'text', 'required': true, 'placeholder':
+'Ej: Constructora ABC S.A. de C.V.'},
+{'name': 'rfc', 'label': 'RFC', 'type': 'text', 'required': false, 'placeholder': 'Ej: XAXX010101000'},
+{'name': 'email', 'label': 'Correo Electrónico', 'type': 'email', 'required': false, 'placeholder': 'Ej:
+contacto@cliente.com'},
+{'name': 'telefono', 'label': 'Teléfono Celular / Fijo', 'type': 'tel', 'required': false, 'placeholder': 'Ej:
+4771234567'},
+{'name': 'direccion', 'label': 'Dirección Completa', 'type': 'text', 'required': false, 'full_width': true,
+'placeholder': 'Calle, Número, Colonia'},
+{'name': 'ciudad', 'label': 'Ciudad', 'type': 'text', 'required': false, 'placeholder': 'Ej: León'},
+{'name': 'estado', 'label': 'Estado', 'type': 'text', 'required': false, 'placeholder': 'Ej: Guanajuato'},
+{'name': 'codigo_postal', 'label': 'Código Postal', 'type': 'text', 'required': false, 'placeholder': 'Ej: 37000'},
+{'name': 'notas', 'label': 'Notas / Observaciones', 'type': 'textarea', 'required': false, 'full_width': true,
+'placeholder': 'Preferencias de entrega, detalles comerciales, etc.'}
+] %}
+
+{% call components.crud_modal(
+'clientes',
+form_fields,
+id_field='id_cliente',
+modal_title='Cliente',
+modal_size='lg'
+) %}
+{% endcall %}
+
+<script src="{{ url_for('static', filename='js/crud.js') }}"></script>
+<script>
+    (function () {
+        var mgr = new CrudManager({
+            id: 'clientes',
+            apiEndpoint: '/clientes',
+            sortBy: 'razon_social',
+            columns: [
+                {
+                    field: 'razon_social',
+                    label: 'Razón Social',
+                    sortable: true,
+                    render: function (val) {
+                        return `<span class="font-semibold text-white">${_escHtml(val)}</span>`;
+                    }
+                },
+                {
+                    field: 'rfc',
+                    label: 'RFC',
+                    sortable: true,
+                    render: function (val) {
+                        return `<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[#1E3A5F] text-gray-300">${val || '—'}</span>`;
+                    }
+                },
+                {
+                    field: 'email',
+                    label: 'Email',
+                    sortable: true,
+                    render: function (val) {
+                        return `<span class="text-gray-400">${val}</span>`;
+                    }
+                },
+                {
+                    field: 'telefono',
+                    label: 'Teléfono',
+                    sortable: true,
+                    render: function (val) {
+                        return `<span class="text-gray-400">${val}</span>`;
+                    }
+                },
+                {
+                    field: 'ciudad',
+                    label: 'Ciudad',
+                    sortable: true,
+                    render: function (val) {
+                        return `<span class="text-gray-400">${val}</span>`;
+                    }
+                },
+                {
+                    field: 'es_activo',
+                    label: 'Estado',
+                    sortable: true,
+                    render: function (val) {
+                        if (val) {
+                            return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Activo
+                        </span>`;
+                        }
+                        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Inactivo
+                    </span>`;
+                    }
+                }
+            ],
+            formFields: [
+                { name: 'razon_social', label: 'Razón Social', type: 'text', required: true },
+                { name: 'rfc', label: 'RFC', type: 'text', required: false },
+                { name: 'email', label: 'Correo', type: 'email', required: false },
+                { name: 'telefono', label: 'Teléfono', type: 'text', required: false },
+                { name: 'direccion', label: 'Dirección', type: 'text', required: false },
+                { name: 'ciudad', label: 'Ciudad', type: 'text', required: false },
+                { name: 'estado', label: 'Estado', type: 'text', required: false },
+                { name: 'codigo_postal', label: 'C.P.', type: 'text', required: false },
+                { name: 'notas', label: 'Notas', type: 'textarea', required: false }
+            ]
+        });
+
+        window.crudManagers['clientes'] = mgr;
+    })();
+</script>
+{% endblock %}
