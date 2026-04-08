@@ -68,6 +68,5 @@ class ProductoForm(FlaskForm):
         'Fecha de Registro',
         validators=[
             DataRequired(message="Este campo es requerido"),
-            fecha_hoy
         ]
     )

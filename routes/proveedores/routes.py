@@ -24,7 +24,7 @@ def registrar_auditoria(usuario_accion, accion, detalles):
 # ----------------------------------------------------------------------
 @proveedores_bp.route('/proveedores')
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_COMPRAS', 'COMPRADOR')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_COMPRAS', 'COMPRADOR')
 def index():
     # Calculamos KPIs
     total_activos = Proveedor.query.filter_by(es_activo=True).count()
@@ -55,7 +55,7 @@ def index():
 # ----------------------------------------------------------------------
 @proveedores_bp.route('/proveedores/api', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_COMPRAS', 'COMPRADOR')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_COMPRAS', 'COMPRADOR')
 def api_proveedores():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -122,7 +122,7 @@ def api_proveedores():
 # ----------------------------------------------------------------------
 @proveedores_bp.route('/proveedores/guardar', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_COMPRAS')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_COMPRAS')
 def guardar_proveedor():
     data = request.form
     id_prov = data.get('id_proveedor')
@@ -167,7 +167,7 @@ def guardar_proveedor():
 # ----------------------------------------------------------------------
 @proveedores_bp.route('/proveedores/obtener/<int:id>', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_COMPRAS')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_COMPRAS')
 def obtener_proveedor(id):
     prov = Proveedor.query.get_or_404(id)
     return jsonify({
@@ -190,7 +190,7 @@ def obtener_proveedor(id):
 # ----------------------------------------------------------------------
 @proveedores_bp.route('/proveedores/alternar_estado/<int:id>', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_COMPRAS')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_COMPRAS')
 def alternar_estado(id):
     prov = Proveedor.query.get_or_404(id)
     prov.es_activo = not prov.es_activo
@@ -204,7 +204,7 @@ def alternar_estado(id):
 # ----------------------------------------------------------------------
 @proveedores_bp.route('/proveedores/<int:id>/pagos', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_COMPRAS', 'COMPRADOR')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_COMPRAS', 'COMPRADOR')
 def pagos_proveedor(id):
     proveedor = Proveedor.query.get_or_404(id)
     # Obtener todas las compras y sus pagos

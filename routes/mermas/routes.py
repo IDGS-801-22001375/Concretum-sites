@@ -22,7 +22,7 @@ def registrar_auditoria(usuario_accion, accion, detalles):
 
 @mermas_bp.route('/mermas')
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_PRODUCCION', 'ALMACENISTA')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_PRODUCCION', 'ALMACENISTA')
 def index():
     return render_template('mermas/index.html')
 
@@ -123,7 +123,7 @@ def materiales_lista():
 
 @mermas_bp.route('/mermas/registrar', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_PRODUCCION', 'ALMACENISTA')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_PRODUCCION', 'ALMACENISTA')
 def registrar_merma():
     data = request.get_json()
     tipo = data.get('tipo_material')

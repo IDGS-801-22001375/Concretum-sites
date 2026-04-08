@@ -22,7 +22,7 @@ def registrar_auditoria(usuario_accion, accion, detalles):
 
 @configuracion_bp.route('/configuracion', methods=['GET', 'POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN')
 def index():
     config = ConfiguracionEmpresa.query.first()
     if not config:

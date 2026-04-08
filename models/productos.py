@@ -34,6 +34,10 @@ class Productos(db.Model):
     unidad_medida = db.relationship('UnidadMedida', backref='productos')
     color = db.relationship('Color', backref='productos')
 
+    @property
+    def id(self):
+        return self.id_producto
+
 class Color(db.Model):
     __tablename__ = 'colores'
 

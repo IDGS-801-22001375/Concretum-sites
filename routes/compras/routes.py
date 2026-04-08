@@ -25,7 +25,7 @@ def registrar_auditoria(usuario_accion, accion, detalles):
 # ----------------------------------------------------------------------
 @compras_bp.route('/compras')
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_COMPRAS', 'COMPRADOR')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_COMPRAS', 'COMPRADOR')
 def index():
     total_ordenes = Compra.query.count()
     pendientes = Compra.query.filter(Compra.estado == 'CREADA').count()
@@ -54,7 +54,7 @@ def index():
 # ----------------------------------------------------------------------
 @compras_bp.route('/compras/api', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_COMPRAS', 'COMPRADOR')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_COMPRAS', 'COMPRADOR')
 def api_compras():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -108,7 +108,7 @@ def api_compras():
 # ----------------------------------------------------------------------
 @compras_bp.route('/compras/obtener/<int:id>', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_COMPRAS')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_COMPRAS')
 def obtener_compra(id):
     compra = Compra.query.get_or_404(id)
     detalles = [{
@@ -116,7 +116,7 @@ def obtener_compra(id):
         'materia_prima_nombre': d.materia_prima.nombre,
         'cantidad': float(d.cantidad),
         'precio_unitario': float(d.precio_unitario),
-        'subtotal': float(d.subtotal)
+        'subtotal': float(d.total_linea)
     } for d in compra.detalles]
     # Devolver solo la fecha (YYYY-MM-DD) para el input date
     return jsonify({
@@ -134,7 +134,7 @@ def obtener_compra(id):
 # ----------------------------------------------------------------------
 @compras_bp.route('/compras/guardar', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_COMPRAS')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_COMPRAS')
 def guardar_compra():
     data = request.form
     id_compra = data.get('id_compra')
@@ -183,7 +183,7 @@ def guardar_compra():
                 materia_prima_id=int(d['materia_prima_id']),
                 cantidad=float(d['cantidad']),
                 precio_unitario=float(d['precio_unitario']),
-                subtotal=float(d['cantidad']) * float(d['precio_unitario'])
+                total_linea=float(d['cantidad']) * float(d['precio_unitario'])
             )
             db.session.add(detalle)
         db.session.commit()
@@ -214,11 +214,11 @@ def guardar_compra():
         
         historial = HistorialCompra(
             compra_id=compra.id,
-            estado_anterior=None,
-            estado_nuevo='CREADA',
-            usuario_id=current_user.id,
-            observaciones='Compra creada'
+            accion='ACTUALIZADA' if id_compra else 'CREADA',
+            modificado_por=current_user.id,
+            comentario='Compra editada' if id_compra else 'Compra creada'
         )
+
         db.session.add(historial)
         db.session.commit()
         registrar_auditoria(current_user.id, "Crear Compra", f"Compra creada: {compra.folio}")
@@ -229,7 +229,7 @@ def guardar_compra():
 # ----------------------------------------------------------------------
 @compras_bp.route('/compras/cambiar_estado/<int:id>', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_COMPRAS')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_COMPRAS')
 def cambiar_estado(id):
     data = request.get_json()
     nuevo_estado = data.get('estado')
@@ -268,10 +268,9 @@ def cambiar_estado(id):
         
         historial = HistorialCompra(
             compra_id=compra.id,
-            estado_anterior=estado_anterior,
-            estado_nuevo=nuevo_estado,
-            usuario_id=current_user.id,
-            observaciones=observaciones
+            accion='ACTUALIZADA' if nuevo_estado != 'CREADA' else 'CREADA', # <--- CAMBIO AQUÍ
+            modificado_por=current_user.id,
+            comentario=f"Cambio de estado: {estado_anterior} -> {nuevo_estado}. {observaciones}"
         )
         db.session.add(historial)
         db.session.commit()
@@ -288,7 +287,7 @@ def cambiar_estado(id):
 # ----------------------------------------------------------------------
 @compras_bp.route('/compras/eliminar/<int:id>', methods=['DELETE'])
 @login_required
-@roles_accepted('ADMINISTRADOR')
+@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN')
 def eliminar_compra(id):
     compra = Compra.query.get_or_404(id)
     if compra.estado != 'CREADA':
