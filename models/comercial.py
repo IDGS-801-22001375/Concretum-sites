@@ -74,7 +74,7 @@ class CorteDesglose(db.Model):
 
 
 # ============================================================
-# CLIENTE (tabla existente en BD)
+# CLIENTES
 # ============================================================
 
 class Cliente(db.Model):
@@ -86,4 +86,19 @@ class Cliente(db.Model):
     email               = db.Column(db.String(254), nullable=True)
     es_activo           = db.Column(db.SmallInteger, nullable=False, default=1)
     fecha_creacion      = db.Column(db.DateTime, nullable=False, default=datetime.now)
-    fecha_actualizacion = db.Column(db.DateTime, nullable=True)
+    fecha_actualizacion = db.Column(db.DateTime, nullable=True, onupdate=datetime.now)
+
+    detalle_info        = db.relationship('ClienteDetalle', backref='cliente', uselist=False, cascade='all, delete-orphan')
+
+class ClienteDetalle(db.Model):
+    __tablename__ = 'cliente_detalle'
+
+    id_detalle          = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    cliente_id          = db.Column(db.BigInteger, db.ForeignKey('clientes.id_cliente', ondelete='CASCADE'), nullable=False)
+    telefono            = db.Column(db.String(10), nullable=True)
+    direccion           = db.Column(db.String(255), nullable=True)
+    ciudad              = db.Column(db.String(50), nullable=True)
+    estado              = db.Column(db.String(50), nullable=True)
+    codigo_postal       = db.Column(db.String(5), nullable=True)
+    notas               = db.Column(db.Text, nullable=True)
+    fecha_actualizacion = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)

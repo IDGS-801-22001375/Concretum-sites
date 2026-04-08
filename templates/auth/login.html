@@ -7,10 +7,71 @@
     <title>Login - CRM Concretum</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <style>
+        /* Animación para las alertas flotantes */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .animate-slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+    </style>
 </head>
 
 <body
     class="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-200 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4">
+
+    <div class="fixed top-5 right-5 z-[100] flex flex-col gap-3 pointer-events-none">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        {% set colors = {
+        'error': 'bg-red-900/80 border-red-700 text-red-200',
+        'success': 'bg-emerald-900/80 border-emerald-700 text-emerald-200',
+        'warning': 'bg-amber-900/80 border-amber-700 text-amber-200',
+        'info': 'bg-sky-900/80 border-sky-700 text-sky-200'
+        } %}
+        {% set icons = {
+        'error': '
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        ',
+        'success': '
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />',
+        'warning': '
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />',
+        'info': '
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />'
+        } %}
+        <div class="flash-message flex items-start gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-sm pointer-events-auto animate-slide-in {{ colors.get(category, colors['info']) }}"
+            role="alert">
+            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {{ icons.get(category, icons['info'])|safe }}
+            </svg>
+            <span class="text-sm font-medium flex-1">{{ message }}</span>
+            <button type="button" onclick="this.parentElement.remove()"
+                class="opacity-60 hover:opacity-100 flex-shrink-0 -mr-1 transition-opacity">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
 
     <a href="{{ url_for('index') }}" style="position:fixed; top:1.5rem; left:1.5rem; z-index:9999;"
         class="flex items-center gap-2 text-slate-400 hover:text-blue-400 text-sm font-semibold bg-slate-800/60 hover:bg-slate-800 px-4 py-2.5 rounded-xl border border-slate-700/50 shadow-sm transition-all">
@@ -41,8 +102,6 @@
         </div>
 
         <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 p-8">
-
-            {% include "security/_messages.html" %}
 
             <form id="auth-form" class="space-y-5" action="{{ url_for('security.login') }}" method="POST">
                 {{ login_user_form.hidden_tag() }}
@@ -115,6 +174,15 @@
             document.getElementById('email_field').value = 'admin@concretum.com';
             document.getElementById('password_field').value = '12345678';
         }
+
+        // Auto-eliminar los mensajes flash a los 5 segundos
+        setTimeout(() => {
+            document.querySelectorAll('.flash-message').forEach(alert => {
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateX(100%)';
+                setTimeout(() => alert.remove(), 300);
+            });
+        }, 5000);
     </script>
 </body>
 

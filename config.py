@@ -21,6 +21,9 @@ class Config:
     
     SECURITY_REGISTERABLE = True
     SECURITY_SEND_REGISTER_EMAIL = False
+
+    SECURITY_AUTO_LOGIN_AFTER_REGISTER = False
+    SECURITY_POST_REGISTER_VIEW = '/login'
     
     # Desactivamos el 2FA nativo porque usaremos nuestra propia implementación
     SECURITY_TWO_FACTOR = False
