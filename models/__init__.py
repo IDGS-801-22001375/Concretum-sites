@@ -18,6 +18,7 @@ from .configuracion import ConfiguracionEmpresa
 from .materia_prima import ExistenciaMateriaPrima, MateriaPrima
 from .recetas       import RecetaDetalle, Recetas
 from .comercial     import VentaDetalle, Cliente, ClienteDetalle, CorteDesglose, CorteCaja, Venta
+from .carrito       import Carrito, CarritoItem, PedidoCliente, PedidoClienteDetalle, SolicitudProduccion, NotificacionCliente, Cotizacion, CotizacionDetalle
 
 __all__ = [
     # Core
@@ -46,4 +47,6 @@ __all__ = [
     'ExistenciaMateriaPrima', 'MateriaPrima',
     # Comercial
     'VentaDetalle', 'Cliente', 'ClienteDetalle', 'CorteDesglose', 'CorteCaja', 'Venta'
+    # Carrito
+    'Carrito', 'CarritoItem', 'PedidoCliente', 'PedidoClienteDetalle', 'SolicitudProduccion', 'NotificacionCliente', 'Cotizacion', 'CotizacionDetalle'
 ]

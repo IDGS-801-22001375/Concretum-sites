@@ -35,6 +35,7 @@ from routes.comercial import comercial_bp
 from routes.clientes import clientes_bp
 from routes.inventario_produccion import stock_bp
 from routes.produccion_recetas import produccion_recetas_bp
+from routes.carrito import carrito_bp  
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -68,6 +69,7 @@ app.register_blueprint(recetas_bp)
 app.register_blueprint(clientes_bp)
 app.register_blueprint(stock_bp)
 app.register_blueprint(produccion_recetas_bp)
+app.register_blueprint(carrito_bp) 
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -110,7 +112,6 @@ def on_user_authenticated(app, user, **extra):
 
 @user_logged_out.connect_via(app)
 def on_user_logout(app, user, **extra):
-    # Validamos que el usuario realmente tenga un ID (que sea de base de datos)
     if user and hasattr(user, 'id') and user.id is not None:
         try:
             mongo_db.auditoria_eventos.insert_one({
@@ -170,7 +171,10 @@ def index():
 def admin():
     return render_template("/base.html")
 
-# Login y dashboard de Cristian
+@app.errorhandler(404)
+def pagina_no_encontrada(error):
+    return render_template('404.html'), 404
+
 def custom_login():
     if current_user.is_authenticated:
         return redirect(url_for('comercial_bp.dashboard'))
@@ -184,6 +188,10 @@ def custom_login():
             login_user(user)
             user.ultima_sesion = datetime.datetime.now()
             db.session.commit()
+
+            if user.has_role('CLIENTE'):
+                return redirect(url_for('carrito_bp.catalogo'))
+
             next_page = request.args.get('next') or url_for('comercial_bp.dashboard')
             return redirect(next_page)
     return render_template('auth/login.html', login_user_form=form)
@@ -197,9 +205,6 @@ def custom_register():
 
     form = ExtendedRegisterForm()
 
-    # ============================================================
-    # DIAGNÓSTICO: imprime en consola si el formulario es válido
-    # ============================================================
     app.logger.debug("=== REGISTRO: Iniciando proceso ===")
     app.logger.debug(f"Método de request: {request.method}")
     
@@ -279,7 +284,7 @@ def verificar_2fa():
         return redirect(url_for('security.login'))
 
     try:
-        user_id = serializer.loads(token, max_age=300)  # 5 minutos
+        user_id = serializer.loads(token, max_age=300)  
     except Exception:
         flash('El enlace ha expirado o es inválido', 'error')
         return redirect(url_for('security.login'))
@@ -307,7 +312,6 @@ def verificar_2fa():
                 return redirect(next_page)
             else:
                 flash('Código incorrecto. Inténtalo de nuevo.', 'error')
-        # Renderizamos la misma plantilla, pasando el token actual
         return render_template('auth/verificar_2fa.html', token=token)
 
     return render_template('auth/verificar_2fa.html', token=token)
