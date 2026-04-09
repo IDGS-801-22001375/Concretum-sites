@@ -1,0 +1,351 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Barra de progreso checkout -->
+<div class="bg-white border-b border-gray-100 py-4">
+  <div class="max-w-5xl mx-auto px-6">
+    <div class="flex items-center justify-center gap-0">
+      <!-- Paso 1 -->
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-[#008DC0] text-white flex items-center justify-center font-bold text-sm">1</div>
+        <span class="text-[#008DC0] font-semibold text-sm">Carrito</span>
+      </div>
+      <div class="w-20 h-0.5 bg-[#008DC0] mx-2"></div>
+      <!-- Paso 2 -->
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-[#008DC0] text-white flex items-center justify-center font-bold text-sm">2</div>
+        <span class="text-[#008DC0] font-semibold text-sm">Pago</span>
+      </div>
+      <div class="w-20 h-0.5 bg-gray-200 mx-2"></div>
+      <!-- Paso 3 -->
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-full bg-gray-200 text-gray-400 flex items-center justify-center font-bold text-sm">3</div>
+        <span class="text-gray-400 font-semibold text-sm">Confirmación</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="bg-[#F4F8FC] min-h-screen py-12 px-4">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-[#002F5C] text-3xl font-bold mb-8">Finalizar compra</h1>
+
+    <form method="POST" action="{{ url_for('carrito_bp.procesar_pago') }}" id="form-checkout">
+      {{ form.hidden_tag() }}
+
+      <div class="grid lg:grid-cols-5 gap-8">
+
+        <!-- ============================
+             COLUMNA IZQUIERDA: Formulario
+             ============================ -->
+        <div class="lg:col-span-3 space-y-6">
+
+          <!-- Datos de entrega -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h2 class="text-[#002F5C] font-bold text-lg mb-5 flex items-center gap-2">
+              <svg class="w-5 h-5 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+              </svg>
+              Dirección de entrega
+            </h2>
+            <div class="space-y-4">
+              <div>
+                {{ form.direccion_entrega.label(class="block text-sm font-medium text-gray-600 mb-1") }}
+                {{ form.direccion_entrega(
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-[#008DC0] bg-gray-50",
+                    placeholder="Calle, número, colonia, ciudad, C.P."
+                  ) }}
+                {% for error in form.direccion_entrega.errors %}
+                <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                {% endfor %}
+              </div>
+              <div>
+                {{ form.notas.label(class="block text-sm font-medium text-gray-600 mb-1") }}
+                {{ form.notas(
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-[#008DC0] bg-gray-50 resize-none",
+                    rows="2",
+                    placeholder="Instrucciones especiales, horario de recepción..."
+                  ) }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Método de pago -->
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <h2 class="text-[#002F5C] font-bold text-lg mb-5 flex items-center gap-2">
+              <svg class="w-5 h-5 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+              </svg>
+              Método de pago
+            </h2>
+
+            <!-- Opciones de método -->
+            <div class="grid grid-cols-3 gap-3 mb-6">
+              <label class="metodo-btn cursor-pointer">
+                <input type="radio" name="metodo_pago" value="TARJETA" class="sr-only" checked>
+                <div class="border-2 border-[#008DC0] bg-[#E5F3FA] rounded-xl p-3 text-center">
+                  <div class="text-2xl mb-1">💳</div>
+                  <span class="text-xs font-semibold text-[#002F5C]">Tarjeta</span>
+                </div>
+              </label>
+              <label class="metodo-btn cursor-pointer">
+                <input type="radio" name="metodo_pago" value="TRANSFERENCIA" class="sr-only">
+                <div class="border-2 border-gray-200 rounded-xl p-3 text-center hover:border-[#008DC0] transition">
+                  <div class="text-2xl mb-1">🏦</div>
+                  <span class="text-xs font-semibold text-gray-500">Transferencia</span>
+                </div>
+              </label>
+            </div>
+
+            <!-- Panel tarjeta -->
+            <div id="panel-tarjeta" class="space-y-4">
+              <div>
+                {{ form.nombre_titular.label(class="block text-sm font-medium text-gray-600 mb-1") }}
+                {{ form.nombre_titular(
+                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+                           focus:outline-none focus:ring-2 focus:ring-[#008DC0] bg-gray-50",
+                    placeholder="Como aparece en la tarjeta"
+                  ) }}
+              </div>
+              <div>
+                {{ form.numero_tarjeta.label(class="block text-sm font-medium text-gray-600 mb-1") }}
+                <div class="relative">
+                  {{ form.numero_tarjeta(
+                      class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+                             focus:outline-none focus:ring-2 focus:ring-[#008DC0] bg-gray-50 pr-12",
+                      placeholder="•••• •••• •••• ••••",
+                      maxlength="19",
+                      id="input-tarjeta"
+                    ) }}
+                  <div id="logo-tarjeta"
+                       class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 font-bold text-lg">
+                    💳
+                  </div>
+                </div>
+              </div>
+              <div class="grid grid-cols-3 gap-3">
+                <div class="col-span-2">
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Vencimiento</label>
+                  <div class="flex gap-2">
+                    {{ form.mes_vencimiento(
+                        class="flex-1 border border-gray-200 rounded-xl px-3 py-3 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-[#008DC0] bg-gray-50"
+                      ) }}
+                    {{ form.anio_vencimiento(
+                        class="flex-1 border border-gray-200 rounded-xl px-3 py-3 text-sm
+                               focus:outline-none focus:ring-2 focus:ring-[#008DC0] bg-gray-50"
+                      ) }}
+                  </div>
+                </div>
+                <div>
+                  {{ form.cvv.label(class="block text-sm font-medium text-gray-600 mb-1") }}
+                  {{ form.cvv(
+                      class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
+                             focus:outline-none focus:ring-2 focus:ring-[#008DC0] bg-gray-50",
+                      placeholder="•••",
+                      maxlength="4"
+                    ) }}
+                </div>
+              </div>
+              <!-- Visual tarjeta de prueba -->
+              <div class="bg-gradient-to-br from-[#002F5C] to-[#008DC0] rounded-2xl p-5 text-white mt-2 shadow-lg">
+                <div class="flex justify-between items-start mb-8">
+                  <span class="text-xs opacity-70 font-medium tracking-widest">CONCRETUM PAY</span>
+                  <div class="flex gap-1">
+                    <div class="w-8 h-5 rounded-sm bg-white/30"></div>
+                    <div class="w-8 h-5 rounded-sm bg-white/20 -ml-3"></div>
+                  </div>
+                </div>
+                <p id="preview-numero" class="text-lg font-mono tracking-widest mb-3 opacity-90">
+                  •••• •••• •••• ••••
+                </p>
+                <div class="flex justify-between items-end">
+                  <div>
+                    <p class="text-xs opacity-60 uppercase tracking-wide">Titular</p>
+                    <p id="preview-titular" class="font-semibold text-sm uppercase tracking-wide">TU NOMBRE</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-xs opacity-60 uppercase tracking-wide">Vence</p>
+                    <p id="preview-vence" class="font-semibold text-sm">MM/AA</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Panel transferencia -->
+            <div id="panel-transferencia" class="hidden">
+              <div class="bg-blue-50 border border-blue-100 rounded-xl p-5 text-sm text-gray-600 space-y-2">
+                <p class="font-semibold text-[#002F5C]">Datos para transferencia bancaria</p>
+                <p>Banco: <strong>BBVA</strong></p>
+                <p>Beneficiario: <strong>CONCRETUM S.A. de C.V.</strong></p>
+                <p>CLABE: <strong>012 910 00123456789 0</strong></p>
+                <p>Referencia: <strong>Tu número de pedido (se mostrará al confirmar)</strong></p>
+                <p class="text-xs text-gray-400 mt-3">
+                  Envía tu comprobante a <span class="text-[#008DC0]">pagos@concretum.com</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Panel OXXO -->
+            <div id="panel-oxxo" class="hidden">
+              <div class="bg-amber-50 border border-amber-100 rounded-xl p-5 text-sm text-gray-600 space-y-2">
+                <p class="font-semibold text-[#002F5C]">Pago en OXXO</p>
+                <p>Al confirmar tu pedido recibirás una referencia de pago OXXO en tu correo electrónico.</p>
+                <p class="text-xs text-gray-400 mt-2">Válida por 48 horas. Presenta la referencia en cualquier tienda OXXO.</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Seguridad -->
+          <div class="flex items-center gap-3 text-xs text-gray-400 px-1">
+            <svg class="w-4 h-4 text-green-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            Pago seguro con cifrado SSL de 256 bits. Tus datos están protegidos.
+          </div>
+
+        </div>
+
+        <!-- ============================
+             COLUMNA DERECHA: Resumen
+             ============================ -->
+        <div class="lg:col-span-2">
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 sticky top-28">
+            <h2 class="text-[#002F5C] font-bold text-lg mb-4">Resumen del pedido</h2>
+
+            <div class="space-y-3 mb-5 max-h-72 overflow-y-auto pr-1">
+              {% for item in items_carrito %}
+              <div class="flex items-center gap-3">
+                <img src="{{ url_for('static', filename=item.producto.enlace_fotografia) }}"
+                     alt="{{ item.producto.nombre }}"
+                     class="w-12 h-12 object-cover rounded-lg bg-[#A5CDE3] shrink-0">
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-semibold text-[#002F5C] truncate">{{ item.producto.nombre }}</p>
+                  <p class="text-xs text-gray-400">× {{ item.cantidad|int }}</p>
+                </div>
+                <span class="text-sm font-bold text-[#002F5C] shrink-0">
+                  ${{ "%.2f"|format(item.subtotal) }}
+                </span>
+              </div>
+              {% endfor %}
+            </div>
+
+            <div class="border-t border-gray-100 pt-4 space-y-2">
+              <div class="flex justify-between text-sm text-gray-500">
+                <span>Subtotal</span>
+                <span>${{ "%.2f"|format(subtotal) }}</span>
+              </div>
+              <div class="flex justify-between text-sm text-gray-500">
+                <span>IVA (16%)</span>
+                <span>${{ "%.2f"|format(iva) }}</span>
+              </div>
+              <div class="flex justify-between text-base font-bold text-[#002F5C] pt-2 border-t border-gray-100">
+                <span>Total</span>
+                <span class="text-[#008DC0] text-xl">${{ "%.2f"|format(total) }} MXN</span>
+              </div>
+            </div>
+
+            <button type="submit" id="btn-pagar"
+                    class="mt-6 w-full bg-[#008DC0] hover:bg-[#0074A0] text-white font-bold
+                           py-4 rounded-xl transition text-sm flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Confirmar y pagar
+            </button>
+            <a href="{{ url_for('carrito_bp.catalogo') }}"
+               class="block mt-2 text-center text-gray-400 hover:text-[#002F5C] text-sm py-2 transition">
+              ← Regresar al catálogo
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </form>
+
+  </div>
+</section>
+
+<!-- Modal de procesando pago -->
+<div id="modal-procesando"
+     class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center">
+  <div class="bg-white rounded-2xl p-10 text-center max-w-sm mx-4 shadow-2xl">
+    <div id="icono-proceso" class="text-6xl mb-4 animate-pulse">⚙️</div>
+    <h3 id="titulo-proceso" class="text-[#002F5C] font-bold text-xl mb-2">Procesando pago...</h3>
+    <p id="msg-proceso" class="text-gray-400 text-sm">
+      Por favor espera, estamos verificando tu pago de forma segura.
+    </p>
+    <div class="mt-5 flex justify-center gap-1">
+      <div class="w-2 h-2 bg-[#008DC0] rounded-full animate-bounce" style="animation-delay:0s"></div>
+      <div class="w-2 h-2 bg-[#008DC0] rounded-full animate-bounce" style="animation-delay:.15s"></div>
+      <div class="w-2 h-2 bg-[#008DC0] rounded-full animate-bounce" style="animation-delay:.3s"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Selector de método de pago ──────────────────────────
+document.querySelectorAll('.metodo-btn input').forEach(radio => {
+  radio.addEventListener('change', function () {
+    document.querySelectorAll('.metodo-btn > div').forEach(d => {
+      d.classList.remove('border-[#008DC0]', 'bg-[#E5F3FA]');
+      d.classList.add('border-gray-200');
+      d.querySelector('span').classList.replace('text-[#002F5C]', 'text-gray-500');
+    });
+    const sel = this.closest('.metodo-btn').querySelector('div');
+    sel.classList.add('border-[#008DC0]', 'bg-[#E5F3FA]');
+    sel.classList.remove('border-gray-200');
+    sel.querySelector('span').classList.replace('text-gray-500', 'text-[#002F5C]');
+
+    document.getElementById('panel-tarjeta').classList.add('hidden');
+    document.getElementById('panel-transferencia').classList.add('hidden');
+    document.getElementById('panel-oxxo').classList.add('hidden');
+
+    if (this.value === 'TARJETA')       document.getElementById('panel-tarjeta').classList.remove('hidden');
+    if (this.value === 'TRANSFERENCIA') document.getElementById('panel-transferencia').classList.remove('hidden');
+    if (this.value === 'OXXO')          document.getElementById('panel-oxxo').classList.remove('hidden');
+  });
+});
+
+// ── Preview de tarjeta ──────────────────────────────────
+const inputTarjeta = document.getElementById('input-tarjeta');
+if (inputTarjeta) {
+  inputTarjeta.addEventListener('input', function () {
+    let v = this.value.replace(/\D/g, '').substring(0, 16);
+    this.value = v.replace(/(.{4})/g, '$1 ').trim();
+    document.getElementById('preview-numero').textContent =
+      (v + '################').substring(0, 16).replace(/(.{4})/g, '$1 ').trim().replace(/#/g, '•');
+
+    const logos = {'4':'VISA','5':'MASTERCARD','3':'AMEX'};
+    document.getElementById('logo-tarjeta').textContent = logos[v[0]] ? (v[0]==='4'?'VISA':v[0]==='5'?'MC':'AMEX') : '💳';
+  });
+}
+document.querySelector('[name="nombre_titular"]')?.addEventListener('input', function () {
+  document.getElementById('preview-titular').textContent = this.value.toUpperCase() || 'TU NOMBRE';
+});
+document.querySelector('[name="mes_vencimiento"]')?.addEventListener('change', actualizarVence);
+document.querySelector('[name="anio_vencimiento"]')?.addEventListener('change', actualizarVence);
+function actualizarVence() {
+  const m = document.querySelector('[name="mes_vencimiento"]')?.value || 'MM';
+  const a = document.querySelector('[name="anio_vencimiento"]')?.value?.slice(-2) || 'AA';
+  document.getElementById('preview-vence').textContent = `${m}/${a}`;
+}
+
+// ── Submit con modal ────────────────────────────────────
+document.getElementById('form-checkout').addEventListener('submit', function (e) {
+  document.getElementById('modal-procesando').classList.remove('hidden');
+  document.getElementById('modal-procesando').style.display = 'flex';
+  document.getElementById('btn-pagar').disabled = true;
+});
+</script>
+{% endblock %}
