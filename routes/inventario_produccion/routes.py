@@ -335,29 +335,37 @@ def api_movimientos():
         query = query.filter(MovimientosInventario.tipo == tipo)
 
     if search:
-        query = query.filter(
-            MovimientosInventario.existencia.has(
-                Productos.nombre.ilike(f'%{search}%')
-            )
-        )
+        query = query.join(
+            Existencias, MovimientosInventario.existencia_id == Existencias.id_existencias
+        ).join(
+            Productos, Existencias.producto_id == Productos.id_producto
+        ).filter(Productos.nombre.ilike(f'%{search}%'))
 
-    if sort_order == 'asc':
-        query = query.order_by(asc(getattr(MovimientosInventario, sort_by, MovimientosInventario.fecha_creacion)))
-    else:
-        query = query.order_by(desc(getattr(MovimientosInventario, sort_by, MovimientosInventario.fecha_creacion)))
+    col = getattr(MovimientosInventario, sort_by, MovimientosInventario.fecha_creacion)
+    query = query.order_by(asc(col) if sort_order == 'asc' else desc(col))
 
     paginated = query.paginate(page=page, per_page=per_page, error_out=False)
 
     items = []
     for mov in paginated.items:
+        try:
+            producto_nombre = mov.existencia.producto.nombre if mov.existencia and mov.existencia.producto else 'N/A'
+        except Exception:
+            producto_nombre = 'N/A'
+
+        try:
+            usuario = mov.usuario.username if mov.usuario else 'Sistema'
+        except Exception:
+            usuario = 'Sistema'
+
         items.append({
-            'id': mov.id,
-            'producto_nombre': mov.existencia.producto.nombre if mov.existencia else 'N/A',
+            'id': mov.id_movimiento_in,
+            'producto_nombre': producto_nombre,
             'tipo': mov.tipo,
             'cantidad': float(mov.cantidad),
-            'motivo': mov.motivo,
-            'usuario': mov.usuario.username if mov.usuario else 'Sistema',
-            'fecha': mov.fecha_creacion.strftime('%Y-%m-%d %H:%M')
+            'motivo': mov.motivo or '-',
+            'usuario': usuario,
+            'fecha': mov.fecha_creacion.strftime('%Y-%m-%d %H:%M') if mov.fecha_creacion else '-'
         })
 
     return jsonify({
@@ -403,7 +411,7 @@ def registrar_movimiento():
         existencia.stock_actual = cantidad_dec
 
     movimiento = MovimientosInventario(
-        existencia_id=existencia.id,
+        existencia_id=existencia.id_existencias,
         usuario_id=current_user.id,
         tipo=tipo,
         cantidad=cantidad,
