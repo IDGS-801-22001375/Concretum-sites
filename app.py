@@ -167,6 +167,10 @@ def index():
 def admin():
     return render_template("/base.html")
 
+@app.errorhandler(404)
+def pagina_no_encontrada(error):
+    return render_template('404.html'), 404
+
 # Login y dashboard de Cristian
 def custom_login():
     if current_user.is_authenticated:

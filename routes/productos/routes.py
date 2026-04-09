@@ -1,4 +1,6 @@
 import datetime
+from flask_login import login_required
+from flask_security.decorators import roles_accepted
 from werkzeug.datastructures import CombinedMultiDict
 from routes.productos import productos_bp
 from forms import ProductoForm
@@ -55,6 +57,8 @@ def convertir_ruta_imagen(enlace_fotografia):
 # ── GET ──────────────────────────────────────────────────────────────────────
 
 @productos_bp.route('/productos')
+@login_required
+@roles_accepted("ADMINISTRADOR", "ADMIN", "SUPER_ADMIN")
 def get_datos():
     form = ProductoForm(request.form)
 
@@ -81,6 +85,8 @@ def get_datos():
 
 # ── GUARDAR ──────────────────────────────────────────────────────────────────
 
+@login_required
+@roles_accepted("ADMINISTRADOR", "ADMIN", "SUPER_ADMIN")
 @productos_bp.route('/productos', methods=['POST'])
 def save_producto():
 
@@ -129,6 +135,8 @@ def save_producto():
 # ── EDITAR ───────────────────────────────────────────────────────────────────
 
 @productos_bp.route("/productos/<int:id_producto>", methods=['GET', 'POST'])
+@login_required
+@roles_accepted("ADMINISTRADOR", "ADMIN", "SUPER_ADMIN")
 def update_producto(id_producto):
 
     producto = db.session.query(Productos).filter_by(id_producto=id_producto).first()
@@ -179,6 +187,8 @@ def update_producto(id_producto):
 # ── ELIMINAR ───────────────────────────────────────────────────
 
 @productos_bp.route("/productos/<int:id_producto>/eliminar", methods=['POST'])
+@login_required
+@roles_accepted("ADMINISTRADOR", "ADMIN", "SUPER_ADMIN")
 def delete_producto(id_producto):
 
     producto = db.session.query(Productos).filter_by(id_producto=id_producto).first()
