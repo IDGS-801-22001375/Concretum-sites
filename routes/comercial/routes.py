@@ -1,11 +1,11 @@
 from flask import render_template, request, redirect, url_for, flash, jsonify
-from datetime import datetime, date
+from datetime import datetime, date, time as dt_time
 from decimal import Decimal
 from sqlalchemy import func
 from flask_security import login_required, roles_accepted, current_user
 
 from models import db, Venta, VentaDetalle, CorteCaja, CorteDesglose, Cliente, Productos, Existencias, MovimientosInventario, User, CategoriasProducto
-from forms import VentaForm, CorteForm, TicketForm
+from forms import VentaForm, CorteForm
 from routes.comercial import comercial_bp
 
 # ============================================================
@@ -35,48 +35,102 @@ def registrar_auditoria(usuario_accion, accion, detalles):
 def dashboard():
     hoy = date.today()
 
-    ventas_hoy = Venta.query.filter(func.date(Venta.fecha_venta) == hoy).all()
+    inicio_hoy = datetime.combine(hoy, dt_time.min)
+    fin_hoy    = datetime.combine(hoy, dt_time.max)
+    ventas_hoy = Venta.query.filter(
+        Venta.fecha_venta >= inicio_hoy,
+        Venta.fecha_venta <= fin_hoy
+    ).all()
 
     ventas_dia      = sum(float(v.total) for v in ventas_hoy)
     num_ventas      = len(ventas_hoy)
     ticket_promedio = round(ventas_dia / num_ventas, 2) if num_ventas > 0 else 0
-    utilidad_dia    = ventas_dia * 0.35 # Calculo estimado del 35% de margen
 
-    # Productos más vendidos
+    from models import VentaDetalle, Productos
+
+    ids_ventas_hoy = [v.id_venta for v in ventas_hoy]
+
+    costo_total = Decimal('0.00')
+
+    if ids_ventas_hoy:
+        detalles_hoy = VentaDetalle.query.filter(
+            VentaDetalle.venta_id.in_(ids_ventas_hoy)
+        ).all()
+
+        for det in detalles_hoy:
+            producto = Productos.query.get(det.producto_id)
+            if producto and producto.precio_base:
+              
+                receta = next(
+                    (r for r in producto.recetas if r.es_active == 1), None
+                )
+                if receta:
+                    costo_receta = Decimal('0.00')
+                    for ingrediente in receta.detalles:
+                        mp = ingrediente.materia_prima
+                        if mp and mp.costo_unitario:
+                            costo_receta += (
+                                Decimal(str(ingrediente.cantidad)) *
+                                Decimal(str(mp.costo_unitario))
+                            )
+                    # costo por unidad producida según receta
+                    costo_unitario_real = (
+                        costo_receta / receta.cuanto_produce
+                        if receta.cuanto_produce > 0
+                        else Decimal('0.00')
+                    )
+                    costo_total += costo_unitario_real * Decimal(str(det.cantidad))
+                else:
+                    # Fallback: estimado del 60% del precio base
+                    costo_total += (
+                        Decimal(str(det.precio_unitario)) *
+                        Decimal('0.60') *
+                        Decimal(str(det.cantidad))
+                    )
+
+    utilidad_dia = float(Decimal(str(ventas_dia)) - costo_total)
+
     productos_top = db.session.query(
         Productos.nombre,
         CategoriasProducto.nombre.label('categoria'),
         func.sum(VentaDetalle.cantidad).label('cantidad'),
         func.sum(VentaDetalle.total_linea).label('total')
     ).join(VentaDetalle, VentaDetalle.producto_id == Productos.id_producto)\
-     .join(CategoriasProducto, Productos.categoria_id == CategoriasProducto.id_categoria)\
-     .join(Venta, Venta.id_venta == VentaDetalle.venta_id)\
-     .filter(func.date(Venta.fecha_venta) == hoy)\
-     .group_by(Productos.id_producto, Productos.nombre, CategoriasProducto.nombre)\
-     .order_by(func.sum(VentaDetalle.cantidad).desc())\
-     .limit(5).all()
+    .join(CategoriasProducto, Productos.categoria_id == CategoriasProducto.id_categoria)\
+    .join(Venta, Venta.id_venta == VentaDetalle.venta_id)\
+    .filter(
+        Venta.fecha_venta >= inicio_hoy,
+        Venta.fecha_venta <= fin_hoy
+    )\
+    .group_by(Productos.id_producto, Productos.nombre, CategoriasProducto.nombre)\
+    .order_by(func.sum(VentaDetalle.cantidad).desc())\
+    .limit(5).all()
 
-    # Presentaciones / Categorías más vendidas para las barras de progreso
     categorias_top = db.session.query(
         CategoriasProducto.nombre,
         func.sum(VentaDetalle.cantidad).label('cantidad')
     ).join(Productos, Productos.categoria_id == CategoriasProducto.id_categoria)\
-     .join(VentaDetalle, VentaDetalle.producto_id == Productos.id_producto)\
-     .join(Venta, Venta.id_venta == VentaDetalle.venta_id)\
-     .filter(func.date(Venta.fecha_venta) == hoy)\
-     .group_by(CategoriasProducto.nombre)\
-     .order_by(func.sum(VentaDetalle.cantidad).desc())\
-     .limit(4).all()
+    .join(VentaDetalle, VentaDetalle.producto_id == Productos.id_producto)\
+    .join(Venta, Venta.id_venta == VentaDetalle.venta_id)\
+    .filter(
+        Venta.fecha_venta >= inicio_hoy,
+        Venta.fecha_venta <= fin_hoy
+    )\
+    .group_by(CategoriasProducto.nombre)\
+    .order_by(func.sum(VentaDetalle.cantidad).desc())\
+    .limit(4).all()
 
     total_unidades = sum(c.cantidad for c in categorias_top) if categorias_top else 1
     presentaciones_top = [{
-        'nombre': c.nombre, 
-        'cantidad': int(c.cantidad), 
+        'nombre': c.nombre,
+        'cantidad': int(c.cantidad),
         'porcentaje': round((c.cantidad / total_unidades) * 100)
     } for c in categorias_top]
 
-    # Últimas ventas formateadas para la tabla
-    ventas_recientes_q = Venta.query.filter(func.date(Venta.fecha_venta) == hoy).order_by(Venta.fecha_creacion.desc()).limit(10).all()
+    ventas_recientes_q = Venta.query.filter(
+        Venta.fecha_venta >= inicio_hoy,
+        Venta.fecha_venta <= fin_hoy
+    ).order_by(Venta.fecha_creacion.desc()).limit(10).all()
     ventas_recientes = [{
         'folio': v.folio,
         'cliente': v.cliente.razon_social if v.cliente else 'Público General',
@@ -110,12 +164,20 @@ def ventas():
 
     form.cliente_id.choices = [(c.id_cliente, c.razon_social) for c in clientes]
 
-    mes_actual  = datetime.now().month
-    anio_actual = datetime.now().year
+    hoy_ventas  = datetime.now()
+    mes_actual  = hoy_ventas.month
+    anio_actual = hoy_ventas.year
+
+    # Calcular inicio y fin del mes actual para usar índice
+    inicio_mes = datetime(anio_actual, mes_actual, 1)
+    if mes_actual == 12:
+        fin_mes = datetime(anio_actual + 1, 1, 1)
+    else:
+        fin_mes = datetime(anio_actual, mes_actual + 1, 1)
 
     ventas_mes_q = Venta.query.filter(
-        func.month(Venta.fecha_venta) == mes_actual,
-        func.year(Venta.fecha_venta)  == anio_actual
+        Venta.fecha_venta >= inicio_mes,
+        Venta.fecha_venta <  fin_mes
     ).all()
 
     ventas_mes      = sum(float(v.total) for v in ventas_mes_q)
@@ -163,37 +225,63 @@ def nueva_venta():
     try:
         fecha_venta = datetime.strptime(fecha_str, '%Y-%m-%d') if fecha_str else datetime.now()
 
-        ultimo = Venta.query.order_by(Venta.id_venta.desc()).first()
-        num    = (ultimo.id_venta + 1) if ultimo else 1
-        folio  = f'V-{datetime.now().year}-{str(num).zfill(4)}'
+        folio = 'TEMP'
 
         subtotal      = Decimal('0.00')
         detalle_items = []
 
-        for pid, cant, precio in zip(producto_ids, cantidades, precios):
-            if not pid or not cant or not precio:
-                continue
-            
-            cant        = Decimal(cant)
-            precio      = Decimal(precio)
-            total_linea = cant * precio
-            subtotal   += total_linea
-            
-            existencia = Existencias.query.filter_by(producto_id=int(pid)).first()
-            if not existencia or existencia.stock_actual < cant:
-                raise Exception(f"Stock insuficiente para el producto seleccionado.")
-            
-            existencia.stock_actual -= cant
-            
-            mov = MovimientosInventario(
-                existencia_id=existencia.id_existencias,
-                usuario_id=current_user.id,
-                tipo='SALIDA',
-                cantidad=cant,
-                motivo=f'Venta Comercial Folio: {folio}'
+        for pid, cant_str, precio_str in zip(producto_ids, cantidades, precios):
+         # Saltar filas vacías
+            if not pid or not cant_str or not precio_str:
+               continue
+
+        # Validar y convertir cantidad
+        try:
+            cant = Decimal(str(cant_str).strip())
+            if cant <= 0:
+                raise Exception(f"La cantidad debe ser mayor a 0.")
+        except Exception as e:
+            raise Exception(f"Cantidad inválida '{cant_str}': {str(e)}")
+
+        # Validar y convertir precio
+        try:
+            precio = Decimal(str(precio_str).strip())
+            if precio < 0:
+                raise Exception(f"El precio no puede ser negativo.")
+        except Exception as e:
+            raise Exception(f"Precio inválido '{precio_str}': {str(e)}")
+
+        total_linea = cant * precio
+        subtotal   += total_linea
+
+        # Obtener nombre del producto para mensajes claros
+        producto_obj = Productos.query.get(int(pid))
+        nombre_producto = producto_obj.nombre if producto_obj else f"ID {pid}"
+
+        # Validar existencia y stock
+        existencia = Existencias.query.with_for_update().filter_by(producto_id=int(pid)).first()
+        if not existencia:
+            raise Exception(
+                f"El producto '{nombre_producto}' no tiene registro de inventario."
             )
-            db.session.add(mov)
-            detalle_items.append((int(pid), cant, precio, total_linea))
+        if existencia.stock_actual < cant:
+            raise Exception(
+                f"Stock insuficiente para '{nombre_producto}': "
+                f"disponible {float(existencia.stock_actual):.3f}, "
+                f"solicitado {float(cant):.3f}."
+            )
+
+        existencia.stock_actual -= cant
+
+        mov = MovimientosInventario(
+            existencia_id=existencia.id_existencias,
+            usuario_id=current_user.id,
+            tipo='SALIDA',
+            cantidad=cant,
+            motivo=f'Venta Comercial Folio: {folio}'
+        )
+        db.session.add(mov)
+        detalle_items.append((int(pid), cant, precio, total_linea))
 
         iva    = subtotal * Decimal('0.16')
         total  = subtotal + iva
@@ -212,6 +300,8 @@ def nueva_venta():
         )
         db.session.add(venta)
         db.session.flush()
+
+        venta.folio = f'V-{datetime.now().year}-{str(venta.id_venta).zfill(5)}'
 
         for pid, cant, precio, total_linea in detalle_items:
             det = VentaDetalle(
@@ -240,40 +330,31 @@ def nueva_venta():
 @comercial_bp.route('/ticket', methods=['GET'])
 @login_required
 def ticket():
-    form         = TicketForm()
-    lista_ventas = Venta.query.order_by(Venta.fecha_creacion.desc()).all()
+    roles_usuario = [r.name for r in current_user.roles]
+    puede_ver_todas = any(r in roles_usuario for r in ['ADMINISTRADOR', 'GERENTE_VENTAS', 'ADMIN'])
 
-    form.venta_id.choices = [
-        (v.id_venta, f'{v.folio} — {v.cliente.razon_social}')
-        for v in lista_ventas
-    ] if lista_ventas else [(0, 'Sin ventas')]
+    if puede_ver_todas:
+        lista_ventas = Venta.query.order_by(Venta.fecha_creacion.desc()).all()
+    else:
+        lista_ventas = Venta.query.filter_by(
+            usuario_id=current_user.id
+        ).order_by(Venta.fecha_creacion.desc()).all()
 
     venta_id = request.args.get('venta_id', type=int)
-    venta    = Venta.query.get(venta_id) if venta_id else None
+    venta    = None
+
+    if venta_id:
+        venta = Venta.query.get(venta_id)
+
+        if venta and not puede_ver_todas:
+            if venta.usuario_id != current_user.id:
+                flash('No tienes permiso para ver este ticket.', 'danger')
+                return redirect(url_for('comercial_bp.ticket'))
 
     return render_template('comercial/ticket.html',
-        form   = form,
         ventas = lista_ventas,
         venta  = venta,
     )
-
-@comercial_bp.route('/ticket/generar', methods=['POST'])
-@login_required
-def generar_ticket():
-    form = TicketForm()
-    lista_ventas = Venta.query.all()
-    form.venta_id.choices = [(v.id_venta, v.folio) for v in lista_ventas]
-
-    if form.validate_on_submit():
-        venta = Venta.query.get_or_404(form.venta_id.data)
-        tipo_doc = form.tipo.data
-        
-        registrar_auditoria(current_user.id, "Generar Documento", f"Generado {tipo_doc} para venta {venta.folio}")
-        flash(f'{tipo_doc.capitalize()} generado para el folio {venta.folio}.', 'success')
-        return redirect(url_for('comercial_bp.ticket', venta_id=venta.id_venta))
-        
-    flash('Error al generar el documento. Verifica los datos.', 'danger')
-    return redirect(url_for('comercial_bp.ticket'))
 
 # ============================================================
 # CORTE DE CAJA
@@ -285,12 +366,19 @@ def corte():
     form = CorteForm()
     hoy  = date.today()
 
+    inicio_hoy = datetime.combine(hoy, dt_time.min)
+    fin_hoy    = datetime.combine(hoy, dt_time.max)
+
     corte_activo = CorteCaja.query.filter(
-        func.date(CorteCaja.periodo_inicio) == hoy,
+        CorteCaja.periodo_inicio >= inicio_hoy,
+        CorteCaja.periodo_inicio <= fin_hoy,
         CorteCaja.estado == 'ABIERTO'
     ).first()
 
-    ventas_hoy = Venta.query.filter(func.date(Venta.fecha_venta) == hoy).all()
+    ventas_hoy = Venta.query.filter(
+        Venta.fecha_venta >= inicio_hoy,
+        Venta.fecha_venta <= fin_hoy
+    ).all()
 
     total_ventas   = sum(float(v.total) for v in ventas_hoy)
     total_cobrado  = sum(float(v.total) for v in ventas_hoy if v.estado == 'COBRADO')
@@ -337,16 +425,51 @@ def realizar_corte():
     fondo_inicial = request.form.get('fondo_inicial', 0, type=float)
     hoy           = date.today()
 
-    ventas_hoy     = Venta.query.filter(func.date(Venta.fecha_venta) == hoy).all()
+    inicio_hoy = datetime.combine(hoy, dt_time.min)
+    fin_hoy    = datetime.combine(hoy, dt_time.max)
+
+    corte_existente = CorteCaja.query.filter(
+        CorteCaja.periodo_inicio >= inicio_hoy,
+        CorteCaja.periodo_inicio <= fin_hoy,
+        CorteCaja.estado == 'ABIERTO'
+    ).first()
+
+    if corte_existente:
+        flash('Ya existe un corte abierto para hoy. Ciérralo antes de iniciar uno nuevo.', 'warning')
+        return redirect(url_for('comercial_bp.corte'))
+    # ────────────────────────────────────────────────────────────
+
+    ventas_hoy = Venta.query.filter(
+        Venta.fecha_venta >= inicio_hoy,
+        Venta.fecha_venta <= fin_hoy
+    ).all()
     total_ventas   = sum(float(v.total) for v in ventas_hoy)
     total_cobrado  = sum(float(v.total) for v in ventas_hoy if v.estado == 'COBRADO')
     ventas_credito = sum(float(v.total) for v in ventas_hoy if v.estado == 'CREDITO')
-    utilidad       = total_cobrado - fondo_inicial
+    costo_total_corte = Decimal('0.00')
+    ids_ventas_corte = [v.id_venta for v in ventas_hoy]
+    
+    if ids_ventas_corte:
+        detalles_corte = VentaDetalle.query.filter(VentaDetalle.venta_id.in_(ids_ventas_corte)).all()
+        for det in detalles_corte:
+            producto = Productos.query.get(det.producto_id)
+            if producto and producto.precio_base:
+                receta = next((r for r in producto.recetas if r.es_active == 1), None)
+                if receta:
+                    costo_receta = sum((Decimal(str(ing.cantidad)) * Decimal(str(ing.materia_prima.costo_unitario))) for ing in receta.detalles if ing.materia_prima and ing.materia_prima.costo_unitario)
+                    costo_unitario_real = costo_receta / receta.cuanto_produce if receta.cuanto_produce > 0 else Decimal('0.00')
+                    costo_total_corte += costo_unitario_real * Decimal(str(det.cantidad))
+                else:
+                    # Fallback del 60% si no hay receta activa
+                    costo_total_corte += Decimal(str(det.precio_unitario)) * Decimal('0.60') * Decimal(str(det.cantidad))
+
+    # La utilidad real es el total de la venta menos el costo de producción
+    utilidad = float(Decimal(str(total_ventas)) - costo_total_corte)
 
     try:
         nuevo_corte = CorteCaja(
             usuario_id     = current_user.id,
-            periodo_inicio = datetime.combine(hoy, datetime.min.time()),
+            periodo_inicio = datetime.combine(hoy, dt_time.min),
             fondo_inicial  = fondo_inicial,
             total_ventas   = total_ventas,
             total_cobrado  = total_cobrado,
@@ -384,8 +507,12 @@ def realizar_corte():
 @login_required
 def cerrar_corte():
     hoy = date.today()
+    inicio_hoy = datetime.combine(hoy, dt_time.min)
+    fin_hoy    = datetime.combine(hoy, dt_time.max)
+
     corte_activo = CorteCaja.query.filter(
-        func.date(CorteCaja.periodo_inicio) == hoy,
+        CorteCaja.periodo_inicio >= inicio_hoy,
+        CorteCaja.periodo_inicio <= fin_hoy,
         CorteCaja.estado == 'ABIERTO'
     ).first()
 

@@ -22,17 +22,3 @@ class CorteForm(FlaskForm):
         Optional(), NumberRange(min=0)
     ])
     submit = SubmitField('Realizar Corte')
-
-
-class TicketForm(FlaskForm):
-    venta_id  = SelectField('Folio / Venta', coerce=int, validators=[DataRequired()])
-    tipo      = SelectField('Tipo de Documento', choices=[
-        ('ticket',  'Ticket de Remisión'),
-        ('factura', 'Factura'),
-    ])
-    rfc       = StringField('RFC del Cliente', validators=[Optional()])
-    uso_cfdi  = SelectField('Uso de CFDI', choices=[
-        ('G03', 'G03 - Gastos en general'),
-        ('P01', 'P01 - Por definir'),
-    ])
-    submit    = SubmitField('Generar Documento')
