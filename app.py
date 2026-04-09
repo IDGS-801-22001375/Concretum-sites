@@ -33,6 +33,7 @@ from routes.comercial import comercial_bp
 from routes.clientes import clientes_bp
 from routes.inventario_produccion import stock_bp
 from routes.produccion_recetas import produccion_recetas_bp
+from routes.carrito import carrito_bp
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
@@ -65,6 +66,7 @@ app.register_blueprint(recetas_bp)
 app.register_blueprint(clientes_bp)
 app.register_blueprint(stock_bp)
 app.register_blueprint(produccion_recetas_bp)
+app.register_blueprint(carrito_bp)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -187,6 +189,9 @@ def custom_login():
             # Actualización para guardar última sesión (agregado de versión 1)
             user.ultima_sesion = datetime.datetime.now()
             db.session.commit()
+
+            if user.has_role('CLIENTE'):
+                return redirect(url_for('carrito_bp.catalogo'))
 
             next_page = request.args.get('next') or url_for('comercial_bp.dashboard')
             return redirect(next_page)

@@ -11,6 +11,7 @@ from .productos import ProductoForm
 from .comercial import VentaForm, CorteForm, TicketForm
 from .producciones import ProduccionForm
 from .clientes import ClienteForm
+from .carrito import AgregarAlCarritoForm, ActualizarCantidadForm, CheckoutForm, ContactoClienteForm
 
 __all__ = [
     'LoginFormSimple',
@@ -24,4 +25,8 @@ __all__ = [
     'TicketForm',
     'ProduccionForm',
     'ClienteForm'
+    'AgregarAlCarritoForm', 
+    'ActualizarCantidadForm', 
+    'CheckoutForm', 
+    'ContactoClienteForm'
 ]

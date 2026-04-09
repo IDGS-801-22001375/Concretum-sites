@@ -52,9 +52,9 @@
         </p>
       </div>
       <div class="flex gap-20 items-center justify-end">
-        <a href="https://wa.me/524770000000?text=Hola,%20me%20interesa%20cotizar%20un%20producto" target="_blank"
+        <a href="{{url_for('carrito_bp.catalogo')}}" target="_blank"
           class="bg-[#008DC0] text-white text-center px-6 py-4 rounded-md font-roboto font-medium hover:bg-[#0074A0] transition">
-          Cotizar productos
+          Ver catalogo de productos
         </a>
       </div>
     </div>
@@ -272,56 +272,7 @@
 </section>
 
 <footer class="bg-[#001F3F] text-white pt-16 pb-8 border-t-4 border-[#008DC0]">
-  <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-12">
-    <div class="space-y-4">
-      <img src="{{url_for('static', filename='images/logo-concretum.png')}}" class="h-6 opacity-90">
-      <p class="text-gray-400 text-sm leading-relaxed mt-4">
-        Especialistas en materiales prefabricados de alto rendimiento para proyectos
-        industriales y de construcción. Innovación, calidad y precisión en cada entrega.
-      </p>
-    </div>
-
-    <div>
-      <h3 class="text-lg font-bold mb-4 tracking-wide">NAVEGACIÓN</h3>
-      <ul class="space-y-3 text-gray-400 text-sm">
-        <li><a href="#inicio" class="hover:text-white transition">Inicio</a></li>
-        <li><a href="#productos" class="hover:text-white transition">Productos</a></li>
-        <li><a href="#nosotros" class="hover:text-white transition">Nosotros</a></li>
-        <li><a href="#contacto" class="hover:text-white transition">Contacto</a></li>
-      </ul>
-    </div>
-
-    <div>
-      <h3 class="text-lg font-bold mb-4 tracking-wide">CONTACTO</h3>
-      <ul class="space-y-3 text-gray-400 text-sm">
-        <li class="flex items-center gap-2"><span class="text-[#008DC0]">📍</span> León, Gto., México</li>
-        <li class="flex items-center gap-2"><span class="text-[#008DC0]">📞</span> +52 477 000 0000</li>
-        <li class="flex items-center gap-2"><span class="text-[#008DC0]">✉️</span> contacto@concretum.com</li>
-      </ul>
-    </div>
-
-    <div>
-      <h3 class="text-lg font-bold mb-4 tracking-wide">BOLETÍN</h3>
-      <p class="text-gray-400 text-sm mb-4">
-        Recibe novedades y promociones directamente en tu correo.
-      </p>
-      <form class="flex flex-col gap-3">
-        <input type="email" placeholder="Tu correo electrónico"
-          class="px-4 py-3 rounded-md text-black outline-none w-full focus:ring-2 focus:ring-[#008DC0]">
-        <button type="button"
-          class="bg-[#008DC0] py-3 rounded-md font-bold text-white hover:bg-[#0074A0] transition w-full">
-          Suscribirme
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <div
-    class="border-t border-gray-700 mt-12 pt-6 text-center text-gray-500 text-sm flex flex-col md:flex-row justify-center items-center gap-4">
-    <span>© 2026 Concretum. Todos los derechos reservados.</span>
-    <span class="hidden md:inline">|</span>
-    <a href="#" class="hover:text-white transition">Aviso de privacidad</a>
-  </div>
+  {% include 'home/footer.html' %}
 </footer>
 
 {% endblock %}
