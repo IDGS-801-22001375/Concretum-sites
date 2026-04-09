@@ -27,7 +27,7 @@ from routes.compras import compras_bp
 from routes.mermas import mermas_bp
 from routes.configuracion import configuracion_bp
 from routes.productos import productos_bp
-from routes.inventario import inventario_bp
+#from routes.inventario import inventario_bp
 from routes.recetas import recetas_bp
 from routes.comercial import comercial_bp
 from routes.clientes import clientes_bp
@@ -58,7 +58,7 @@ app.register_blueprint(comercial_bp)
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(materia_prima_bp)
 app.register_blueprint(compras_bp)
-app.register_blueprint(inventario_bp)
+#app.register_blueprint(inventario_bp)
 app.register_blueprint(mermas_bp)
 app.register_blueprint(configuracion_bp)
 app.register_blueprint(recetas_bp)
