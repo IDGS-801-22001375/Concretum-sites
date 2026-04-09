@@ -1,7 +1,11 @@
+from decimal import Decimal
 from flask import render_template, redirect, url_for, flash
 from datetime import datetime
 import threading
 import time
+
+from flask_login import login_required
+from flask_security.decorators import roles_accepted
 
 from models.inventario_produccion import Existencias
 from routes.produccion_recetas import produccion_recetas_bp
@@ -39,6 +43,8 @@ def finalizar_produccion(id_produccion):
 # ====================== INDEX ======================
 
 @produccion_recetas_bp.route('/producciones')
+@login_required
+@roles_accepted("ADMINISTRADOR", "ADMIN", "SUPER_ADMIN")
 def index():
     historial = Produccion.query.order_by(Produccion.id_produccion.desc()).all()
 
@@ -67,8 +73,17 @@ def index():
 # ====================== CREAR ======================
 
 @produccion_recetas_bp.route('/crear', methods=['POST'])
+@login_required
+@roles_accepted("ADMINISTRADOR", "ADMIN", "SUPER_ADMIN")
 def crear_orden():
     form = ProduccionForm()
+    
+    recetas = Recetas.query.filter_by(es_active=1).all()
+    
+    form.receta_id.choices = [
+        (r.id_receta, f"{r.descripcion} - {r.producto.nombre}")
+        for r in recetas
+    ]
 
     if not form.validate_on_submit():
         flash('Formulario inválido', 'error')
@@ -139,6 +154,8 @@ def crear_orden():
 # ====================== CANCELAR ======================
 
 @produccion_recetas_bp.route('/cancelar/<int:id>', methods=['POST'])
+@login_required
+@roles_accepted("ADMINISTRADOR", "ADMIN", "SUPER_ADMIN")
 def cancelar_orden(id):
     produccion = Produccion.query.get_or_404(id)
 
@@ -152,7 +169,7 @@ def cancelar_orden(id):
 
     for c in consumos:
         mp = MateriaPrima.query.get(c.materia_prima_id)
-        mp.existencia.stock_actual += float(c.cantidad_usada)
+        mp.existencia.stock_actual += Decimal(c.cantidad_usada)
 
     produccion.estado = 'CANCELADA'
     db.session.commit()
@@ -164,6 +181,8 @@ def cancelar_orden(id):
 # ====================== FINALIZAR ======================
 
 @produccion_recetas_bp.route('/finalizar/<int:id>', methods=['POST'])
+@login_required
+@roles_accepted("ADMINISTRADOR", "ADMIN", "SUPER_ADMIN")
 def finalizar_manual(id):
     produccion = Produccion.query.get_or_404(id)
 

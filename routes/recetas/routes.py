@@ -1,4 +1,6 @@
 import datetime
+from flask_login import login_required
+from flask_security.decorators import roles_accepted
 from sqlalchemy.orm import joinedload
 from flask import flash, redirect, render_template, request, url_for
 
@@ -47,6 +49,8 @@ def _render(form, page=1, **kwargs):
 # ── GET ──────────────────────────────────────────────────────────────────────
 
 @recetas_bp.route('/recetas', methods=['GET'])
+@login_required
+@roles_accepted("ADMINISTRADOR", "ADMIN", "SUPER_ADMIN")
 def get_recetas():
     form = RecetaForm()
     _poblar_choices(form)
@@ -59,6 +63,8 @@ def get_recetas():
 # ── GUARDAR ──────────────────────────────────────────────────────────────────
 
 @recetas_bp.route('/recetas', methods=['POST'])
+@login_required
+@roles_accepted("ADMINISTRADOR", "ADMIN", "SUPER_ADMIN")
 def save_receta():
     form = RecetaForm(request.form)
     page = request.args.get('page', 1, type=int)
@@ -114,6 +120,8 @@ def save_receta():
 # ── EDITAR ───────────────────────────────────────────────────────────────────
 
 @recetas_bp.route('/recetas/<int:id_receta>/editar', methods=['GET', 'POST'])
+@login_required
+@roles_accepted("ADMINISTRADOR", "ADMIN", "SUPER_ADMIN")
 def editar_receta(id_receta):
     receta = Recetas.query.filter_by(id_receta=id_receta, es_active=1).first_or_404()
     page = request.args.get('page', 1, type=int)
@@ -185,6 +193,8 @@ def editar_receta(id_receta):
 # ── ELIMINAR ───────────────────────────────────────────────────
 
 @recetas_bp.route('/recetas/<int:id_receta>/eliminar', methods=['POST'])
+@login_required
+@roles_accepted("ADMINISTRADOR", "ADMIN", "SUPER_ADMIN")
 def eliminar_receta(id_receta):
     receta = Recetas.query.filter_by(id_receta=id_receta, es_active=1).first_or_404()
 
