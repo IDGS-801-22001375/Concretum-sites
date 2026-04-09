@@ -9,6 +9,8 @@ from pymongo import MongoClient
 from flask_wtf.csrf import CSRFProtect
 from forms import LoginFormSimple, ExtendedRegisterForm
 from flask_security.registerable import register_user
+from itsdangerous import URLSafeTimedSerializer
+from sqlalchemy.exc import IntegrityError
 import jwt
 import datetime
 import logging
@@ -27,7 +29,7 @@ from routes.compras import compras_bp
 from routes.mermas import mermas_bp
 from routes.configuracion import configuracion_bp
 from routes.productos import productos_bp
-from routes.inventario import inventario_bp
+#from routes.inventario import inventario_bp
 from routes.recetas import recetas_bp
 from routes.comercial import comercial_bp
 from routes.clientes import clientes_bp
@@ -36,6 +38,7 @@ from routes.produccion_recetas import produccion_recetas_bp
 
 app = Flask(__name__)
 app.config.from_object(DevelopmentConfig)
+serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
 csrf = CSRFProtect(app)
 db.init_app(app)
 
@@ -58,7 +61,7 @@ app.register_blueprint(comercial_bp)
 app.register_blueprint(usuarios_bp)
 app.register_blueprint(materia_prima_bp)
 app.register_blueprint(compras_bp)
-app.register_blueprint(inventario_bp)
+#app.register_blueprint(inventario_bp)
 app.register_blueprint(mermas_bp)
 app.register_blueprint(configuracion_bp)
 app.register_blueprint(recetas_bp)
@@ -170,20 +173,17 @@ def admin():
 # Login y dashboard de Cristian
 def custom_login():
     if current_user.is_authenticated:
-       return redirect(url_for('comercial_bp.dashboard')) 
+        return redirect(url_for('comercial_bp.dashboard'))
     form = LoginFormSimple()
     if form.validate_on_submit():
         user = form.user
         if user.tf_primary_method:
-            session['pending_2fa_user_id'] = user.id
-            return redirect(url_for('verificar_2fa'))
+            token = serializer.dumps(user.id)
+            return redirect(url_for('verificar_2fa', token=token))
         else:
             login_user(user)
-            
-            # Actualización para guardar última sesión (agregado de versión 1)
             user.ultima_sesion = datetime.datetime.now()
             db.session.commit()
-
             next_page = request.args.get('next') or url_for('comercial_bp.dashboard')
             return redirect(next_page)
     return render_template('auth/login.html', login_user_form=form)
@@ -194,17 +194,78 @@ app.view_functions['security.login'] = custom_login
 def custom_register():
     if current_user.is_authenticated:
         return redirect(url_for('comercial_bp.dashboard'))
-    
+
     form = ExtendedRegisterForm()
+
+    # ============================================================
+    # DIAGNÓSTICO: imprime en consola si el formulario es válido
+    # ============================================================
+    app.logger.debug("=== REGISTRO: Iniciando proceso ===")
+    app.logger.debug(f"Método de request: {request.method}")
+    
+    if request.method == 'POST':
+        app.logger.debug(f"Datos del formulario: {request.form}")
+        app.logger.debug(f"Errores de validación (antes de validate): {form.errors}")
+
     if form.validate_on_submit():
-        # Esto crea al usuario, encripta su contraseña y lo guarda
-        user = register_user(form)
-        db.session.commit()
-        
-        flash('¡Cuenta creada exitosamente! Por favor, inicia sesión con tus nuevas credenciales.', 'success')
-        # Lo redirigimos AL LOGIN a la fuerza
-        return redirect(url_for('security.login'))
-        
+        app.logger.debug("Formulario validado correctamente")
+        try:
+            # Verificar duplicados manualmente (por si acaso)
+            if User.query.filter_by(email=form.email.data).first():
+                flash('El correo electrónico ya está registrado.', 'danger')
+                app.logger.warning(f"Email duplicado: {form.email.data}")
+                return render_template('auth/register.html', register_user_form=form)
+
+            if User.query.filter_by(username=form.username.data).first():
+                flash('El nombre de usuario ya está en uso.', 'danger')
+                app.logger.warning(f"Username duplicado: {form.username.data}")
+                return render_template('auth/register.html', register_user_form=form)
+
+            from flask_security import hash_password
+            import uuid
+
+            nuevo_usuario = User(
+                username=form.username.data,
+                email=form.email.data,
+                password=hash_password(form.password.data),
+                fs_uniquifier=str(uuid.uuid4()),
+                active=True,
+                intentos_fallidos=0
+            )
+            db.session.add(nuevo_usuario)
+            db.session.flush()  # Para obtener ID
+            app.logger.debug(f"Usuario creado con ID: {nuevo_usuario.id}")
+
+            # Asegurar rol CLIENTE
+            cliente_role = Role.query.filter_by(name='CLIENTE').first()
+            if not cliente_role:
+                app.logger.warning("Rol CLIENTE no existe, creándolo...")
+                cliente_role = Role(name='CLIENTE', description='Usuario cliente', es_activo=True)
+                db.session.add(cliente_role)
+                db.session.flush()
+
+            nuevo_usuario.roles.append(cliente_role)
+            db.session.commit()
+            app.logger.info(f"Usuario {nuevo_usuario.email} registrado con rol CLIENTE")
+
+            flash('¡Cuenta creada exitosamente! Por favor, inicia sesión.', 'success')
+            return redirect(url_for('security.login'))
+
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"ERROR en registro: {str(e)}", exc_info=True)
+            flash(f'Error inesperado: {str(e)}', 'danger')
+            return render_template('auth/register.html', register_user_form=form)
+    else:
+        # El formulario no es válido: mostrar todos los errores
+        app.logger.warning(f"Formulario inválido. Errores: {form.errors}")
+        for field, field_errors in form.errors.items():
+            for error in field_errors:
+                flash(f'Error en {getattr(form, field).label.text}: {error}', 'danger')
+        # También mostrar un mensaje genérico si no hay errores específicos
+        if not form.errors:
+            flash('Por favor completa todos los campos correctamente.', 'danger')
+
     return render_template('auth/register.html', register_user_form=form)
 
 # Sobrescribimos la ruta original de Flask-Security
@@ -212,14 +273,22 @@ app.view_functions['security.register'] = custom_register
 
 @app.route('/verificar-2fa', methods=['GET', 'POST'])
 def verificar_2fa():
-    user_id = session.get('pending_2fa_user_id')
-    if not user_id:
-        flash('No hay una sesión de verificación activa.', 'error')
+    token = request.args.get('token')
+    if not token:
+        flash('Enlace de verificación inválido', 'error')
         return redirect(url_for('security.login'))
+
+    try:
+        user_id = serializer.loads(token, max_age=300)  # 5 minutos
+    except Exception:
+        flash('El enlace ha expirado o es inválido', 'error')
+        return redirect(url_for('security.login'))
+
     user = User.query.get(user_id)
     if not user:
-        flash('Usuario no encontrado.', 'error')
+        flash('Usuario no encontrado', 'error')
         return redirect(url_for('security.login'))
+
     if request.method == 'POST':
         code = request.form.get('codigo')
         if not code:
@@ -232,18 +301,16 @@ def verificar_2fa():
             totp = pyotp.TOTP(secret)
             if totp.verify(code):
                 login_user(user)
-
-                # Actualización para guardar última sesión (agregado de versión 1)
                 user.ultima_sesion = datetime.datetime.now()
                 db.session.commit()
-                
-                session.pop('pending_2fa_user_id', None)
-                next_page = request.args.get('next') or url_for('comercial_bp.dashboard') 
+                next_page = request.args.get('next') or url_for('comercial_bp.dashboard')
                 return redirect(next_page)
             else:
                 flash('Código incorrecto. Inténtalo de nuevo.', 'error')
-        return render_template('auth/verificar_2fa.html')
-    return render_template('auth/verificar_2fa.html')
+        # Renderizamos la misma plantilla, pasando el token actual
+        return render_template('auth/verificar_2fa.html', token=token)
+
+    return render_template('auth/verificar_2fa.html', token=token)
 
 @app.route('/configurar-2fa', methods=['GET', 'POST'])
 @login_required

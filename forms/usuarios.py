@@ -85,5 +85,9 @@ class UsuarioForm(FlaskForm):
         return super().validate(extra_validators)
     
 
-class ExtendedRegisterForm(RegisterForm):
+class ExtendedRegisterForm(FlaskForm):
     username = StringField('Nombre de Usuario', validators=[DataRequired(), Length(min=4, max=80)])
+    email = StringField('Correo Electrónico', validators=[DataRequired(), Email(message='Ingresa un email válido')])
+    password = PasswordField('Contraseña', validators=[DataRequired(), Length(min=8)])
+    password_confirm = PasswordField('Confirmar Contraseña', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Registrarse')

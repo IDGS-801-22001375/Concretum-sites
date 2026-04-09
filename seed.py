@@ -5,14 +5,15 @@ import uuid
 with app.app_context():
     # Crear roles si no existen
     admin_rol = user_datastore.find_or_create_role(name='ADMINISTRADOR', description='Control total')
-    user_datastore.find_or_create_role(name='VENTAS', description='Gestión de ventas')
-    
+    ventas_rol = user_datastore.find_or_create_role(name='VENTAS', description='Gestión de ventas')
+    cliente_rol = user_datastore.find_or_create_role(name='CLIENTE', description='Usuario cliente')
+
     # Crear usuario Admin por defecto
     if not user_datastore.find_user(email='admin@concretum.com'):
         admin_user = user_datastore.create_user(
             username='admin',
             email='admin@concretum.com',
-            password=hash_password('12345678'), 
+            password=hash_password('12345678'),
             fs_uniquifier=str(uuid.uuid4()),
             active=True
         )
