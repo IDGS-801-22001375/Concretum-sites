@@ -3,12 +3,13 @@ from flask_security import hash_password
 import uuid
 
 with app.app_context():
-    # Crear roles si no existen
     admin_rol = user_datastore.find_or_create_role(name='ADMINISTRADOR', description='Control total')
     ventas_rol = user_datastore.find_or_create_role(name='VENTAS', description='Gestión de ventas')
+    compras_rol = user_datastore.find_or_create_role(name='COMPRAS', description='Gestión de compras y proveedores')
+    almacen_rol = user_datastore.find_or_create_role(name='ALMACEN', description='Gestión de inventario y mermas')
+    produccion_rol = user_datastore.find_or_create_role(name='PRODUCCION', description='Gestión de recetas y fabricación')
     cliente_rol = user_datastore.find_or_create_role(name='CLIENTE', description='Usuario cliente')
 
-    # Crear usuario Admin por defecto
     if not user_datastore.find_user(email='admin@concretum.com'):
         admin_user = user_datastore.create_user(
             username='admin',

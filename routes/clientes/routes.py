@@ -22,7 +22,7 @@ def registrar_auditoria(usuario_accion, accion, detalles):
 
 @clientes_bp.route('/')
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_VENTAS', 'VENDEDOR')
+@roles_accepted('ADMINISTRADOR', 'VENTAS')
 def index():
     form = ClienteForm()
     total_activos = Cliente.query.filter_by(es_activo=1).count()
@@ -90,7 +90,7 @@ def api_clientes():
 
 @clientes_bp.route('/guardar', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_VENTAS', 'VENDEDOR')
+@roles_accepted('ADMINISTRADOR', 'VENTAS')
 def guardar_cliente():
     data = request.form
     id_cli = data.get('id_cliente')
@@ -170,7 +170,7 @@ def obtener_cliente(id):
 
 @clientes_bp.route('/alternar_estado/<int:id>', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'GERENTE_VENTAS')
+@roles_accepted('ADMINISTRADOR', 'VENTAS')
 def alternar_estado(id):
     c = Cliente.query.get_or_404(id)
     c.es_activo = 0 if c.es_activo == 1 else 1

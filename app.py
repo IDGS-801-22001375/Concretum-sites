@@ -11,6 +11,7 @@ from forms import LoginFormSimple, ExtendedRegisterForm
 from flask_security.registerable import register_user
 from itsdangerous import URLSafeTimedSerializer
 from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import HTTPException
 import jwt
 import datetime
 import logging
@@ -30,6 +31,7 @@ from routes.mermas import mermas_bp
 from routes.configuracion import configuracion_bp
 from routes.productos import productos_bp
 #from routes.inventario import inventario_bp
+from routes.auditoria import auditoria_bp
 from routes.recetas import recetas_bp
 from routes.comercial import comercial_bp
 from routes.clientes import clientes_bp
@@ -63,6 +65,7 @@ app.register_blueprint(usuarios_bp)
 app.register_blueprint(materia_prima_bp)
 app.register_blueprint(compras_bp)
 #app.register_blueprint(inventario_bp)
+app.register_blueprint(auditoria_bp)
 app.register_blueprint(mermas_bp)
 app.register_blueprint(configuracion_bp)
 app.register_blueprint(recetas_bp)
@@ -175,6 +178,32 @@ def admin():
 def pagina_no_encontrada(error):
     return render_template('404.html'), 404
 
+@app.errorhandler(Exception)
+def handle_global_exception(e):
+    """Atrapa cualquier error 500 o excepción no manejada en toda la app."""
+    
+    if isinstance(e, HTTPException):
+        return e
+
+    app.logger.error(f"Error crítico del sistema: {str(e)}", exc_info=True)
+
+    is_api = (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest' or
+        'application/json' in request.headers.get('Accept', '') or
+        request.path.startswith('/api') or 
+        '/api/' in request.path
+    )
+
+    if is_api:
+        return jsonify({
+            'success': False,
+            'message': 'Ocurrió un error interno en el servidor. El equipo técnico ha sido notificado.'
+        }), 500
+
+    flash('Ocurrió un error inesperado en la plataforma. Intenta nuevamente.', 'error')
+    
+    return redirect(request.referrer or url_for('comercial_bp.dashboard'))
+
 def custom_login():
     if current_user.is_authenticated:
         return redirect(url_for('comercial_bp.dashboard'))
@@ -205,9 +234,6 @@ def custom_register():
 
     form = ExtendedRegisterForm()
 
-    app.logger.debug("=== REGISTRO: Iniciando proceso ===")
-    app.logger.debug(f"Método de request: {request.method}")
-    
     if request.method == 'POST':
         app.logger.debug(f"Datos del formulario: {request.form}")
         app.logger.debug(f"Errores de validación (antes de validate): {form.errors}")
@@ -215,20 +241,19 @@ def custom_register():
     if form.validate_on_submit():
         app.logger.debug("Formulario validado correctamente")
         try:
-            # Verificar duplicados manualmente (por si acaso)
+            # Verificar duplicados manualmente
             if User.query.filter_by(email=form.email.data).first():
                 flash('El correo electrónico ya está registrado.', 'danger')
-                app.logger.warning(f"Email duplicado: {form.email.data}")
                 return render_template('auth/register.html', register_user_form=form)
 
             if User.query.filter_by(username=form.username.data).first():
                 flash('El nombre de usuario ya está en uso.', 'danger')
-                app.logger.warning(f"Username duplicado: {form.username.data}")
                 return render_template('auth/register.html', register_user_form=form)
 
             from flask_security import hash_password
             import uuid
 
+            # Crear usuario con rol CLIENTE
             nuevo_usuario = User(
                 username=form.username.data,
                 email=form.email.data,
@@ -238,20 +263,28 @@ def custom_register():
                 intentos_fallidos=0
             )
             db.session.add(nuevo_usuario)
-            db.session.flush()  # Para obtener ID
-            app.logger.debug(f"Usuario creado con ID: {nuevo_usuario.id}")
+            db.session.flush()  # para obtener ID
 
             # Asegurar rol CLIENTE
             cliente_role = Role.query.filter_by(name='CLIENTE').first()
             if not cliente_role:
-                app.logger.warning("Rol CLIENTE no existe, creándolo...")
                 cliente_role = Role(name='CLIENTE', description='Usuario cliente', es_activo=True)
                 db.session.add(cliente_role)
                 db.session.flush()
 
             nuevo_usuario.roles.append(cliente_role)
+
+            # Crear registro en clientes vinculado al usuario
+            nuevo_cliente = Cliente(
+                usuario_id=nuevo_usuario.id,
+                razon_social=form.username.data,   # o podrías poner el nombre completo después
+                email=form.email.data,
+                es_activo=1
+            )
+            db.session.add(nuevo_cliente)
+
             db.session.commit()
-            app.logger.info(f"Usuario {nuevo_usuario.email} registrado con rol CLIENTE")
+            app.logger.info(f"Usuario {nuevo_usuario.email} registrado con rol CLIENTE y cliente asociado")
 
             flash('¡Cuenta creada exitosamente! Por favor, inicia sesión.', 'success')
             return redirect(url_for('security.login'))
@@ -262,12 +295,9 @@ def custom_register():
             flash(f'Error inesperado: {str(e)}', 'danger')
             return render_template('auth/register.html', register_user_form=form)
     else:
-        # El formulario no es válido: mostrar todos los errores
-        app.logger.warning(f"Formulario inválido. Errores: {form.errors}")
         for field, field_errors in form.errors.items():
             for error in field_errors:
                 flash(f'Error en {getattr(form, field).label.text}: {error}', 'danger')
-        # También mostrar un mensaje genérico si no hay errores específicos
         if not form.errors:
             flash('Por favor completa todos los campos correctamente.', 'danger')
 
@@ -319,6 +349,9 @@ def verificar_2fa():
 @app.route('/configurar-2fa', methods=['GET', 'POST'])
 @login_required
 def configurar_2fa():
+    es_cliente = current_user.has_role('CLIENTE')
+    template_name = 'tienda/2fa_config.html' if es_cliente else 'security/custom_2fa.html'
+    
     if current_user.tf_primary_method:
         if request.method == 'POST' and request.form.get('action') == 'disable':
             current_user.tf_primary_method = None
@@ -326,7 +359,8 @@ def configurar_2fa():
             db.session.commit()
             flash('2FA desactivado correctamente.', 'success')
             return redirect(url_for('configurar_2fa'))
-        return render_template('security/custom_2fa.html', activado=True, metodo=current_user.tf_primary_method)
+        return render_template(template_name, activado=True, metodo=current_user.tf_primary_method)
+    
     if request.method == 'POST':
         if 'codigo' in request.form:
             secret = current_user.tf_totp_secret
@@ -347,6 +381,7 @@ def configurar_2fa():
                 current_user.tf_totp_secret = pyotp.random_base32()
                 db.session.commit()
             return redirect(url_for('configurar_2fa'))
+    
     secret = current_user.tf_totp_secret
     if secret:
         uri = f"otpauth://totp/CRM_Concretum:{current_user.email}?secret={secret}&issuer=CRM_Concretum"
@@ -355,19 +390,21 @@ def configurar_2fa():
         qr.save(img_io, 'PNG')
         img_io.seek(0)
         qr_base64 = base64.b64encode(img_io.getvalue()).decode('utf-8')
-        return render_template('security/custom_2fa.html', activado=False, qr_base64=qr_base64, secret=secret)
+        return render_template(template_name, activado=False, qr_base64=qr_base64, secret=secret)
     else:
-        return render_template('security/custom_2fa.html', activado=False)
+        return render_template(template_name, activado=False)
 
 @app.context_processor
 def inject_sidebar_counts():
-    from models import ConfiguracionEmpresa
+    from models import ConfiguracionEmpresa, Existencias, Productos, MateriaPrima, ExistenciaMateriaPrima, Merma, Produccion, PedidoCliente, SolicitudProduccion
     config = ConfiguracionEmpresa.query.first()
-    criticos = 0
+    
+    criticos_mp = 0
+    criticos_prod = 0
     mermas_recientes = 0
+
     if config and config.alerta_stock_minimo:
-        
-        criticos = db.session.query(MateriaPrima).join(
+        criticos_mp = db.session.query(MateriaPrima).join(
             ExistenciaMateriaPrima,
             MateriaPrima.id_materia_prima == ExistenciaMateriaPrima.materia_prima_id
         ).filter(
@@ -375,14 +412,33 @@ def inject_sidebar_counts():
             MateriaPrima.stock_minimo > 0,
             ExistenciaMateriaPrima.stock_actual < MateriaPrima.stock_minimo
         ).count()
+
+        criticos_prod = db.session.query(Existencias).join(
+            Productos,
+            Existencias.producto_id == Productos.id_producto
+        ).filter(
+            Productos.es_active == 1,
+            Existencias.estado_stock == 'BAJO'
+        ).count()
+
     if config and config.alerta_merma_diaria:
         hace_7dias = datetime.datetime.utcnow() - datetime.timedelta(days=7)
-        mermas_recientes = Merma.query.filter(Merma.fecha_registro >= hace_7dias).count()
+        mermas_recientes = Merma.query.filter(
+            Merma.fecha_registro >= hace_7dias
+        ).count()
+
     producciones_activas = Produccion.query.filter_by(estado='EN_PROCESO').count()
+    
+    pedidos_por_autorizar = PedidoCliente.query.filter_by(estado='COTIZACION').count()
+    solicitudes_prod = SolicitudProduccion.query.filter_by(estado='PENDIENTE').count()
+
     return {
-        'sidebar_criticos': criticos,
+        'sidebar_criticos_mp': criticos_mp,
+        'sidebar_criticos_prod': criticos_prod,
         'sidebar_pedidos': producciones_activas,
-        'sidebar_mermas': mermas_recientes
+        'sidebar_mermas': mermas_recientes,
+        'sidebar_pedidos_autorizar': pedidos_por_autorizar,
+        'sidebar_solicitudes_prod': solicitudes_prod
     }
 
 @app.context_processor

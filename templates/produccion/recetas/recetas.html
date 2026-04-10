@@ -1,20 +1,230 @@
 {% extends "base.html" %}
-{% import "_macros.html" as macros %}
 {% import 'macros/crud_components.html' as components %}
 
 {% block title %}Fórmulas / Recetas{% endblock %}
 
 {% block content %}
 
-<script src="https://cdn.tailwindcss.com"></script>
+{{ components.page_header('Fórmulas / Recetas de Producción', 'Define las recetas y fórmulas para la fabricación de
+productos') }}
 
-<!--CARDS-->
-{% include "produccion/recetas/_card-recetas.html" %}
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+    {{ components.kpi_card('Total Recetas', 'kpi-total-recetas', kpis.total|string, 'slate', '<svg
+        class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>') }}
+    {{ components.kpi_card('Recetas Activas', 'kpi-recetas-activas', kpis.activas|string, 'green', '<svg
+        class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>') }}
+    {{ components.kpi_card('Inactivas', 'kpi-inactivas', (kpis.total - kpis.activas)|string, 'red', '<svg
+        class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>') }}
+</div>
 
-<!-- Grid de Recetas -->
-{% include "produccion/recetas/_grid-recetas.html" %}
+{{ components.crud_table(
+id_table='recetas',
+api_endpoint='/produccion/recetas/api',
+title='Catálogo de Recetas',
+columns=[
+{'field': 'producto_nombre', 'label': 'Producto', 'sortable': true},
+{'field': 'descripcion', 'label': 'Descripción', 'sortable': true},
+{'field': 'categoria', 'label': 'Categoría', 'sortable': false},
+{'field': 'cuanto_produce', 'label': 'Rendimiento (uds)', 'sortable': true},
+{'field': 'es_activo', 'label': 'Estado', 'sortable': true}
+],
+search_placeholder='Buscar por producto o descripción...',
+btn_new_label='Nueva Receta'
+) }}
 
-<!-- Formulario de Receta -->
-{% include "produccion/recetas/_form-recetas.html" %}
+{% set form_fields = [
+{'name': 'producto_id', 'label': 'Producto Resultante', 'type': 'select', 'required': true, 'options':
+productos_options, 'full_width': true},
+{'name': 'descripcion', 'label': 'Descripción de Fórmula', 'type': 'text', 'required': true, 'placeholder': 'Ej: Mezcla
+estándar block hueco'},
+{'name': 'cuanto_produce', 'label': 'Rendimiento (Unidades)', 'type': 'number', 'required': true, 'placeholder': 'Ej:
+120'},
+{'name': 'tiempo_produccion', 'label': 'Tiempo de Producción (Horas)', 'type': 'number', 'step': '0.1', 'required':
+true, 'placeholder': 'Ej: 6.5'},
+{'name': 'resistencia', 'label': 'Resistencia (kg/cm²)', 'type': 'number', 'step': '0.1', 'required': true,
+'placeholder': 'Ej: 150'}
+] %}
 
+{% call components.crud_modal('recetas', form_fields, id_field='id_receta', modal_title='Fórmula / Receta',
+modal_size='xl') %}
+
+<input type="hidden" name="detalles_json" id="detalles_json">
+
+<div class="sm:col-span-2 border-t border-[#1E3A5F] pt-6 mt-2">
+    <div class="flex items-center justify-between mb-4">
+        <h4 class="text-sm font-bold text-[#008DC0] uppercase tracking-wider">Ingredientes de la mezcla</h4>
+        <button type="button" id="btn-add-ingrediente"
+            class="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-400 hover:text-emerald-300 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Añadir ingrediente
+        </button>
+    </div>
+
+    <div class="bg-[#0B2239] rounded-xl border border-[#1E3A5F] p-4">
+        <div class="hidden sm:grid grid-cols-12 gap-3 mb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">
+            <div class="col-span-5">Materia Prima</div>
+            <div class="col-span-3">Cantidad</div>
+            <div class="col-span-3">Unidad Medida</div>
+            <div class="col-span-1"></div>
+        </div>
+
+        <div id="ingredientes-container" class="space-y-3">
+            <div
+                class="ingrediente-row grid grid-cols-1 sm:grid-cols-12 gap-3 items-center bg-[#0F2A44] sm:bg-transparent p-3 sm:p-0 rounded-lg border border-[#1E3A5F] sm:border-none">
+                <div class="sm:col-span-5">
+                    <label class="sm:hidden block text-xs text-gray-400 mb-1">Materia Prima</label>
+                    <select
+                        class="mp-select w-full px-3 py-2 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] outline-none"
+                        required>
+                        <option value="">Seleccionar...</option>
+                        {% for m in mp_options %}
+                        <option value="{{ m.value }}">{{ m.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="sm:col-span-3">
+                    <label class="sm:hidden block text-xs text-gray-400 mb-1">Cantidad</label>
+                    <input type="number" step="any" placeholder="0.00"
+                        class="cant-input w-full px-3 py-2 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] outline-none"
+                        required>
+                </div>
+                <div class="sm:col-span-3">
+                    <label class="sm:hidden block text-xs text-gray-400 mb-1">Unidad</label>
+                    <select
+                        class="unidad-select w-full px-3 py-2 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] outline-none"
+                        required>
+                        <option value="">Seleccionar...</option>
+                        {% for u in unidades_options %}
+                        <option value="{{ u.value }}">{{ u.label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="sm:col-span-1 flex justify-end sm:justify-center mt-2 sm:mt-0">
+                    <button type="button"
+                        class="btn-remove-ingrediente p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/20 rounded-lg transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endcall %}
+
+<script src="{{ url_for('static', filename='js/crud.js') }}"></script>
+<script>
+    function actualizarJsonIngredientes() {
+        const detalles = [];
+        document.querySelectorAll('#ingredientes-container .ingrediente-row').forEach(row => {
+            const mpId = row.querySelector('.mp-select').value;
+            const cant = row.querySelector('.cant-input').value;
+            const unidadId = row.querySelector('.unidad-select').value;
+
+            if (mpId && cant && unidadId) {
+                detalles.push({
+                    materia_prima_id: mpId,
+                    cantidad: parseFloat(cant),
+                    unidad_id: unidadId
+                });
+            }
+        });
+        document.getElementById('detalles_json').value = JSON.stringify(detalles);
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // --- LOGICA DEL GRID DINAMICO DE INGREDIENTES ---
+        const container = document.getElementById('ingredientes-container');
+        const btnAdd = document.getElementById('btn-add-ingrediente');
+
+        btnAdd.addEventListener('click', function () {
+            const firstRow = container.querySelector('.ingrediente-row');
+            const newRow = firstRow.cloneNode(true);
+            // Limpiar valores clonados
+            newRow.querySelectorAll('input, select').forEach(el => el.value = '');
+            container.appendChild(newRow);
+            actualizarJsonIngredientes();
+        });
+
+        container.addEventListener('click', function (e) {
+            const btnRemove = e.target.closest('.btn-remove-ingrediente');
+            if (btnRemove) {
+                if (container.querySelectorAll('.ingrediente-row').length > 1) {
+                    btnRemove.closest('.ingrediente-row').remove();
+                    actualizarJsonIngredientes();
+                } else {
+                    alert("La receta debe tener al menos un ingrediente.");
+                }
+            }
+        });
+
+        container.addEventListener('input', actualizarJsonIngredientes);
+        container.addEventListener('change', actualizarJsonIngredientes);
+
+        // --- CRUD MANAGER ---
+        window.crudManagers['recetas'] = new CrudManager({
+            id: 'recetas',
+            apiEndpoint: '/produccion/recetas',
+            sortBy: 'descripcion',
+            columns: [
+                { field: 'producto_nombre', label: 'Producto', sortable: true, render: val => `<span class="font-bold text-white">${val}</span>` },
+                { field: 'descripcion', label: 'Descripción', sortable: true, render: val => `<span class="text-sm text-gray-300">${val}</span>` },
+                { field: 'categoria', label: 'Categoría', sortable: false, render: val => `<span class="bg-[#1E3A5F] px-2.5 py-1 rounded-lg text-xs font-semibold text-gray-300">${val}</span>` },
+                { field: 'cuanto_produce', label: 'Rendimiento', sortable: true, render: val => `<span class="text-cyan-400 font-mono font-bold">${val} uds</span>` },
+                {
+                    field: 'es_activo', label: 'Estado', sortable: true,
+                    render: val => val ? `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Activa</span>` : `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Inactiva</span>`
+                }
+            ],
+            formFields: [
+                { name: 'producto_id', label: 'Producto', type: 'select', required: true },
+                { name: 'descripcion', label: 'Descripción', type: 'text', required: true },
+                { name: 'cuanto_produce', label: 'Rendimiento', type: 'number', required: true },
+                { name: 'tiempo_produccion', label: 'Tiempo', type: 'number', required: true },
+                { name: 'resistencia', label: 'Resistencia', type: 'number', required: true }
+            ],
+            onEdit: function (item) {
+                // Llenar datos principales
+                document.getElementById('id_receta').value = item.id_receta;
+
+                // Llenar el grid de ingredientes
+                while (container.querySelectorAll('.ingrediente-row').length > 1) {
+                    container.querySelector('.ingrediente-row:last-child').remove();
+                }
+                const firstRow = container.querySelector('.ingrediente-row');
+                firstRow.querySelectorAll('input, select').forEach(el => el.value = '');
+
+                if (item.detalles && item.detalles.length > 0) {
+                    item.detalles.forEach((det, idx) => {
+                        let row = idx === 0 ? firstRow : firstRow.cloneNode(true);
+                        if (idx > 0) container.appendChild(row);
+
+                        row.querySelector('.mp-select').value = det.materia_prima_id;
+                        row.querySelector('.cant-input').value = det.cantidad;
+                        row.querySelector('.unidad-select').value = det.unidad_id;
+                    });
+                }
+                actualizarJsonIngredientes();
+            },
+            onSubmit: function (formData) {
+                actualizarJsonIngredientes();
+                return formData;
+            }
+        });
+    });
+</script>
 {% endblock %}

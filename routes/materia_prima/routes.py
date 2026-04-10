@@ -21,7 +21,7 @@ def registrar_auditoria(usuario_accion, accion, detalles):
 
 @materia_prima_bp.route('/materia-prima')
 @login_required
-@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO', 'ALMACENISTA')
+@roles_accepted('ADMINISTRADOR', 'ALMACEN')
 def index():
     proveedores = Proveedor.query.filter_by(es_activo=True).all()
     proveedores_options = [{'value': p.id, 'label': p.razon_social} for p in proveedores]
@@ -29,7 +29,7 @@ def index():
 
 @materia_prima_bp.route('/materia-prima/api', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO', 'ALMACENISTA')
+@roles_accepted('ADMINISTRADOR', 'ALMACEN')
 def api_materia_prima():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
@@ -84,7 +84,7 @@ def api_materia_prima():
 
 @materia_prima_bp.route('/materia-prima/guardar', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO')
+@roles_accepted('ADMINISTRADOR', 'ALMACEN')
 def guardar_materia_prima():
     data = request.form
     id_mp = data.get('id_materia_prima')
@@ -124,7 +124,7 @@ def guardar_materia_prima():
 
 @materia_prima_bp.route('/materia-prima/obtener/<int:id>', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO')
+@roles_accepted('ADMINISTRADOR', 'ALMACEN')
 def obtener_materia_prima(id):
     mp = MateriaPrima.query.get_or_404(id)
     return jsonify({
@@ -140,7 +140,7 @@ def obtener_materia_prima(id):
 
 @materia_prima_bp.route('/materia-prima/alternar_estado/<int:id>', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_INVENTARIO')
+@roles_accepted('ADMINISTRADOR', 'ALMACEN')
 def alternar_estado(id):
     mp = MateriaPrima.query.get_or_404(id)
     mp.es_activo = not mp.es_activo

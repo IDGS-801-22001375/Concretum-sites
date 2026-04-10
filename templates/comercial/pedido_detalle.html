@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% import 'macros/crud_components.html' as components %}
+
+{% block title %}Detalle del pedido {{ pedido.folio }}{% endblock %}
+
+{% block content %}
+
+{{ components.page_header('Detalle del pedido', 'Revisa los productos y autoriza o rechaza') }}
+
+<div class="grid lg:grid-cols-3 gap-6 mb-8">
+    <!-- Información del pedido -->
+    <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] p-6">
+        <h3 class="text-white font-bold text-lg mb-4">Información general</h3>
+        <div class="space-y-3 text-sm">
+            <div class="flex justify-between">
+                <span class="text-gray-400">Folio:</span>
+                <span class="text-white font-mono font-semibold">{{ pedido.folio }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-400">Cliente:</span>
+                <span class="text-white">{{ pedido.usuario.username }} ({{ pedido.usuario.email }})</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-400">Fecha solicitud:</span>
+                <span class="text-white">{{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-400">Método de pago:</span>
+                <span class="text-white">{{ pedido.metodo_pago }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-400">Dirección:</span>
+                <span class="text-white text-right">{{ pedido.direccion_entrega or 'No especificada' }}</span>
+            </div>
+            {% if pedido.notas %}
+            <div>
+                <span class="text-gray-400 block mb-1">Notas:</span>
+                <p class="text-white bg-[#0B2239] p-3 rounded-xl">{{ pedido.notas }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Resumen de totales -->
+    <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] p-6">
+        <h3 class="text-white font-bold text-lg mb-4">Totales</h3>
+        <div class="space-y-3 text-sm">
+            <div class="flex justify-between">
+                <span class="text-gray-400">Subtotal:</span>
+                <span class="text-white font-mono">${{ "{:,.2f}".format(pedido.subtotal|float) }}</span>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-gray-400">IVA (16%):</span>
+                <span class="text-white font-mono">${{ "{:,.2f}".format(pedido.iva|float) }}</span>
+            </div>
+            <div class="flex justify-between border-t border-[#1E3A5F] pt-3 mt-3">
+                <span class="text-gray-200 font-bold">Total:</span>
+                <span class="text-emerald-400 font-bold text-xl">${{ "{:,.2f}".format(pedido.total|float) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] p-6">
+        <h3 class="text-white font-bold text-lg mb-4">Acciones</h3>
+        <div class="space-y-4">
+            <form method="POST"
+                action="{{ url_for('comercial_bp.autorizar_pedido', pedido_id=pedido.id_pedido_cliente) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit"
+                    class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition">
+                    Autorizar pedido
+                </button>
+            </form>
+            <button onclick="mostrarMotivoRechazo()"
+                class="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-3 rounded-xl transition">
+                Rechazar pedido
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Detalle de productos -->
+<div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden">
+    <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
+        <h3 class="text-white font-bold text-lg">Productos solicitados</h3>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead>
+                <tr class="bg-[#0B2239] border-b border-[#1E3A5F]">
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase">Producto</th>
+                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase">Cantidad</th>
+                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase">Precio unit.</th>
+                    <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase">Total</th>
+                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase">Stock actual</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-[#1E3A5F]">
+                {% for detalle in pedido.detalles %}
+                {# ✅ Acceso directo a la relación uno a uno #}
+                {% set existencia = detalle.producto.existencia %}
+                {% set stock_actual = existencia.stock_actual if existencia else 0 %}
+
+                <tr class="hover:bg-[#123555]/50">
+                    <td class="px-6 py-4 font-medium text-white">{{ detalle.producto.nombre }}</td>
+                    <td class="px-6 py-4 text-center text-white">{{ detalle.cantidad|int }}</td>
+                    <td class="px-6 py-4 text-right text-white font-mono">${{
+                        "{:,.2f}".format(detalle.precio_unitario|float) }}</td>
+                    <td class="px-6 py-4 text-right text-white font-mono">${{
+                        "{:,.2f}".format(detalle.total_linea|float) }}</td>
+                    <td class="px-6 py-4 text-center">
+                        {% if stock_actual >= detalle.cantidad %}
+                        <span
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            Suficiente ({{ stock_actual|int }})
+                        </span>
+                        {% else %}
+                        <span
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                            Insuficiente ({{ stock_actual|int }})
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal para motivo de rechazo -->
+<div id="modal-rechazo" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+    <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] max-w-md w-full p-6">
+        <h3 class="text-white font-bold text-lg mb-4">Motivo de rechazo</h3>
+        <form method="POST" action="{{ url_for('comercial_bp.rechazar_pedido', pedido_id=pedido.id_pedido_cliente) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <textarea name="motivo" rows="3" required
+                class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#008DC0]"
+                placeholder="Ej: Producto no disponible, precio incorrecto..."></textarea>
+            <div class="flex justify-end gap-3 mt-5">
+                <button type="button" onclick="cerrarModalRechazo()"
+                    class="px-4 py-2 text-sm font-medium text-gray-300 bg-[#1E3A5F] rounded-xl hover:bg-[#2A4A6F] transition">Cancelar</button>
+                <button type="submit"
+                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-xl hover:bg-red-500 transition">Rechazar
+                    pedido</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function mostrarMotivoRechazo() {
+        document.getElementById('modal-rechazo').classList.remove('hidden');
+    }
+    function cerrarModalRechazo() {
+        document.getElementById('modal-rechazo').classList.add('hidden');
+    }
+</script>
+
+{% endblock %}

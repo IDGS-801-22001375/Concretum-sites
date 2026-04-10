@@ -10,13 +10,12 @@ class AgregarAlCarritoForm(FlaskForm):
         'Producto',
         validators=[DataRequired(message="El producto es requerido")]
     )
-    cantidad = DecimalField(
+    cantidad = IntegerField(
         'Cantidad',
         validators=[
             DataRequired(message="La cantidad es requerida"),
             NumberRange(min=1, message="La cantidad mínima es 1")
         ],
-        places=3,
         default=1
     )
 
@@ -28,13 +27,13 @@ class ActualizarCantidadForm(FlaskForm):
         'Ítem',
         validators=[DataRequired(message="El ítem es requerido")]
     )
-    cantidad = DecimalField(
+
+    cantidad = IntegerField(
         'Cantidad',
         validators=[
             DataRequired(message="La cantidad es requerida"),
             NumberRange(min=1, message="La cantidad mínima es 1")
-        ],
-        places=3
+        ]
     )
 
 

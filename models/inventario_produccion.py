@@ -11,7 +11,7 @@ class Existencias(db.Model):
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     estado_stock = db.Column(db.Enum('BAJO','PRECAUCION', 'ALTO'), nullable=False, default='ALTO')
 
-    producto = db.relationship('Productos', backref='existencia')
+    producto = db.relationship('Productos', backref=db.backref('existencia', uselist=False))
     
 class MovimientosInventario(db.Model):
     __tablename__ = 'movimientos_inventario'
@@ -25,3 +25,8 @@ class MovimientosInventario(db.Model):
     fecha_creacion = db.Column(db.DateTime, default=datetime.datetime.now)
 
     existencia = db.relationship('Existencias', backref='movimientos')
+    usuario = db.relationship('User', backref='movimientos_inventario')
+
+    @property
+    def id(self):
+        return self.id_movimiento_in

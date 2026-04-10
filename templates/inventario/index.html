@@ -7,7 +7,6 @@
 
 {{ components.page_header('Inventario General', 'Control y seguimiento de todo el inventario del sistema') }}
 
-<!-- KPIs -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     {{ components.kpi_card(
     'Total Productos',
@@ -52,7 +51,6 @@
     ) }}
 </div>
 
-<!-- Tabs -->
 <div class="bg-[#0F2A44] border border-[#1E3A5F] rounded-2xl overflow-hidden shadow-sm">
     <div class="border-b border-[#1E3A5F] px-4">
         <nav class="flex -mb-px gap-2" id="inventario-tabs">
@@ -76,7 +74,6 @@
     </div>
 
     <div id="inventario-tab-content">
-        <!-- Productos Terminados -->
         <div id="tab-productos" class="tab-panel p-5">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
                 <div class="relative w-full sm:w-64">
@@ -88,7 +85,7 @@
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                 </div>
-                <button id="btn-movimiento"
+                <button onclick="abrirModalMovimiento()"
                     class="inline-flex items-center gap-2 bg-[#008DC0] hover:bg-[#007AAD] text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-lg shadow-[#008DC0]/20">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -119,7 +116,6 @@
                 class="flex justify-between items-center mt-4 pt-4 border-t border-[#1E3A5F]"></div>
         </div>
 
-        <!-- Materia Prima -->
         <div id="tab-materia-prima" class="tab-panel p-5 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
                 <div class="relative w-full sm:w-64">
@@ -154,7 +150,6 @@
             <div id="pagination-mp" class="flex justify-between items-center mt-4 pt-4 border-t border-[#1E3A5F]"></div>
         </div>
 
-        <!-- En Proceso -->
         <div id="tab-produccion" class="tab-panel p-5 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
                 <div class="relative w-full sm:w-64">
@@ -190,7 +185,6 @@
                 class="flex justify-between items-center mt-4 pt-4 border-t border-[#1E3A5F]"></div>
         </div>
 
-        <!-- Movimientos -->
         <div id="tab-movimientos" class="tab-panel p-5 hidden">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5">
                 <div class="flex gap-3">
@@ -238,62 +232,22 @@
     </div>
 </div>
 
-<!-- Modal para registrar movimiento (mismo estilo oscuro) -->
-<div id="movimiento-modal"
-    class="hidden fixed inset-0 bg-[#0B2239]/80 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-    <div class="relative w-full max-w-md bg-[#0F2A44] border border-[#1E3A5F] rounded-2xl shadow-2xl">
-        <div class="flex justify-between items-center p-5 border-b border-[#1E3A5F]">
-            <h3 class="text-lg font-semibold text-white">Registrar Movimiento</h3>
-            <button id="close-modal" class="text-gray-400 hover:text-white transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-        </div>
-        <form id="movimiento-form" class="p-5 space-y-4">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Producto</label>
-                <select id="producto_id" name="producto_id"
-                    class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
-                    required>
-                    <option value="">Seleccione...</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Tipo de Movimiento</label>
-                <select id="tipo" name="tipo"
-                    class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
-                    required>
-                    <option value="ENTRADA">Entrada</option>
-                    <option value="SALIDA">Salida</option>
-                    <option value="AJUSTE">Ajuste (establecer stock)</option>
-                </select>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Cantidad</label>
-                <input type="number" step="any" id="cantidad" name="cantidad"
-                    class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
-                    required>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-300 mb-2">Motivo</label>
-                <textarea id="motivo" name="motivo" rows="2"
-                    class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none resize-none"></textarea>
-            </div>
-            <div class="flex justify-end gap-3 pt-2">
-                <button type="button" id="cancelar-movimiento"
-                    class="px-4 py-2.5 text-sm font-medium text-gray-300 hover:text-white bg-[#1E3A5F] hover:bg-[#2A4A6F] rounded-xl transition-colors">
-                    Cancelar
-                </button>
-                <button type="submit"
-                    class="px-4 py-2.5 text-sm font-medium text-white bg-[#008DC0] hover:bg-[#007AAD] rounded-xl transition-colors">
-                    Guardar
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
+{% set form_fields = [
+{'name': 'producto_id', 'label': 'Producto', 'type': 'select', 'required': true, 'options': []},
+{'name': 'tipo', 'label': 'Tipo de Movimiento', 'type': 'select', 'required': true, 'options': [
+{'value': 'ENTRADA', 'label': 'Entrada'},
+{'value': 'SALIDA', 'label': 'Salida'},
+{'value': 'AJUSTE', 'label': 'Ajuste (establecer stock)'}
+]},
+{'name': 'cantidad', 'label': 'Cantidad', 'type': 'number', 'step': '0.001', 'required': true},
+{'name': 'motivo', 'label': 'Motivo / Observaciones', 'type': 'textarea', 'rows': 2, 'required': false, 'full_width':
+true}
+] %}
+
+{% call components.crud_modal('movimiento', form_fields, id_field='id_movimiento', modal_title='Registrar Movimiento',
+modal_size='md') %}
+{% endcall %}
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -321,10 +275,9 @@
             });
         });
 
-        // Funciones de carga (similares a las que ya tenías, pero con manejo de errores)
         async function cargarKPIs() {
             try {
-                const res = await fetch('/inventario/kpis');
+                const res = await fetch('/stock/inventario/kpis');
                 const data = await res.json();
                 document.getElementById('kpi-total-productos').textContent = data.total_productos || 0;
                 document.getElementById('kpi-valor-total').textContent = window.APP_CONFIG.moneda + ' ' + (data.valor_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -337,7 +290,7 @@
             const search = document.getElementById('search-productos').value;
             const params = new URLSearchParams({ page, per_page: 10, search, sort_by: 'nombre', sort_order: 'asc' });
             try {
-                const res = await fetch(`/inventario/api/productos?${params}`);
+                const res = await fetch(`/stock/inventario/api/productos?${params}`);
                 const data = await res.json();
                 const tbody = document.getElementById('tbody-productos');
                 if (!data.items?.length) {
@@ -348,7 +301,7 @@
                         <td class="px-4 py-3 text-sm text-gray-300 font-mono">${p.sku}</td>
                         <td class="px-4 py-3 text-sm text-white font-medium">${p.nombre}</td>
                         <td class="px-4 py-3 text-sm text-gray-400">${p.unidad_medida}</td>
-                        <td class="px-4 py-3 text-sm text-right font-mono text-white">${p.stock.toFixed(3)}</td>
+                        <td class="px-4 py-3 text-sm text-right font-mono font-bold ${p.stock <= 0 ? 'text-red-400' : 'text-white'}">${p.stock.toFixed(3)}</td>
                         <td class="px-4 py-3 text-sm text-right font-mono text-emerald-400">${window.APP_CONFIG.moneda} ${p.valor_inventario.toFixed(2)}</td>
                     </tr>
                 `).join('');
@@ -361,7 +314,7 @@
             const search = document.getElementById('search-mp').value;
             const params = new URLSearchParams({ page, per_page: 10, search, sort_by: 'nombre', sort_order: 'asc' });
             try {
-                const res = await fetch(`/inventario/api/materia-prima?${params}`);
+                const res = await fetch(`/stock/inventario/api/materia-prima?${params}`);
                 const data = await res.json();
                 const tbody = document.getElementById('tbody-mp');
                 if (!data.items?.length) {
@@ -372,7 +325,7 @@
                         <td class="px-4 py-3 text-sm text-gray-300 font-mono">${mp.sku}</td>
                         <td class="px-4 py-3 text-sm text-white font-medium">${mp.nombre}</td>
                         <td class="px-4 py-3 text-sm text-gray-400">${mp.unidad_medida}</td>
-                        <td class="px-4 py-3 text-sm text-right font-mono text-white">${mp.stock.toFixed(3)}</td>
+                        <td class="px-4 py-3 text-sm text-right font-mono font-bold ${mp.stock <= 0 ? 'text-red-400' : 'text-white'}">${mp.stock.toFixed(3)}</td>
                         <td class="px-4 py-3 text-sm text-right font-mono text-emerald-400">${window.APP_CONFIG.moneda} ${mp.valor_inventario.toFixed(2)}</td>
                     </tr>
                 `).join('');
@@ -385,7 +338,7 @@
             const search = document.getElementById('search-produccion').value;
             const params = new URLSearchParams({ page, per_page: 10, search, sort_by: 'fecha_inicio', sort_order: 'desc' });
             try {
-                const res = await fetch(`/inventario/api/producciones?${params}`);
+                const res = await fetch(`/stock/inventario/api/producciones?${params}`);
                 const data = await res.json();
                 const tbody = document.getElementById('tbody-produccion');
                 if (!data.items?.length) {
@@ -397,7 +350,7 @@
                         <td class="px-4 py-3 text-sm text-right font-mono text-white">${prod.cantidad_producida}</td>
                         <td class="px-4 py-3 text-sm text-gray-400">${prod.unidad_medida}</td>
                         <td class="px-4 py-3 text-sm text-gray-400">${prod.fecha_inicio}</td>
-                        <td class="px-4 py-3"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-400">${prod.estado}</span></td>
+                        <td class="px-4 py-3"><span class="px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400">${prod.estado}</span></td>
                     </tr>
                 `).join('');
                 }
@@ -410,7 +363,7 @@
             const search = document.getElementById('search-movimientos').value;
             const params = new URLSearchParams({ page, per_page: 10, tipo, search, sort_by: 'fecha_creacion', sort_order: 'desc' });
             try {
-                const res = await fetch(`/inventario/api/movimientos?${params}`);
+                const res = await fetch(`/stock/inventario/api/movimientos?${params}`);
                 const data = await res.json();
                 const tbody = document.getElementById('tbody-movimientos');
                 if (!data.items?.length) {
@@ -453,56 +406,52 @@
             });
         }
 
-        // Modal movimiento
-        const modal = document.getElementById('movimiento-modal');
-        const btnMovimiento = document.getElementById('btn-movimiento');
-        const closeModal = document.getElementById('close-modal');
-        const cancelar = document.getElementById('cancelar-movimiento');
-        const formMovimiento = document.getElementById('movimiento-form');
-
+        // Lógica del Modal
         async function cargarProductosSelector() {
             try {
-                const res = await fetch('/inventario/productos-lista');
+                const res = await fetch('/stock/inventario/productos-lista');
                 const data = await res.json();
                 const select = document.getElementById('producto_id');
-                select.innerHTML = '<option value="">Seleccione...</option>';
+                select.innerHTML = '<option value="">Seleccione un producto...</option>';
                 (data.items || []).forEach(p => {
                     const opt = document.createElement('option');
                     opt.value = p.id;
-                    opt.textContent = `${p.nombre} (Stock: ${p.stock})`;
+                    opt.textContent = `${p.nombre} (Stock actual: ${p.stock})`;
                     select.appendChild(opt);
                 });
             } catch (e) { console.error(e); }
         }
 
-        function abrirModal() { cargarProductosSelector(); modal.classList.remove('hidden'); }
-        function cerrarModal() { modal.classList.add('hidden'); formMovimiento.reset(); }
+        // Asignamos la función al botón global y cargamos productos antes de abrir
+        window.abrirModalMovimiento = async function () {
+            await cargarProductosSelector();
+            window.openModal_movimiento();
+        };
 
-        btnMovimiento.addEventListener('click', abrirModal);
-        closeModal.addEventListener('click', cerrarModal);
-        cancelar.addEventListener('click', cerrarModal);
-        modal.addEventListener('click', (e) => { if (e.target === modal) cerrarModal(); });
-
-        formMovimiento.addEventListener('submit', async (e) => {
+        // Interceptar el envío del formulario del macro
+        document.getElementById('form-movimiento').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const producto_id = document.getElementById('producto_id').value;
-            const tipo = document.getElementById('tipo').value;
-            const cantidad = parseFloat(document.getElementById('cantidad').value);
-            const motivo = document.getElementById('motivo').value;
-            const csrf = formMovimiento.querySelector('[name="csrf_token"]').value;
+            const form = e.target;
+            const fd = new FormData(form);
+
             try {
-                const res = await fetch('/inventario/movimiento', {
+                const res = await fetch('/stock/inventario/movimiento', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-                    body: JSON.stringify({ producto_id, tipo, cantidad, motivo })
+                    body: fd
                 });
                 const data = await res.json();
                 if (data.success) {
-                    cerrarModal();
+                    window.closeModal_movimiento();
+                    form.reset();
                     cargarProductos();
+                    cargarMovimientos();
                     cargarKPIs();
-                } else alert(data.message || 'Error');
-            } catch (e) { alert('Error de conexión'); }
+                } else {
+                    alert(data.message || 'Error al procesar.');
+                }
+            } catch (e) {
+                alert('Error de conexión.');
+            }
         });
 
         // Eventos de búsqueda con debounce

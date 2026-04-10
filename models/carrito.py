@@ -36,7 +36,7 @@ class CarritoItem(db.Model):
     id_item         = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     carrito_id      = db.Column(db.BigInteger, db.ForeignKey('carritos.id_carrito', ondelete='CASCADE'), nullable=False)
     producto_id     = db.Column(db.BigInteger, db.ForeignKey('productos.id_producto', ondelete='RESTRICT'), nullable=False)
-    cantidad        = db.Column(db.Numeric(14, 3), nullable=False, default=1)
+    cantidad = db.Column(db.Integer, nullable=False, default=1) 
     precio_unitario = db.Column(db.Numeric(12, 2), nullable=False)
     fecha_agregado  = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
@@ -61,11 +61,13 @@ class PedidoCliente(db.Model):
     id_pedido_cliente   = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     folio               = db.Column(db.String(40), nullable=False, unique=True)
     usuario_id          = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario', ondelete='RESTRICT'), nullable=False)
-    metodo_pago         = db.Column(db.Enum('TARJETA', 'TRANSFERENCIA', 'OXXO'), nullable=False, default='TARJETA')
-    estado              = db.Column(
-        db.Enum('PENDIENTE', 'PAGADO', 'EN_PRODUCCION', 'ENVIADO', 'ENTREGADO', 'CANCELADO'),
-        nullable=False, default='PENDIENTE'
+    metodo_pago         = db.Column(db.Enum('EFECTIVO','TRANSFERENCIA','CHEQUE','CREDITO','TARJETA','OXXO'), nullable=False, default='TARJETA')
+    estado = db.Column(
+        db.Enum('COTIZACION', 'AUTORIZADO', 'RECHAZADO', 'EN_PRODUCCION', 'PARCIALMENTE_ENTREGADO', 'ENTREGADO', 'CANCELADO'),
+        nullable=False, default='COTIZACION'
     )
+    fecha_autorizacion = db.Column(db.DateTime, nullable=True)
+    motivo_rechazo = db.Column(db.String(500), nullable=True)
     subtotal            = db.Column(db.Numeric(12, 2), nullable=False, default=0)
     iva                 = db.Column(db.Numeric(12, 2), nullable=False, default=0)
     total               = db.Column(db.Numeric(12, 2), nullable=False, default=0)
@@ -101,7 +103,9 @@ class PedidoClienteDetalle(db.Model):
     id_detalle      = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     pedido_id       = db.Column(db.BigInteger, db.ForeignKey('pedidos_cliente.id_pedido_cliente', ondelete='CASCADE'), nullable=False)
     producto_id     = db.Column(db.BigInteger, db.ForeignKey('productos.id_producto', ondelete='RESTRICT'), nullable=False)
-    cantidad        = db.Column(db.Numeric(14, 3), nullable=False)
+    cantidad           = db.Column(db.Integer, nullable=False)
+    cantidad_entregada = db.Column(db.Integer, nullable=False, default=0)
+    cantidad_pendiente = db.Column(db.Integer, nullable=False, default=0)
     precio_unitario = db.Column(db.Numeric(12, 2), nullable=False)
     total_linea     = db.Column(db.Numeric(12, 2), nullable=False)
     stock_suficiente = db.Column(db.SmallInteger, nullable=False, default=1)

@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% import 'macros/crud_components.html' as components %}
+
+{% block title %}Solicitudes de Producción{% endblock %}
+
+{% block content %}
+
+{{ components.page_header('Solicitudes de Producción', 'Gestiona las órdenes de fabricación generadas por falta de
+stock') }}
+
+{# ── KPIs ────────────────────────────────────────────────────────────────── #}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+    {{ components.kpi_card(
+    'Pendientes',
+    'kpi-pendientes-sol',
+    (solicitudes | selectattr('estado', 'equalto', 'PENDIENTE') | list | length)|string,
+    'amber',
+    '<svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>'
+    ) }}
+
+    {{ components.kpi_card(
+    'En proceso',
+    'kpi-en-proceso-sol',
+    (solicitudes | selectattr('estado', 'in', ['ACEPTADA', 'EN_PROCESO']) | list | length)|string,
+    'blue',
+    '<svg class="w-6 h-6 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066
+                   c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426
+                   1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37
+                   2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724
+                   1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0
+                   00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573
+                   c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>'
+    ) }}
+
+    {{ components.kpi_card(
+    'Completadas',
+    'kpi-completadas-sol',
+    (solicitudes | selectattr('estado', 'equalto', 'COMPLETADA') | list | length)|string,
+    'green',
+    '<svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>'
+    ) }}
+
+    {{ components.kpi_card(
+    'Total solicitudes',
+    'kpi-total-sol',
+    solicitudes|length|string,
+    'slate',
+    '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2
+                   M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+    </svg>'
+    ) }}
+
+</div>
+
+{# ── TABLA PRINCIPAL ─────────────────────────────────────────────────────── #}
+<div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden shadow-sm">
+
+    {# Header #}
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4
+                px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-[#008DC0]/20 flex items-center justify-center">
+                <svg class="w-5 h-5 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517
+                           l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1
+                           1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415
+                           3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009
+                           10.172V5L8 4z" />
+                </svg>
+            </div>
+            <div>
+                <h2 class="text-lg font-bold text-white">Solicitudes registradas</h2>
+                <p class="text-xs text-gray-400 mt-0.5">Órdenes de fabricación generadas por falta de stock</p>
+            </div>
+        </div>
+
+        {# Filtro de estado #}
+        <select id="filtro-estado" class="px-3 py-2.5 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239]
+                       text-white focus:outline-none focus:ring-2 focus:ring-[#008DC0]/40
+                       focus:border-[#008DC0] transition-all cursor-pointer min-w-[180px]">
+            <option value="">Todos los estados</option>
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="ACEPTADA">Aceptada</option>
+            <option value="EN_PROCESO">En proceso</option>
+            <option value="COMPLETADA">Completada</option>
+            <option value="RECHAZADA">Rechazada</option>
+        </select>
+    </div>
+
+    {# Tabla #}
+    <div class="overflow-x-auto">
+        <table class="w-full" id="tabla-solicitudes">
+            <thead>
+                <tr class="bg-[#0B2239] border-b border-[#1E3A5F]">
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">#</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Producto
+                    </th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Cantidad
+                        faltante</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Pedido
+                        origen</th>
+                    <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Fecha
+                        solicitud</th>
+                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">Estado
+                    </th>
+                    <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">Acción
+                    </th>
+                </tr>
+            </thead>
+
+            <tbody class="divide-y divide-[#1E3A5F]" id="tbody-solicitudes">
+                {% for sol in solicitudes %}
+                <tr class="fila-sol hover:bg-[#123555]/50 transition-colors" data-estado="{{ sol.estado }}">
+
+                    {# ID #}
+                    <td class="px-6 py-4">
+                        <span class="text-xs font-mono text-gray-400">#{{ sol.id_solicitud }}</span>
+                    </td>
+
+                    {# Producto #}
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl overflow-hidden bg-[#A5CDE3] shrink-0
+                                        border border-[#1E3A5F] flex items-center justify-center">
+                                <img src="{{ url_for('static', filename=sol.producto.enlace_fotografia) }}"
+                                    alt="{{ sol.producto.nombre }}" class="w-full h-full object-cover"
+                                    onerror="this.style.display='none'">
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-white">{{ sol.producto.nombre }}</p>
+                                <p class="text-xs text-gray-400">{{ sol.producto.sku }}</p>
+                            </div>
+                        </div>
+                    </td>
+
+                    {# Cantidad faltante #}
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center shrink-0">
+                                <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                                </svg>
+                            </div>
+                            <div>
+                                <span class="text-sm font-bold text-white font-mono">
+                                    {{ sol.cantidad_faltante | int }}
+                                </span>
+                                <span class="text-xs text-gray-400 ml-1">uds.</span>
+                            </div>
+                        </div>
+                    </td>
+
+                    {# Pedido origen #}
+                    <td class="px-6 py-4">
+                        <a href="{{ url_for('comercial_bp.ver_pedido', pedido_id=sol.pedido_id) }}" class="inline-flex items-center gap-1.5 text-[#008DC0] hover:text-[#00A8E8]
+                                  font-mono text-xs font-semibold transition-colors group">
+                            <span>{{ sol.pedido.folio }}</span>
+                            <svg class="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14
+                                       4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                        </a>
+                    </td>
+
+                    {# Fecha #}
+                    <td class="px-6 py-4">
+                        <p class="text-sm text-gray-300">{{ sol.fecha_solicitud.strftime('%d/%m/%Y') }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">{{ sol.fecha_solicitud.strftime('%H:%M') }} h</p>
+                    </td>
+
+                    {# Estado #}
+                    <td class="px-6 py-4 text-center">
+                        {% if sol.estado == 'PENDIENTE' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-xs font-semibold bg-amber-500/20 text-amber-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                            Pendiente
+                        </span>
+                        {% elif sol.estado == 'ACEPTADA' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-xs font-semibold bg-[#008DC0]/20 text-[#008DC0]">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#008DC0]"></span>
+                            Aceptada
+                        </span>
+                        {% elif sol.estado == 'EN_PROCESO' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-xs font-semibold bg-purple-500/20 text-purple-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+                            En proceso
+                        </span>
+                        {% elif sol.estado == 'COMPLETADA' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-xs font-semibold bg-emerald-500/20 text-emerald-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                            Completada
+                        </span>
+                        {% elif sol.estado == 'RECHAZADA' %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-xs font-semibold bg-red-500/20 text-red-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                            Rechazada
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                                     text-xs font-semibold bg-gray-500/20 text-gray-400">
+                            {{ sol.estado }}
+                        </span>
+                        {% endif %}
+                    </td>
+
+                    {# Acción #}
+                    <td class="px-6 py-4 text-center">
+                        {% if sol.estado == 'PENDIENTE' %}
+                        <form method="POST"
+                            action="{{ url_for('produccion_recetas_bp.aceptar_solicitud', solicitud_id=sol.id_solicitud) }}"
+                            onsubmit="return confirmarAceptar(event, '{{ sol.producto.nombre }}', {{ sol.cantidad_faltante | int }})">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold
+                                           text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl
+                                           transition-all active:scale-[0.97] shadow-sm shadow-emerald-600/20">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                        d="M5 13l4 4L19 7" />
+                                </svg>
+                                Aceptar y producir
+                            </button>
+                        </form>
+                        {% elif sol.estado in ['ACEPTADA', 'EN_PROCESO'] %}
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium
+                                     text-gray-400 bg-[#1E3A5F] rounded-xl">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0
+                                       002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0
+                                       001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0
+                                       00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0
+                                       00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0
+                                       00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0
+                                       00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0
+                                       001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07
+                                       2.572-1.065z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            En producción
+                        </span>
+                        {% elif sol.estado == 'COMPLETADA' %}
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium
+                                     text-emerald-400 bg-emerald-500/10 rounded-xl">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Finalizada
+                        </span>
+                        {% else %}
+                        <span class="text-gray-500 text-xs">—</span>
+                        {% endif %}
+                    </td>
+
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-6 py-20 text-center">
+                        <div class="flex flex-col items-center gap-4">
+                            <div class="w-20 h-20 rounded-2xl bg-[#1E3A5F] flex items-center justify-center">
+                                <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517
+                                           l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1
+                                           1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415
+                                           3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009
+                                           10.172V5L8 4z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-white font-semibold text-base">Sin solicitudes de producción</p>
+                                <p class="text-gray-400 text-sm mt-1">
+                                    Las solicitudes se generan automáticamente cuando falta stock al autorizar un
+                                    pedido.
+                                </p>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {# Footer #}
+    {% if solicitudes %}
+    <div class="px-6 py-3 border-t border-[#1E3A5F] bg-[#0B2239]
+                flex items-center justify-between">
+        <p class="text-xs text-gray-400">
+            Mostrando
+            <span id="contador-sol" class="text-white font-semibold">{{ solicitudes|length }}</span>
+            de <span class="text-white font-semibold">{{ solicitudes|length }}</span> solicitudes
+        </p>
+        <a href="{{ url_for('produccion_recetas_bp.index') }}" class="inline-flex items-center gap-1.5 text-xs font-medium text-[#008DC0]
+                  hover:text-[#00A8E8] transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z
+                       M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z
+                       M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z
+                       M14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+            </svg>
+            Ver control de producción
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+
+{# ── MODAL DE CONFIRMACIÓN ───────────────────────────────────────────────── #}
+<div id="modal-confirmar" class="hidden fixed inset-0 z-50 items-center justify-center p-4"
+    style="background-color: rgba(11,34,57,0.85); backdrop-filter: blur(4px);">
+    <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] w-full max-w-md shadow-2xl">
+        <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239] rounded-t-2xl">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955
+                               11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824
+                               10.29 9 11.622 5.176-1.332 9-6.03 9-11.622
+                               0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-emerald-400 uppercase tracking-widest">Confirmar acción</p>
+                    <h3 class="text-lg font-bold text-white">Aceptar solicitud</h3>
+                </div>
+            </div>
+        </div>
+        <div class="p-6">
+            <p class="text-gray-300 text-sm mb-3">Se iniciará una orden de producción para:</p>
+            <div class="bg-[#0B2239] rounded-xl border border-[#1E3A5F] p-4 mb-5">
+                <p id="confirm-producto" class="text-white font-semibold text-sm"></p>
+                <p id="confirm-cantidad" class="text-gray-400 text-xs mt-1"></p>
+            </div>
+            <p class="text-gray-400 text-xs mb-6">
+                Esta acción creará automáticamente una producción en estado
+                <span class="text-[#008DC0] font-semibold">EN PROCESO</span>
+                y notificará al cliente.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="cerrarModal()" class="flex-1 px-4 py-2.5 text-sm font-semibold text-gray-300
+                               bg-[#1E3A5F] hover:bg-[#2A4A6F] rounded-xl transition-all">
+                    Cancelar
+                </button>
+                <button id="btn-confirmar-submit" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5
+                               text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500
+                               rounded-xl transition-all active:scale-[0.98]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Confirmar y producir
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let _formPendiente = null;
+
+    function confirmarAceptar(event, producto, cantidad) {
+        event.preventDefault();
+        _formPendiente = event.target;
+        document.getElementById('confirm-producto').textContent = producto;
+        document.getElementById('confirm-cantidad').textContent =
+            cantidad + ' unidades requeridas para cubrir el pedido';
+        const modal = document.getElementById('modal-confirmar');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        return false;
+    }
+
+    function cerrarModal() {
+        const modal = document.getElementById('modal-confirmar');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        _formPendiente = null;
+    }
+
+    document.getElementById('btn-confirmar-submit').addEventListener('click', function () {
+        if (_formPendiente) {
+            _formPendiente.submit();
+            cerrarModal();
+        }
+    });
+
+    document.getElementById('modal-confirmar').addEventListener('click', function (e) {
+        if (e.target === this) cerrarModal();
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') cerrarModal();
+    });
+
+    // Filtro por estado
+    document.getElementById('filtro-estado').addEventListener('change', function () {
+        const estado = this.value;
+        const filas = document.querySelectorAll('.fila-sol');
+        let visibles = 0;
+        filas.forEach(fila => {
+            const coincide = !estado || fila.dataset.estado === estado;
+            fila.style.display = coincide ? '' : 'none';
+            if (coincide) visibles++;
+        });
+        const contador = document.getElementById('contador-sol');
+        if (contador) contador.textContent = visibles;
+    });
+</script>
+
+{% endblock %}

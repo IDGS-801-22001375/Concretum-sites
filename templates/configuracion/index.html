@@ -10,93 +10,126 @@
 <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden shadow-sm">
     <form method="POST" enctype="multipart/form-data" class="p-6 space-y-8">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        
+
         <!-- Datos de la empresa -->
         <div>
             <h3 class="text-lg font-semibold text-white mb-4 pb-2 border-b border-[#1E3A5F]">Datos de la Empresa</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Razón Social</label>
-                    <input type="text" name="razon_social" value="{{ config.razon_social }}" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none" required>
+                    <input type="text" name="razon_social" value="{{ config.razon_social }}"
+                        class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
+                        required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">RFC</label>
-                    <input type="text" name="rfc" value="{{ config.rfc }}" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none" required>
+                    <input type="text" name="rfc" value="{{ config.rfc }}"
+                        class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
+                        required>
                 </div>
                 <div class="md:col-span-2">
                     <label class="block text-sm font-medium text-gray-300 mb-2">Dirección</label>
-                    <textarea name="direccion" rows="2" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">{{ config.direccion }}</textarea>
+                    <textarea name="direccion" rows="2"
+                        class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">{{ config.direccion }}</textarea>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Teléfono</label>
-                    <input type="tel" name="telefono" value="{{ config.telefono }}" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
+                    <input type="tel" name="telefono" value="{{ config.telefono }}"
+                        class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Email Facturación</label>
-                    <input type="email" name="email_facturacion" value="{{ config.email_facturacion }}" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
+                    <input type="email" name="email_facturacion" value="{{ config.email_facturacion }}"
+                        class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Logo (imagen)</label>
-                    <input type="file" name="logo" accept="image/*" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
+                    <input type="file" name="logo" accept="image/*"
+                        class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
                     {% if config.logo %}
-                        <div class="mt-2">
-                            <p class="text-xs text-gray-400 mb-1">Logo actual:</p>
-                            <img src="{{ url_for('static', filename=config.logo) }}" alt="Logo actual" class="h-12 w-auto object-contain border border-[#1E3A5F] rounded p-1 bg-white">
-                        </div>
+                    <div class="mt-2">
+                        <p class="text-xs text-gray-400 mb-1">Logo actual:</p>
+                        <img src="{{ url_for('static', filename=config.logo) }}" alt="Logo actual"
+                            class="h-12 w-auto object-contain border border-[#1E3A5F] rounded p-1 bg-white">
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
-        
+
         <!-- Alertas -->
         <div>
-            <h3 class="text-lg font-semibold text-white mb-4 pb-2 border-b border-[#1E3A5F]">Configuración de Alertas</h3>
+            <h3 class="text-lg font-semibold text-white mb-4 pb-2 border-b border-[#1E3A5F]">Configuración de Alertas
+            </h3>
             <div class="space-y-3">
                 <label class="flex items-center cursor-pointer">
-                    <input type="checkbox" name="alerta_stock_minimo" class="sr-only peer" {% if config.alerta_stock_minimo %}checked{% endif %}>
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#008DC0]"></div>
+                    <input type="checkbox" name="alerta_stock_minimo" class="sr-only peer" {% if
+                        config.alerta_stock_minimo==True or config.alerta_stock_minimo==1 %}checked{% endif %}>
+                    <div
+                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#008DC0]">
+                    </div>
                     <span class="ms-3 text-sm font-medium text-gray-300">Alertas de stock mínimo</span>
                 </label>
                 <label class="flex items-center cursor-pointer">
-                    <input type="checkbox" name="alerta_vencimiento_credito" class="sr-only peer" {% if config.alerta_vencimiento_credito %}checked{% endif %}>
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#008DC0]"></div>
-                    <span class="ms-3 text-sm font-medium text-gray-300">Alertas de vencimiento de crédito a proveedores</span>
+                    <input type="checkbox" name="alerta_vencimiento_credito" class="sr-only peer" {% if
+                        config.alerta_vencimiento_credito==True or config.alerta_vencimiento_credito==1 %}checked{%
+                        endif %}>
+
+                    <div
+                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#008DC0]">
+                    </div>
+                    <span class="ms-3 text-sm font-medium text-gray-300">Alertas de vencimiento de crédito a
+                        proveedores</span>
                 </label>
                 <label class="flex items-center cursor-pointer">
-                    <input type="checkbox" name="alerta_merma_diaria" class="sr-only peer" {% if config.alerta_merma_diaria %}checked{% endif %}>
-                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#008DC0]"></div>
+                    <input type="checkbox" name="alerta_merma_diaria" class="sr-only peer" {% if
+                        config.alerta_merma_diaria==True or config.alerta_merma_diaria==1 %}checked{% endif %}>
+
+                    <div
+                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#008DC0]">
+                    </div>
                     <span class="ms-3 text-sm font-medium text-gray-300">Reporte diario de mermas</span>
                 </label>
             </div>
         </div>
-        
+
         <!-- Preferencias -->
         <div>
             <h3 class="text-lg font-semibold text-white mb-4 pb-2 border-b border-[#1E3A5F]">Preferencias</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Moneda</label>
-                    <select name="moneda" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
-                        <option value="MXN" {% if config.moneda == 'MXN' %}selected{% endif %}>MXN - Peso Mexicano</option>
-                        <option value="USD" {% if config.moneda == 'USD' %}selected{% endif %}>USD - Dólar Americano</option>
-                        <option value="EUR" {% if config.moneda == 'EUR' %}selected{% endif %}>EUR - Euro</option>
+                    <select name="moneda"
+                        class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
+                        <option value="MXN" {% if config.moneda=='MXN' %}selected{% endif %}>MXN - Peso Mexicano
+                        </option>
+                        <option value="USD" {% if config.moneda=='USD' %}selected{% endif %}>USD - Dólar Americano
+                        </option>
+                        <option value="EUR" {% if config.moneda=='EUR' %}selected{% endif %}>EUR - Euro</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-2">Zona Horaria</label>
-                    <select name="zona_horaria" class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
-                        <option value="America/Mexico_City" {% if config.zona_horaria == 'America/Mexico_City' %}selected{% endif %}>Ciudad de México</option>
-                        <option value="America/Monterrey" {% if config.zona_horaria == 'America/Monterrey' %}selected{% endif %}>Monterrey</option>
-                        <option value="America/Guadalajara" {% if config.zona_horaria == 'America/Guadalajara' %}selected{% endif %}>Guadalajara</option>
-                        <option value="America/Chicago" {% if config.zona_horaria == 'America/Chicago' %}selected{% endif %}>Chicago (UTC-6)</option>
-                        <option value="America/New_York" {% if config.zona_horaria == 'America/New_York' %}selected{% endif %}>Nueva York (UTC-5)</option>
+                    <select name="zona_horaria"
+                        class="w-full bg-[#0B2239] border border-[#1E3A5F] rounded-xl px-4 py-2.5 text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none">
+                        <option value="America/Mexico_City" {% if config.zona_horaria=='America/Mexico_City'
+                            %}selected{% endif %}>Ciudad de México</option>
+                        <option value="America/Monterrey" {% if config.zona_horaria=='America/Monterrey' %}selected{%
+                            endif %}>Monterrey</option>
+                        <option value="America/Guadalajara" {% if config.zona_horaria=='America/Guadalajara'
+                            %}selected{% endif %}>Guadalajara</option>
+                        <option value="America/Chicago" {% if config.zona_horaria=='America/Chicago' %}selected{% endif
+                            %}>Chicago (UTC-6)</option>
+                        <option value="America/New_York" {% if config.zona_horaria=='America/New_York' %}selected{%
+                            endif %}>Nueva York (UTC-5)</option>
                     </select>
                 </div>
             </div>
         </div>
-        
+
         <div class="flex justify-end">
-            <button type="submit" class="px-6 py-2.5 text-sm font-semibold text-white bg-[#008DC0] hover:bg-[#007AAD] rounded-xl shadow-lg shadow-[#008DC0]/25 transition-all">
+            <button type="submit"
+                class="px-6 py-2.5 text-sm font-semibold text-white bg-[#008DC0] hover:bg-[#007AAD] rounded-xl shadow-lg shadow-[#008DC0]/25 transition-all">
                 Guardar Configuración
             </button>
         </div>

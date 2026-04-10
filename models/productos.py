@@ -7,7 +7,6 @@ class CategoriasProducto(db.Model):
     id_categoria = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100), nullable=False, unique=True)
     descripcion = db.Column(db.String(255), nullable=False, unique=True)
-    # Mapeamos 'es_activo' de la BD a 'es_active' en Python
     es_active = db.Column('es_activo', db.BigInteger, default=1) 
     fecha_creacion = db.Column(db.DateTime, default=datetime.datetime.now)
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
@@ -25,7 +24,6 @@ class Productos(db.Model):
     resistencia_mpa = db.Column(db.Float, nullable=False)
     color_id = db.Column(db.Integer, db.ForeignKey('colores.id_color'))
     precio_base = db.Column(db.Float, nullable=False)
-    # Mapeamos 'es_activo' de la BD a 'es_active' en Python
     es_active = db.Column('es_activo', db.BigInteger, default=1)
     fecha_creacion = db.Column(db.DateTime, default=datetime.datetime.now)
     fecha_actualizacion = db.Column(db.DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)

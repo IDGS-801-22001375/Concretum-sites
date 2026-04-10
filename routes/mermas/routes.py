@@ -7,8 +7,8 @@ import datetime
 from decimal import Decimal
 
 def registrar_auditoria(usuario_accion, accion, detalles):
-    from app import mongo_db
     try:
+        from app import mongo_db
         mongo_db.auditoria_eventos.insert_one({
             "usuario_id": usuario_accion,
             "evento": accion,
@@ -22,7 +22,7 @@ def registrar_auditoria(usuario_accion, accion, detalles):
 
 @mermas_bp.route('/mermas')
 @login_required
-@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_PRODUCCION', 'ALMACENISTA')
+@roles_accepted('ADMINISTRADOR', 'ALMACEN', 'PRODUCCION')
 def index():
     return render_template('mermas/index.html')
 
@@ -30,24 +30,42 @@ def index():
 @login_required
 def kpis():
     from datetime import datetime, timedelta
+    from sqlalchemy import func as sa_func
+    
     hoy = datetime.utcnow()
     inicio_mes = hoy.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     mermas_mes = Merma.query.filter(Merma.fecha_registro >= inicio_mes).all()
-    total_registros = len(mermas_mes)
-    valor_total = sum(float(m.valor_monetario) for m in mermas_mes)
     
-    # Porcentaje respecto al valor total del inventario (aproximado)
-    # Suma de existencias de productos + materia prima
-    from sqlalchemy import func as sa_func
-    valor_productos = db.session.query(sa_func.sum(Existencias.stock_actual * Productos.precio_base)).join(Productos).scalar() or 0
-    valor_mp = db.session.query(sa_func.sum(ExistenciaMateriaPrima.stock_actual * MateriaPrima.costo_unitario)).join(MateriaPrima).scalar() or 0
+    total_registros = len(mermas_mes)
+    
+    # Recalcular valor real usando costo ACTUAL de cada material
+    valor_total = 0
+    for m in mermas_mes:
+        if m.tipo_material == 'MATERIA_PRIMA':
+            mat = MateriaPrima.query.get(m.material_id)
+            costo = float(mat.costo_unitario) if mat and mat.costo_unitario else 0
+        else:
+            prod = Productos.query.get(m.material_id)
+            costo = float(prod.precio_base) if prod and prod.precio_base else 0
+        valor_total += float(m.cantidad) * costo
+
+    # Valor total del inventario actual
+    valor_productos = db.session.query(
+        sa_func.sum(Existencias.stock_actual * Productos.precio_base)
+    ).join(Productos).filter(Productos.es_active == 1).scalar() or 0
+    
+    valor_mp = db.session.query(
+        sa_func.sum(ExistenciaMateriaPrima.stock_actual * MateriaPrima.costo_unitario)
+    ).join(MateriaPrima).filter(MateriaPrima.es_activo == True).scalar() or 0
+    
     valor_inventario = float(valor_productos) + float(valor_mp)
-    porcentaje = (valor_total / valor_inventario * 100) if valor_inventario > 0 else 0
+    
+    porcentaje = round((valor_total / valor_inventario * 100), 2) if valor_inventario > 0 else 0
     
     return jsonify({
         'total_registros': total_registros,
-        'valor_total': valor_total,
-        'porcentaje': round(porcentaje, 2)
+        'valor_total': round(valor_total, 2),
+        'porcentaje': porcentaje
     })
 
 @mermas_bp.route('/mermas/api', methods=['GET'])
@@ -81,7 +99,7 @@ def api_mermas():
             nombre = material.nombre if material else 'Desconocido'
         
         items.append({
-            'id': m.id,
+            'id': m.id_merma,
             'fecha_registro': m.fecha_registro.strftime('%Y-%m-%d %H:%M'),
             'tipo_material': m.tipo_material,
             'material_nombre': nombre,
@@ -106,32 +124,39 @@ def materiales_lista():
     if tipo == 'MATERIA_PRIMA':
         materiales = MateriaPrima.query.filter_by(es_activo=True).all()
         items = [{
-            'id': m.id,
+            'id': m.id_materia_prima,
             'nombre': m.nombre,
             'stock': float(m.existencia.stock_actual) if m.existencia else 0,
             'costo': float(m.costo_unitario) if m.costo_unitario else 0
         } for m in materiales]
     else:
-        productos = Productos.query.filter_by(es_activo=True).all()
+        productos = Productos.query.filter(Productos.es_active == 1).all()
         items = [{
-            'id': p.id,
+            'id': p.id_producto,
             'nombre': p.nombre,
             'stock': float(p.existencia.stock_actual) if p.existencia else 0,
             'costo': float(p.precio_base)
         } for p in productos]
     return jsonify({'items': items})
 
-@mermas_bp.route('/mermas/registrar', methods=['POST'])
+# ESTA ES LA RUTA QUE SE ESTANDARIZÓ
+@mermas_bp.route('/mermas/guardar', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN', 'GERENTE_PRODUCCION', 'ALMACENISTA')
-def registrar_merma():
-    data = request.get_json()
+@roles_accepted('ADMINISTRADOR', 'ALMACEN', 'PRODUCCION')
+def guardar_merma():
+    # Ahora usamos request.form para que sea compatible con el CrudManager
+    data = request.form
+    
     tipo = data.get('tipo_material')
     material_id = data.get('material_id')
-    cantidad = float(data.get('cantidad'))
+    cantidad = float(data.get('cantidad', 0))
     causa = data.get('causa')
     responsable = data.get('responsable', '')
     observaciones = data.get('observaciones', '')
+    produccion_id = data.get('produccion_id')
+
+    if produccion_id and produccion_id.strip() == '':
+        produccion_id = None
     
     if not tipo or not material_id or cantidad <= 0 or not causa:
         return jsonify({'success': False, 'message': 'Faltan datos obligatorios'}), 400
@@ -143,12 +168,14 @@ def registrar_merma():
         if not material:
             return jsonify({'success': False, 'message': 'Material no encontrado'}), 404
         costo = float(material.costo_unitario) if material.costo_unitario else 0
-        existencia = ExistenciaMateriaPrima.query.filter_by(materia_prima_id=material.id).first()
+        valor_monetario = cantidad * costo
+        existencia = ExistenciaMateriaPrima.query.filter_by(materia_prima_id=material.id_materia_prima).first()
         if not existencia:
             return jsonify({'success': False, 'message': 'No hay registro de existencia para este material'}), 400
         cantidad_dec = Decimal(str(cantidad))
         if existencia.stock_actual < cantidad_dec:
             return jsonify({'success': False, 'message': 'Cantidad de merma supera el stock disponible'}), 400
+        
         existencia.stock_actual -= cantidad_dec
         movimiento_id = None
     else:
@@ -156,16 +183,17 @@ def registrar_merma():
         if not material:
             return jsonify({'success': False, 'message': 'Producto no encontrado'}), 404
         costo = float(material.precio_base) if material.precio_base else 0
-        existencia = Existencias.query.filter_by(producto_id=material.id).first()
+        existencia = Existencias.query.filter_by(producto_id=material.id_producto).first()
         if not existencia:
             return jsonify({'success': False, 'message': 'No hay registro de existencia para este producto'}), 400
         cantidad_dec = Decimal(str(cantidad))
         if existencia.stock_actual < cantidad_dec:
             return jsonify({'success': False, 'message': 'Cantidad de merma supera el stock disponible'}), 400
+        
         existencia.stock_actual -= cantidad_dec
         # Crear movimiento de inventario
         movimiento = MovimientosInventario(
-            existencia_id=existencia.id,
+            existencia_id=existencia.id_existencias,
             usuario_id=current_user.id,
             tipo='SALIDA',
             cantidad=cantidad_dec,
@@ -173,7 +201,7 @@ def registrar_merma():
         )
         db.session.add(movimiento)
         db.session.flush()
-        movimiento_id = movimiento.id
+        movimiento_id = movimiento.id_movimiento_in
 
     valor_monetario = cantidad * costo
     
@@ -186,7 +214,8 @@ def registrar_merma():
         observaciones=observaciones,
         valor_monetario=valor_monetario,
         usuario_id=current_user.id,
-        movimiento_id=movimiento_id
+        movimiento_id=movimiento_id,
+        produccion_id=produccion_id
     )
     db.session.add(merma)
     db.session.commit()

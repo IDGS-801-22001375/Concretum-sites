@@ -1,12 +1,17 @@
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, current_app
 from datetime import datetime, date, time as dt_time
 from decimal import Decimal
-from sqlalchemy import func
+from sqlalchemy import func, or_, desc, asc
 from flask_security import login_required, roles_accepted, current_user
 
-from models import db, Venta, VentaDetalle, CorteCaja, CorteDesglose, Cliente, Productos, Existencias, MovimientosInventario, User, CategoriasProducto
+from models import (
+    db, Venta, VentaDetalle, CorteCaja, CorteDesglose, Cliente,
+    Productos, Existencias, MovimientosInventario, User, CategoriasProducto,
+    PedidoCliente, PedidoClienteDetalle, SolicitudProduccion, NotificacionCliente
+)
 from forms import VentaForm, CorteForm
 from routes.comercial import comercial_bp
+from routes.carrito.routes import _crear_notificacion
 
 # ============================================================
 # FUNCIONES AUXILIARES
@@ -26,6 +31,18 @@ def registrar_auditoria(usuario_accion, accion, detalles):
     except Exception as e:
         print(f"Error Mongo: {e}")
 
+def calcular_costo_unitario_producto(producto_id):
+    producto = Productos.query.get(producto_id)
+    receta = next((r for r in producto.recetas if r.es_active == 1), None)
+    if receta and receta.cuanto_produce > 0:
+        costo_receta = Decimal('0.00')
+        for ing in receta.detalles:
+            mp = ing.materia_prima
+            if mp and mp.costo_unitario:
+                costo_receta += Decimal(str(ing.cantidad)) * Decimal(str(mp.costo_unitario))
+        return costo_receta / Decimal(str(receta.cuanto_produce))
+    return Decimal(str(producto.precio_base)) * Decimal('0.60') 
+
 # ============================================================
 # DASHBOARD
 # ============================================================
@@ -34,19 +51,40 @@ def registrar_auditoria(usuario_accion, accion, detalles):
 @login_required
 def dashboard():
     hoy = date.today()
+    
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
 
-    inicio_hoy = datetime.combine(hoy, dt_time.min)
-    fin_hoy    = datetime.combine(hoy, dt_time.max)
+    try:
+        if start_date_str and end_date_str:
+            fecha_inicio = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            fecha_fin = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            
+            if fecha_inicio == fecha_fin:
+                texto_fecha = fecha_inicio.strftime('%d/%m/%Y')
+            else:
+                texto_fecha = f"{fecha_inicio.strftime('%d/%m/%Y')} - {fecha_fin.strftime('%d/%m/%Y')}"
+        else:
+            fecha_inicio = hoy
+            fecha_fin = hoy
+            texto_fecha = hoy.strftime('%d/%m/%Y')
+            
+    except ValueError:
+        fecha_inicio = hoy
+        fecha_fin = hoy
+        texto_fecha = hoy.strftime('%d/%m/%Y')
+
+    inicio_rango = datetime.combine(fecha_inicio, dt_time.min)
+    fin_rango    = datetime.combine(fecha_fin, dt_time.max)
+
     ventas_hoy = Venta.query.filter(
-        Venta.fecha_venta >= inicio_hoy,
-        Venta.fecha_venta <= fin_hoy
+        Venta.fecha_venta >= inicio_rango,
+        Venta.fecha_venta <= fin_rango
     ).all()
 
     ventas_dia      = sum(float(v.total) for v in ventas_hoy)
     num_ventas      = len(ventas_hoy)
     ticket_promedio = round(ventas_dia / num_ventas, 2) if num_ventas > 0 else 0
-
-    from models import VentaDetalle, Productos
 
     ids_ventas_hoy = [v.id_venta for v in ventas_hoy]
 
@@ -58,35 +96,10 @@ def dashboard():
         ).all()
 
         for det in detalles_hoy:
-            producto = Productos.query.get(det.producto_id)
-            if producto and producto.precio_base:
-              
-                receta = next(
-                    (r for r in producto.recetas if r.es_active == 1), None
-                )
-                if receta:
-                    costo_receta = Decimal('0.00')
-                    for ingrediente in receta.detalles:
-                        mp = ingrediente.materia_prima
-                        if mp and mp.costo_unitario:
-                            costo_receta += (
-                                Decimal(str(ingrediente.cantidad)) *
-                                Decimal(str(mp.costo_unitario))
-                            )
-                    # costo por unidad producida según receta
-                    costo_unitario_real = (
-                        costo_receta / receta.cuanto_produce
-                        if receta.cuanto_produce > 0
-                        else Decimal('0.00')
-                    )
-                    costo_total += costo_unitario_real * Decimal(str(det.cantidad))
-                else:
-                    # Fallback: estimado del 60% del precio base
-                    costo_total += (
-                        Decimal(str(det.precio_unitario)) *
-                        Decimal('0.60') *
-                        Decimal(str(det.cantidad))
-                    )
+            if det.costo_unitario and det.costo_unitario > 0:
+                costo_total += Decimal(str(det.costo_unitario)) * Decimal(str(det.cantidad))
+            else:
+                costo_total += calcular_costo_unitario_producto(det.producto_id) * Decimal(str(det.cantidad))
 
     utilidad_dia = float(Decimal(str(ventas_dia)) - costo_total)
 
@@ -99,8 +112,8 @@ def dashboard():
     .join(CategoriasProducto, Productos.categoria_id == CategoriasProducto.id_categoria)\
     .join(Venta, Venta.id_venta == VentaDetalle.venta_id)\
     .filter(
-        Venta.fecha_venta >= inicio_hoy,
-        Venta.fecha_venta <= fin_hoy
+        Venta.fecha_venta >= inicio_rango,
+        Venta.fecha_venta <= fin_rango
     )\
     .group_by(Productos.id_producto, Productos.nombre, CategoriasProducto.nombre)\
     .order_by(func.sum(VentaDetalle.cantidad).desc())\
@@ -113,8 +126,8 @@ def dashboard():
     .join(VentaDetalle, VentaDetalle.producto_id == Productos.id_producto)\
     .join(Venta, Venta.id_venta == VentaDetalle.venta_id)\
     .filter(
-        Venta.fecha_venta >= inicio_hoy,
-        Venta.fecha_venta <= fin_hoy
+        Venta.fecha_venta >= inicio_rango,
+        Venta.fecha_venta <= fin_rango
     )\
     .group_by(CategoriasProducto.nombre)\
     .order_by(func.sum(VentaDetalle.cantidad).desc())\
@@ -128,9 +141,10 @@ def dashboard():
     } for c in categorias_top]
 
     ventas_recientes_q = Venta.query.filter(
-        Venta.fecha_venta >= inicio_hoy,
-        Venta.fecha_venta <= fin_hoy
+        Venta.fecha_venta >= inicio_rango,
+        Venta.fecha_venta <= fin_rango
     ).order_by(Venta.fecha_creacion.desc()).limit(10).all()
+    
     ventas_recientes = [{
         'folio': v.folio,
         'cliente': v.cliente.razon_social if v.cliente else 'Público General',
@@ -141,7 +155,7 @@ def dashboard():
     } for v in ventas_recientes_q]
 
     return render_template('comercial/dashboard.html',
-        fecha_hoy        = hoy.strftime('%d/%m/%Y'),
+        fecha_hoy        = texto_fecha, 
         ventas_dia       = f'{ventas_dia:,.2f}',
         num_ventas       = num_ventas,
         ticket_promedio  = f'{ticket_promedio:,.2f}',
@@ -152,7 +166,7 @@ def dashboard():
     )
 
 # ============================================================
-# VENTAS
+# VENTAS (STANDARIZADO)
 # ============================================================
 
 @comercial_bp.route('/ventas')
@@ -164,16 +178,13 @@ def ventas():
 
     form.cliente_id.choices = [(c.id_cliente, c.razon_social) for c in clientes]
 
+    # Calcular KPIs del mes
     hoy_ventas  = datetime.now()
-    mes_actual  = hoy_ventas.month
-    anio_actual = hoy_ventas.year
-
-    # Calcular inicio y fin del mes actual para usar índice
-    inicio_mes = datetime(anio_actual, mes_actual, 1)
-    if mes_actual == 12:
-        fin_mes = datetime(anio_actual + 1, 1, 1)
+    inicio_mes = datetime(hoy_ventas.year, hoy_ventas.month, 1)
+    if hoy_ventas.month == 12:
+        fin_mes = datetime(hoy_ventas.year + 1, 1, 1)
     else:
-        fin_mes = datetime(anio_actual, mes_actual + 1, 1)
+        fin_mes = datetime(hoy_ventas.year, hoy_ventas.month + 1, 1)
 
     ventas_mes_q = Venta.query.filter(
         Venta.fecha_venta >= inicio_mes,
@@ -185,28 +196,59 @@ def ventas():
     ticket_promedio = round(ventas_mes / num_ventas, 2) if num_ventas > 0 else 0
     cuentas_cobrar  = sum(float(v.total) for v in ventas_mes_q if v.estado == 'CREDITO')
 
-    lista_ventas_q = Venta.query.order_by(Venta.fecha_creacion.desc()).limit(50).all()
-    lista_ventas = [{
-        'id': v.id_venta,
-        'folio': v.folio,
-        'cliente': v.cliente.razon_social if v.cliente else 'N/A',
-        'num_productos': int(sum(d.cantidad for d in v.detalle)),
-        'total': f'{v.total:,.2f}',
-        'metodo_pago': v.metodo_pago.capitalize(),
-        'fecha': v.fecha_venta.strftime('%d/%m/%Y'),
-        'estado': v.estado.capitalize()
-    } for v in lista_ventas_q]
-
     return render_template('comercial/ventas.html',
         form               = form,
         clientes           = clientes,
         productos          = prods,
-        ventas             = lista_ventas,
         ventas_mes         = f'{ventas_mes:,.2f}',
         num_ventas         = num_ventas,
         ticket_promedio    = f'{ticket_promedio:,.2f}',
         cuentas_por_cobrar = f'{cuentas_cobrar:,.2f}',
     )
+
+@comercial_bp.route('/ventas/api', methods=['GET'])
+@login_required
+def api_ventas():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    search = request.args.get('search', '')
+    sort_by = request.args.get('sort_by', 'fecha_creacion')
+    sort_order = request.args.get('sort_order', 'desc')
+    
+    query = Venta.query
+    if search:
+        query = query.filter(or_(
+            Venta.folio.ilike(f'%{search}%'),
+            Venta.cliente.has(Cliente.razon_social.ilike(f'%{search}%'))
+        ))
+    
+    if sort_order == 'asc':
+        query = query.order_by(asc(getattr(Venta, sort_by, Venta.fecha_creacion)))
+    else:
+        query = query.order_by(desc(getattr(Venta, sort_by, Venta.fecha_creacion)))
+        
+    paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+    
+    items = []
+    for v in paginated.items:
+        items.append({
+            'id': v.id_venta,
+            'folio': v.folio,
+            'cliente': v.cliente.razon_social if v.cliente else 'Público General',
+            'num_productos': int(sum(d.cantidad for d in v.detalle)),
+            'total': float(v.total),
+            'metodo_pago': v.metodo_pago,
+            'fecha': v.fecha_venta.strftime('%d/%m/%Y'),
+            'estado': v.estado
+        })
+        
+    return jsonify({
+        'items': items,
+        'total': paginated.total,
+        'page': paginated.page,
+        'pages': paginated.pages,
+        'per_page': paginated.per_page
+    })
 
 @comercial_bp.route('/ventas/nueva', methods=['POST'])
 @login_required
@@ -219,69 +261,55 @@ def nueva_venta():
     precios      = request.form.getlist('precio[]')
 
     if not cliente_id or not metodo_pago or not producto_ids:
-        flash('Completa todos los campos requeridos.', 'danger')
-        return redirect(url_for('comercial_bp.ventas'))
+        return jsonify({'success': False, 'message': 'Completa todos los campos requeridos.'}), 400
 
     try:
         fecha_venta = datetime.strptime(fecha_str, '%Y-%m-%d') if fecha_str else datetime.now()
-
         folio = 'TEMP'
-
         subtotal      = Decimal('0.00')
         detalle_items = []
 
         for pid, cant_str, precio_str in zip(producto_ids, cantidades, precios):
-         # Saltar filas vacías
             if not pid or not cant_str or not precio_str:
-               continue
+                continue
 
-        # Validar y convertir cantidad
-        try:
-            cant = Decimal(str(cant_str).strip())
-            if cant <= 0:
-                raise Exception(f"La cantidad debe ser mayor a 0.")
-        except Exception as e:
-            raise Exception(f"Cantidad inválida '{cant_str}': {str(e)}")
+            try:
+                cant = Decimal(str(cant_str).strip())
+                if cant <= 0:
+                    raise Exception(f"La cantidad debe ser mayor a 0.")
+            except Exception as e:
+                return jsonify({'success': False, 'message': f"Cantidad inválida '{cant_str}': {str(e)}"}), 400
 
-        # Validar y convertir precio
-        try:
-            precio = Decimal(str(precio_str).strip())
-            if precio < 0:
-                raise Exception(f"El precio no puede ser negativo.")
-        except Exception as e:
-            raise Exception(f"Precio inválido '{precio_str}': {str(e)}")
+            try:
+                precio = Decimal(str(precio_str).strip())
+                if precio < 0:
+                    raise Exception(f"El precio no puede ser negativo.")
+            except Exception as e:
+                return jsonify({'success': False, 'message': f"Precio inválido '{precio_str}': {str(e)}"}), 400
 
-        total_linea = cant * precio
-        subtotal   += total_linea
+            total_linea = cant * precio
+            subtotal += total_linea
 
-        # Obtener nombre del producto para mensajes claros
-        producto_obj = Productos.query.get(int(pid))
-        nombre_producto = producto_obj.nombre if producto_obj else f"ID {pid}"
+            producto_obj = Productos.query.get(int(pid))
+            nombre_producto = producto_obj.nombre if producto_obj else f"ID {pid}"
 
-        # Validar existencia y stock
-        existencia = Existencias.query.with_for_update().filter_by(producto_id=int(pid)).first()
-        if not existencia:
-            raise Exception(
-                f"El producto '{nombre_producto}' no tiene registro de inventario."
+            existencia = Existencias.query.with_for_update().filter_by(producto_id=int(pid)).first()
+            if not existencia:
+                return jsonify({'success': False, 'message': f"El producto '{nombre_producto}' no tiene registro de inventario."}), 400
+            if existencia.stock_actual < cant:
+                return jsonify({'success': False, 'message': f"Stock insuficiente para '{nombre_producto}': disponible {float(existencia.stock_actual):.3f}, solicitado {float(cant):.3f}."}), 400
+
+            existencia.stock_actual -= cant
+
+            mov = MovimientosInventario(
+                existencia_id=existencia.id_existencias,
+                usuario_id=current_user.id,
+                tipo='SALIDA',
+                cantidad=cant,
+                motivo=f'Venta Comercial Folio: {folio}'
             )
-        if existencia.stock_actual < cant:
-            raise Exception(
-                f"Stock insuficiente para '{nombre_producto}': "
-                f"disponible {float(existencia.stock_actual):.3f}, "
-                f"solicitado {float(cant):.3f}."
-            )
-
-        existencia.stock_actual -= cant
-
-        mov = MovimientosInventario(
-            existencia_id=existencia.id_existencias,
-            usuario_id=current_user.id,
-            tipo='SALIDA',
-            cantidad=cant,
-            motivo=f'Venta Comercial Folio: {folio}'
-        )
-        db.session.add(mov)
-        detalle_items.append((int(pid), cant, precio, total_linea))
+            db.session.add(mov)
+            detalle_items.append((int(pid), cant, precio, total_linea))
 
         iva    = subtotal * Decimal('0.16')
         total  = subtotal + iva
@@ -301,27 +329,36 @@ def nueva_venta():
         db.session.add(venta)
         db.session.flush()
 
+        # Actualizar el folio real
         venta.folio = f'V-{datetime.now().year}-{str(venta.id_venta).zfill(5)}'
+        
+        # Actualizar motivo de movimiento con el folio real
+        for mov in db.session.new:
+            if isinstance(mov, MovimientosInventario) and mov.motivo == 'Venta Comercial Folio: TEMP':
+                mov.motivo = f'Venta Comercial Folio: {venta.folio}'
 
         for pid, cant, precio, total_linea in detalle_items:
+            costo_unit = calcular_costo_unitario_producto(int(pid)) 
+            
             det = VentaDetalle(
                 venta_id        = venta.id_venta,
                 producto_id     = pid,
                 cantidad        = cant,
+                costo_unitario  = costo_unit, 
                 precio_unitario = precio,
                 total_linea     = total_linea,
             )
             db.session.add(det)
 
         db.session.commit()
-        registrar_auditoria(current_user.id, "Crear Venta", f"Venta registrada: {folio} por ${total:,.2f}")
-        flash(f'Venta {folio} registrada correctamente.', 'success')
+        registrar_auditoria(current_user.id, "Crear Venta", f"Venta registrada: {venta.folio} por ${total:,.2f}")
+        
+        # Retornamos JSON indicando éxito
+        return jsonify({'success': True, 'message': f'Venta {venta.folio} registrada correctamente.'})
 
     except Exception as e:
         db.session.rollback()
-        flash(f'Error al registrar la venta: {str(e)}', 'danger')
-
-    return redirect(url_for('comercial_bp.ventas'))
+        return jsonify({'success': False, 'message': f'Error al registrar la venta: {str(e)}'}), 500
 
 # ============================================================
 # TICKET
@@ -452,16 +489,10 @@ def realizar_corte():
     if ids_ventas_corte:
         detalles_corte = VentaDetalle.query.filter(VentaDetalle.venta_id.in_(ids_ventas_corte)).all()
         for det in detalles_corte:
-            producto = Productos.query.get(det.producto_id)
-            if producto and producto.precio_base:
-                receta = next((r for r in producto.recetas if r.es_active == 1), None)
-                if receta:
-                    costo_receta = sum((Decimal(str(ing.cantidad)) * Decimal(str(ing.materia_prima.costo_unitario))) for ing in receta.detalles if ing.materia_prima and ing.materia_prima.costo_unitario)
-                    costo_unitario_real = costo_receta / receta.cuanto_produce if receta.cuanto_produce > 0 else Decimal('0.00')
-                    costo_total_corte += costo_unitario_real * Decimal(str(det.cantidad))
-                else:
-                    # Fallback del 60% si no hay receta activa
-                    costo_total_corte += Decimal(str(det.precio_unitario)) * Decimal('0.60') * Decimal(str(det.cantidad))
+            if det.costo_unitario and det.costo_unitario > 0:
+                costo_total_corte += Decimal(str(det.costo_unitario)) * Decimal(str(det.cantidad))
+            else:
+                costo_total_corte += calcular_costo_unitario_producto(det.producto_id) * Decimal(str(det.cantidad))
 
     # La utilidad real es el total de la venta menos el costo de producción
     utilidad = float(Decimal(str(total_ventas)) - costo_total_corte)
@@ -531,3 +562,191 @@ def cerrar_corte():
         flash('No hay corte activo para cerrar.', 'warning')
 
     return redirect(url_for('comercial_bp.corte'))
+
+# ============================================================
+# PEDIDOS PENDIENTES
+# ============================================================
+
+@comercial_bp.route('/pedidos/pendientes')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'VENTAS')
+def pedidos_pendientes():
+    pedidos = PedidoCliente.query.filter_by(estado='COTIZACION').order_by(PedidoCliente.fecha_pedido.desc()).all()
+    return render_template('comercial/pedidos_pendientes.html', pedidos=pedidos)
+
+@comercial_bp.route('/pedidos/<int:pedido_id>')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'VENTAS')
+def ver_pedido(pedido_id):
+    pedido = PedidoCliente.query.get_or_404(pedido_id)
+    return render_template('comercial/pedido_detalle.html', pedido=pedido)
+
+@comercial_bp.route('/pedidos/<int:pedido_id>/autorizar', methods=['POST'])
+@login_required
+@roles_accepted('ADMINISTRADOR', 'VENTAS')
+def autorizar_pedido(pedido_id):
+    from decimal import Decimal
+
+    pedido = PedidoCliente.query.get_or_404(pedido_id)
+    if pedido.estado != 'COTIZACION':
+        flash('Este pedido ya no está pendiente de autorización.', 'warning')
+        return redirect(url_for('comercial_bp.pedidos_pendientes'))
+
+    try:
+        cliente = Cliente.query.filter_by(usuario_id=pedido.usuario_id).first()
+        if not cliente:
+            cliente = Cliente(
+                usuario_id=pedido.usuario_id,
+                razon_social=pedido.usuario.username,
+                email=pedido.usuario.email,
+                es_activo=1
+            )
+            db.session.add(cliente)
+            db.session.flush()         
+        cliente_id = cliente.id_cliente
+
+        detalles = pedido.detalles
+        productos_sin_stock = []
+
+        total_venta = Decimal('0.00')
+        for detalle in detalles:
+            producto = detalle.producto
+            cantidad_pedida = Decimal(str(detalle.cantidad))
+            existencia = Existencias.query.filter_by(producto_id=producto.id).first()
+            stock_actual = Decimal(str(existencia.stock_actual)) if existencia else Decimal('0')
+            entregable = min(cantidad_pedida, stock_actual)
+            if entregable > 0:
+                total_venta += entregable * Decimal(str(detalle.precio_unitario))
+
+        venta = None
+        if total_venta > 0:
+            folio_venta = f'VTA-{pedido.folio}'
+            subtotal_venta = total_venta / Decimal('1.16')
+            iva_venta = total_venta - subtotal_venta
+
+            venta = Venta(
+                folio=folio_venta,
+                cliente_id=cliente_id,
+                usuario_id=current_user.id,
+                metodo_pago=pedido.metodo_pago,
+                estado='COBRADO' if pedido.metodo_pago != 'CREDITO' else 'CREDITO',
+                subtotal=subtotal_venta,
+                iva=iva_venta,
+                total=total_venta,
+                fecha_venta=datetime.now()
+            )
+            db.session.add(venta)
+            db.session.flush()
+
+        for detalle in detalles:
+            producto = detalle.producto
+            cantidad_pedida = Decimal(str(detalle.cantidad))
+            existencia = Existencias.query.filter_by(producto_id=producto.id).first()
+            stock_actual = Decimal(str(existencia.stock_actual)) if existencia else Decimal('0')
+
+            entregable = min(cantidad_pedida, stock_actual)
+            faltante = cantidad_pedida - entregable
+
+            if entregable > 0:
+                existencia.stock_actual = stock_actual - entregable
+
+                movimiento = MovimientosInventario(
+                    existencia_id=existencia.id_existencias,
+                    usuario_id=current_user.id,
+                    tipo='SALIDA',
+                    cantidad=entregable,
+                    motivo=f'Venta por pedido {pedido.folio}'
+                )
+                db.session.add(movimiento)
+
+                if venta:
+                    costo_unit = calcular_costo_unitario_producto(producto.id)
+                    detalle_venta = VentaDetalle(
+                        venta_id=venta.id_venta,
+                        producto_id=producto.id,
+                        cantidad=entregable,
+                        costo_unitario=costo_unit, 
+                        precio_unitario=detalle.precio_unitario,
+                        total_linea=entregable * Decimal(str(detalle.precio_unitario))
+                    )
+                    db.session.add(detalle_venta)
+
+                detalle.cantidad_entregada = entregable
+                detalle.cantidad_pendiente = faltante
+            else:
+                detalle.cantidad_entregada = Decimal('0')
+                detalle.cantidad_pendiente = cantidad_pedida
+
+            if faltante > 0:
+                solicitud = SolicitudProduccion(
+                    pedido_id=pedido.id_pedido_cliente,
+                    producto_id=producto.id,
+                    cantidad_faltante=faltante,
+                    estado='PENDIENTE'
+                )
+                db.session.add(solicitud)
+                productos_sin_stock.append((producto.nombre, faltante))
+
+        if all(d.cantidad_pendiente == 0 for d in detalles):
+            pedido.estado = 'ENTREGADO'
+        elif any(d.cantidad_pendiente > 0 for d in detalles) and any(d.cantidad_entregada > 0 for d in detalles):
+            pedido.estado = 'PARCIALMENTE_ENTREGADO'
+        else:
+            pedido.estado = 'EN_PRODUCCION'
+
+        pedido.fecha_autorizacion = datetime.now()
+        db.session.commit()
+
+        mensaje = f"Tu pedido {pedido.folio} ha sido autorizado. "
+        if total_venta > 0:
+            mensaje += f"Se entregarán {int(total_venta)} unidades de inmediato. "
+        if productos_sin_stock:
+            mensaje += "Los siguientes productos están pendientes de producción: " + \
+                       ", ".join([f"{p[0]} ({int(p[1])} u)" for p in productos_sin_stock])
+        else:
+            mensaje += "Todo el pedido está listo para entrega."
+
+        _crear_notificacion(
+            usuario_id=pedido.usuario_id,
+            tipo='INFO',
+            titulo=f'Pedido autorizado - {pedido.folio}',
+            mensaje=mensaje,
+            referencia_id=pedido.id_pedido_cliente,
+            referencia_tipo='pedido_cliente',
+        )
+
+        flash(f'Pedido {pedido.folio} autorizado correctamente.', 'success')
+
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al autorizar el pedido: {str(e)}', 'danger')
+        current_app.logger.error(f"Error autorizando pedido {pedido_id}: {e}")
+
+    return redirect(url_for('comercial_bp.pedidos_pendientes'))
+
+@comercial_bp.route('/pedidos/<int:pedido_id>/rechazar', methods=['POST'])
+@login_required
+@roles_accepted('ADMINISTRADOR', 'VENTAS')
+def rechazar_pedido(pedido_id):
+    pedido = PedidoCliente.query.get_or_404(pedido_id)
+    if pedido.estado != 'COTIZACION':
+        flash('Este pedido ya no está pendiente de autorización.', 'warning')
+        return redirect(url_for('comercial_bp.pedidos_pendientes'))
+
+    motivo = request.form.get('motivo', 'No especificado')
+    pedido.estado = 'RECHAZADO'
+    pedido.motivo_rechazo = motivo
+    pedido.fecha_autorizacion = datetime.now()  # o fecha_rechazo
+    db.session.commit()
+
+    _crear_notificacion(
+        usuario_id=pedido.usuario_id,
+        tipo='INFO',
+        titulo=f'Pedido rechazado - {pedido.folio}',
+        mensaje=f'Tu pedido {pedido.folio} ha sido rechazado. Motivo: {motivo}',
+        referencia_id=pedido.id_pedido_cliente,
+        referencia_tipo='pedido_cliente',
+    )
+
+    flash(f'Pedido {pedido.folio} rechazado.', 'warning')
+    return redirect(url_for('comercial_bp.pedidos_pendientes'))
