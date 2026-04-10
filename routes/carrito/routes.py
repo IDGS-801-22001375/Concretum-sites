@@ -79,14 +79,55 @@ def _registrar_auditoria_mongo(accion, detalles):
 # ─────────────────────────────────────────────
 
 @carrito_bp.app_context_processor
-def inyectar_total_carrito():
-    """Expone `total_items_carrito` en todos los templates de la app."""
-    total = 0
+def inyectar_carrito_global():
+    """Expone el carrito completo en todos los templates del portal cliente."""
+    carrito_obj = None
+    items = []
     if current_user.is_authenticated:
-        carrito = Carrito.query.filter_by(usuario_id=current_user.id).first()
-        if carrito:
-            total = carrito.total_items
-    return {'total_items_carrito': total}
+        carrito_obj = Carrito.query.filter_by(usuario_id=current_user.id).first()
+        if carrito_obj:
+            items = carrito_obj.items.all()
+    return {
+        'carrito_global': carrito_obj,
+        'items_carrito_global': items,
+        'total_items_carrito': carrito_obj.total_items if carrito_obj else 0
+    }
+
+@carrito_bp.route('/mi-cuenta/datos', methods=['POST'])
+@login_required
+def actualizar_datos():
+    from models import ClienteDetalle
+    datos = request.form
+    
+    cliente = current_user.cliente_info
+    if not cliente:
+        flash('No se encontró información de cliente asociada.', 'error')
+        return redirect(url_for('carrito_bp.dashboard_cliente'))
+
+    cliente.razon_social = datos.get('razon_social', cliente.razon_social)
+    cliente.rfc = datos.get('rfc', cliente.rfc)
+    
+    if not cliente.detalle_info:
+        cliente.detalle_info = ClienteDetalle(cliente_id=cliente.id_cliente)
+        db.session.add(cliente.detalle_info)
+        
+    cliente.detalle_info.telefono = datos.get('telefono', '')
+    cliente.detalle_info.direccion = datos.get('direccion', '')
+    cliente.detalle_info.ciudad = datos.get('ciudad', '')
+    cliente.detalle_info.estado = datos.get('estado', '')
+    cliente.detalle_info.codigo_postal = datos.get('codigo_postal', '')
+    
+    db.session.commit()
+    flash('Tus datos han sido actualizados correctamente.', 'success')
+    return redirect(url_for('carrito_bp.dashboard_cliente') + '#datos')
+
+
+@carrito_bp.route('/carrito/contenido')
+@login_required
+def carrito_contenido():
+    carrito = Carrito.query.filter_by(usuario_id=current_user.id).first()
+    items = carrito.items.all() if carrito else []
+    return render_template('tienda/_carrito_items.html', items_carrito=items, carrito=carrito)
 
 
 # ─────────────────────────────────────────────
@@ -152,14 +193,9 @@ def catalogo():
 @carrito_bp.route('/carrito/agregar', methods=['POST'])
 @login_required
 def agregar_al_carrito():
-    """
-    Agrega o incrementa un producto en el carrito.
-    Responde JSON para que el frontend actualice el contador sin recargar.
-    Si el stock no alcanza: agrega de todas formas pero crea una solicitud de producción.
-    """
-    datos       = request.get_json(silent=True) or request.form
+    datos = request.get_json(silent=True) or request.form
     producto_id = int(datos.get('producto_id', 0))
-    cantidad    = float(datos.get('cantidad', 1))
+    cantidad = float(datos.get('cantidad', 1))
 
     producto = Productos.query.filter_by(id_producto=producto_id, es_active=1).first()
     if not producto:
@@ -170,7 +206,7 @@ def agregar_al_carrito():
 
     carrito = _obtener_o_crear_carrito()
 
-    # ¿Ya está el producto en el carrito?
+    # Verificar si el producto ya está en el carrito
     item = CarritoItem.query.filter_by(
         carrito_id=carrito.id_carrito, producto_id=producto_id
     ).first()
@@ -188,7 +224,7 @@ def agregar_al_carrito():
 
     db.session.commit()
 
-    # Validación de stock (solo informativa; no bloqueamos)
+    # Validación de stock (solo informativa)
     advertencia = None
     if stock_actual < float(item.cantidad):
         advertencia = (
@@ -209,14 +245,19 @@ def agregar_al_carrito():
         db.session.commit()
 
     total_items = carrito.total_items
-    subtotal    = carrito.subtotal
+    subtotal = carrito.subtotal
+
+    # Renderizar el HTML del item (para actualizar el carrito sin recargar)
+    item_html = render_template('tienda/_carrito_item.html', item=item)
 
     return jsonify({
-        'exito':       True,
+        'exito': True,
         'advertencia': advertencia,
         'total_items': total_items,
-        'subtotal':    f"${subtotal:,.2f}",
-        'mensaje':     f'«{producto.nombre}» agregado al carrito.',
+        'subtotal': f"${subtotal:,.2f}",
+        'mensaje': f'«{producto.nombre}» agregado al carrito.',
+        'item_html': item_html,
+        'item_id': item.id_item
     })
 
 
@@ -325,14 +366,8 @@ def checkout():
 @carrito_bp.route('/checkout', methods=['POST'])
 @login_required
 def procesar_pago():
-    """
-    Procesa el formulario de pago:
-    1. Crea el pedido y sus detalles.
-    2. Descuenta stock de existencias.
-    3. Si el stock no alcanza, crea una SolicitudProduccion y notifica al cliente.
-    4. Vacía el carrito.
-    5. Redirige al dashboard del cliente.
-    """
+    from decimal import Decimal
+    
     carrito = Carrito.query.filter_by(usuario_id=current_user.id).first()
     if not carrito or not carrito.items.count():
         flash('Tu carrito está vacío.', 'warning')
@@ -344,17 +379,17 @@ def procesar_pago():
         return redirect(url_for('carrito_bp.checkout'))
 
     items_carrito = carrito.items.all()
-    subtotal      = carrito.subtotal
-    iva           = round(subtotal * 0.16, 2)
-    total         = round(subtotal + iva, 2)
-    folio         = _generar_folio('PED')
+    subtotal = Decimal(str(carrito.subtotal))   # Convertir a Decimal de forma segura
+    iva = (subtotal * Decimal('0.16')).quantize(Decimal('0.01'))  # Redondear a 2 decimales
+    total = subtotal + iva
+    folio = _generar_folio('PED')
 
-    # Crear pedido
+    # Crear pedido en estado COTIZACION
     pedido = PedidoCliente(
         folio=folio,
         usuario_id=current_user.id,
         metodo_pago=form.metodo_pago.data,
-        estado='PAGADO',
+        estado='COTIZACION',
         subtotal=subtotal,
         iva=iva,
         total=total,
@@ -362,75 +397,27 @@ def procesar_pago():
         notas=form.notas.data,
     )
     db.session.add(pedido)
-    db.session.flush()  # Obtenemos id_pedido_cliente antes de commit
+    db.session.flush()
 
-    productos_sin_stock = []
-
+    # Crear detalles del pedido
     for item in items_carrito:
-        cantidad_pedida = float(item.cantidad)
-        existencia      = Existencias.query.filter_by(producto_id=item.producto_id).with_for_update().first()
-        stock_actual    = float(existencia.stock_actual) if existencia else 0
-        stock_suficiente = 1
-
-        # Descontar stock disponible
-        if existencia:
-            if stock_actual >= cantidad_pedida:
-                existencia.stock_actual = stock_actual - cantidad_pedida
-            else:
-                # Descontamos lo que hay y marcamos insuficiente
-                cantidad_faltante        = cantidad_pedida - stock_actual
-                existencia.stock_actual  = 0
-                stock_suficiente         = 0
-                productos_sin_stock.append({
-                    'producto': item.producto,
-                    'faltante': cantidad_faltante,
-                })
-
-        # Detalle de pedido
         detalle = PedidoClienteDetalle(
             pedido_id=pedido.id_pedido_cliente,
             producto_id=item.producto_id,
-            cantidad=cantidad_pedida,
+            cantidad=item.cantidad,
             precio_unitario=item.precio_unitario,
             total_linea=item.subtotal,
-            stock_suficiente=stock_suficiente,
+            stock_suficiente=0,
+            cantidad_entregada=0,
+            cantidad_pendiente=item.cantidad
         )
         db.session.add(detalle)
 
-    # Crear solicitudes de producción para productos sin stock
-    for ps in productos_sin_stock:
-        solicitud = SolicitudProduccion(
-            pedido_id=pedido.id_pedido_cliente,
-            producto_id=ps['producto'].id_producto,
-            cantidad_faltante=ps['faltante'],
-        )
-        db.session.add(solicitud)
-        db.session.flush()
-
-        _crear_notificacion(
-            usuario_id=current_user.id,
-            tipo='PRODUCCION',
-            titulo=f"Producción solicitada: {ps['producto'].nombre}",
-            mensaje=(
-                f"No había suficiente stock para «{ps['producto'].nombre}» "
-                f"(faltan {int(ps['faltante'])} unidades). "
-                "Hemos enviado una solicitud de producción. "
-                "Te avisaremos en cuanto sea aceptada."
-            ),
-            referencia_id=solicitud.id_solicitud,
-            referencia_tipo='solicitud_produccion',
-        )
-
-    # Notificación de pago confirmado
     _crear_notificacion(
         usuario_id=current_user.id,
-        tipo='PAGO',
-        titulo=f'Pago confirmado — {folio}',
-        mensaje=(
-            f"Recibimos el pago de tu pedido {folio} "
-            f"por un total de ${total:,.2f} MXN. "
-            "Pronto recibirás más actualizaciones."
-        ),
+        tipo='INFO',
+        titulo=f'Pedido solicitado - {folio}',
+        mensaje=f'Tu pedido {folio} ha sido enviado para autorización. Pronto recibirás respuesta.',
         referencia_id=pedido.id_pedido_cliente,
         referencia_tipo='pedido_cliente',
     )
@@ -440,9 +427,9 @@ def procesar_pago():
         db.session.delete(item)
 
     db.session.commit()
-    _registrar_auditoria_mongo('PEDIDO_CREADO', f'Pedido {folio} por ${total:,.2f}')
+    _registrar_auditoria_mongo('PEDIDO_CREADO', f'Pedido {folio} por ${total:,.2f} (pendiente autorización)')
 
-    flash(f'¡Pago procesado! Tu número de pedido es {folio}.', 'success')
+    flash(f'Tu pedido {folio} ha sido enviado para autorización. Te notificaremos cuando sea aprobado.', 'success')
     return redirect(url_for('carrito_bp.dashboard_cliente'))
 
 

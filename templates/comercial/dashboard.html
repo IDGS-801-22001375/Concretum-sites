@@ -5,17 +5,152 @@
 
 {% block content %}
 
-{{ components.page_header('Dashboard', 'Resumen de operaciones comerciales del día') }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
 
-<!-- Fecha actual -->
-<div class="flex items-center gap-2 mb-6">
-  <div class="inline-flex items-center gap-2 px-4 py-2 bg-[#0F2A44] border border-[#1E3A5F] rounded-xl">
+<style>
+  #date-wrapper input {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 14rem !important;
+    font-weight: 700 !important;
+    font-size: 0.875rem !important;
+  }
+
+  #date-wrapper input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  /* 2. Personalización completa del calendario al tema Concretum */
+  .flatpickr-calendar {
+    background: #0F2A44 !important;
+    border: 1px solid #1E3A5F !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  /* Flechitas del popup */
+  .flatpickr-calendar.arrowTop:before {
+    border-bottom-color: #1E3A5F !important;
+  }
+
+  .flatpickr-calendar.arrowTop:after {
+    border-bottom-color: #0F2A44 !important;
+  }
+
+  .flatpickr-calendar.arrowBottom:before {
+    border-top-color: #1E3A5F !important;
+  }
+
+  .flatpickr-calendar.arrowBottom:after {
+    border-top-color: #0F2A44 !important;
+  }
+
+  /* Meses y controles de arriba */
+  .flatpickr-months .flatpickr-month {
+    background: #0B2239 !important;
+    color: white !important;
+    fill: white !important;
+  }
+
+  .flatpickr-current-month .flatpickr-monthDropdown-months {
+    background: #0B2239 !important;
+    color: white !important;
+  }
+
+  .flatpickr-current-month .flatpickr-monthDropdown-months:hover {
+    background: #123555 !important;
+  }
+
+  .flatpickr-months .flatpickr-prev-month,
+  .flatpickr-months .flatpickr-next-month {
+    fill: white !important;
+  }
+
+  /* Días de la semana */
+  span.flatpickr-weekday {
+    background: #0B2239 !important;
+    color: #008DC0 !important;
+    font-weight: bold !important;
+  }
+
+  /* Días normales y hovers */
+  .flatpickr-day {
+    color: #d1d5db !important;
+    /* text-gray-300 */
+  }
+
+  .flatpickr-day:hover,
+  .flatpickr-day.focus {
+    background: #123555 !important;
+    border-color: #1E3A5F !important;
+  }
+
+  /* Rango intermedio seleccionado */
+  .flatpickr-day.inRange,
+  .flatpickr-day.inRange:hover {
+    background: #1E3A5F !important;
+    border-color: #1E3A5F !important;
+    box-shadow: -5px 0 0 #1E3A5F, 5px 0 0 #1E3A5F !important;
+  }
+
+  /* Días de inicio, fin o seleccionados */
+  .flatpickr-day.selected,
+  .flatpickr-day.startRange,
+  .flatpickr-day.endRange,
+  .flatpickr-day.selected.inRange,
+  .flatpickr-day.startRange.inRange,
+  .flatpickr-day.endRange.inRange,
+  .flatpickr-day.selected:focus,
+  .flatpickr-day.startRange:focus,
+  .flatpickr-day.endRange:focus,
+  .flatpickr-day.selected:hover,
+  .flatpickr-day.startRange:hover,
+  .flatpickr-day.endRange:hover {
+    background: #008DC0 !important;
+    border-color: #008DC0 !important;
+    color: white !important;
+  }
+
+  .flatpickr-day.flatpickr-disabled,
+  .flatpickr-day.flatpickr-disabled:hover,
+  .flatpickr-day.prevMonthDay,
+  .flatpickr-day.nextMonthDay {
+    color: #4b5563 !important;
+  }
+</style>
+
+{{ components.page_header('Dashboard', 'Resumen de operaciones comerciales') }}
+
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+
+  <div id="date-wrapper"
+    class="inline-flex items-center gap-2 px-4 py-2 bg-[#0F2A44] border border-[#1E3A5F] rounded-xl relative cursor-pointer"
+    onclick="document.getElementById('rango-fechas')._flatpickr.open()">
+
     <svg class="w-4 h-4 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
         d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
     </svg>
-    <span class="text-sm font-medium text-gray-300">Hoy: <span class="text-white">{{ fecha_hoy or '—' }}</span></span>
+    <span class="text-sm font-medium text-gray-300">Periodo:</span>
+
+    <input type="text" id="rango-fechas"
+      class="bg-transparent border-none text-white text-sm font-bold w-48 focus:ring-0 cursor-pointer p-0 m-0"
+      placeholder="Seleccionar..." autocomplete="off" readonly="readonly">
   </div>
+
+  {% if request.args.get('start_date') %}
+  <a href="{{ url_for('comercial_bp.dashboard') }}"
+    class="text-xs font-semibold text-gray-300 bg-[#1E3A5F] hover:bg-[#2A4A6F] px-3 py-2 rounded-lg transition-colors">
+    Restablecer a hoy
+  </a>
+  {% endif %}
 </div>
 
 <!-- KPIs -->
@@ -238,5 +373,57 @@
     </table>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const startDate = urlParams.get('start_date');
+    const endDate = urlParams.get('end_date');
+
+    const inputFechas = document.getElementById('rango-fechas');
+
+    let defaultDates = [new Date()];
+    let initialValue = '';
+
+    if (startDate && endDate) {
+      const d1 = new Date(startDate + "T00:00:00");
+      const d2 = new Date(endDate + "T00:00:00");
+
+      defaultDates = [d1, d2];
+
+      if (d1.toDateString() === d2.toDateString()) {
+        initialValue = d1.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      } else {
+        initialValue = `${d1.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' })} - ${d2.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
+      }
+    }
+
+    inputFechas.value = initialValue;
+
+    flatpickr("#rango-fechas", {
+      mode: "range",
+      locale: "es",
+      dateFormat: "Y-m-d",
+      altInput: true,
+      altFormat: "d/m/Y",
+      defaultDate: defaultDates,
+      allowInput: false,
+      onClose: function (selectedDates, dateStr, instance) {
+        if (selectedDates.length === 1) {
+          const date = instance.formatDate(selectedDates[0], "Y-m-d");
+          window.location.href = `?start_date=${date}&end_date=${date}`;
+        } else if (selectedDates.length === 2) {
+          const start = instance.formatDate(selectedDates[0], "Y-m-d");
+          const end = instance.formatDate(selectedDates[1], "Y-m-d");
+          window.location.href = `?start_date=${start}&end_date=${end}`;
+        }
+      }
+    });
+  });
+</script>
 
 {% endblock %}

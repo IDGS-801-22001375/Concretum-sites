@@ -1,293 +1,111 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<script src="https://cdn.tailwindcss.com"></script>
-
-<nav class="bg-[#002F5C] border-b border-white sticky top-0 z-40">
-  {% include 'home/navbar.html' %}
-  {# Botón carrito integrado en el navbar — ve el include de navbar para el badge #}
-</nav>
-
-<!-- =========================================================
-     CARRITO LATERAL (drawer)
-     ========================================================= -->
-<div id="overlay-carrito"
-     class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity"
-     onclick="cerrarCarrito()"></div>
-
-<aside id="drawer-carrito"
-       class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50
-              translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
-
-  <!-- Encabezado -->
-  <div class="bg-[#002F5C] px-6 py-4 flex items-center justify-between shrink-0">
-    <div class="flex items-center gap-3">
-      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-      </svg>
-      <span class="text-white font-bold text-lg">Mi carrito</span>
-      <span id="badge-header"
-            class="bg-[#008DC0] text-white text-xs font-bold px-2 py-0.5 rounded-full">
-        {{ items_carrito|length }}
-      </span>
-    </div>
-    <button onclick="cerrarCarrito()" class="text-white hover:text-[#008DC0] transition">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
-    </button>
-  </div>
-
-  <!-- Lista de ítems -->
-  <div id="lista-items-carrito" class="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-    {% if items_carrito %}
-      {% for item in items_carrito %}
-      <div id="item-{{ item.id_item }}" class="flex gap-3 bg-gray-50 rounded-xl p-3 border border-gray-100">
-        <img src="{{ url_for('static', filename=item.producto.enlace_fotografia) }}"
-             alt="{{ item.producto.nombre }}"
-             class="w-16 h-16 object-cover rounded-lg bg-[#A5CDE3] shrink-0">
-        <div class="flex-1 min-w-0">
-          <p class="text-[#002F5C] font-semibold text-sm truncate">{{ item.producto.nombre }}</p>
-          <p class="text-gray-400 text-xs mt-0.5">
-            ${{ "%.2f"|format(item.precio_unitario) }} / ud.
-          </p>
-          <div class="flex items-center gap-2 mt-2">
-            <button onclick="cambiarCantidad({{ item.id_item }}, -1)"
-                    class="w-7 h-7 rounded-full border border-gray-300 text-gray-600 flex items-center justify-center hover:bg-gray-200 text-lg font-bold">−</button>
-            <span id="cant-{{ item.id_item }}"
-                  class="text-sm font-semibold w-8 text-center">{{ item.cantidad|int }}</span>
-            <button onclick="cambiarCantidad({{ item.id_item }}, 1)"
-                    class="w-7 h-7 rounded-full border border-gray-300 text-gray-600 flex items-center justify-center hover:bg-gray-200 text-lg font-bold">+</button>
-          </div>
-        </div>
-        <div class="flex flex-col items-end justify-between shrink-0">
-          <button onclick="quitarItem({{ item.id_item }})"
-                  class="text-gray-300 hover:text-red-500 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-          <span id="sub-{{ item.id_item }}" class="text-[#002F5C] font-bold text-sm">
-            ${{ "%.2f"|format(item.subtotal) }}
-          </span>
-        </div>
-      </div>
-      {% endfor %}
-    {% else %}
-      <div id="carrito-vacio" class="flex flex-col items-center justify-center h-full text-center py-16">
-        <svg class="w-16 h-16 text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-        </svg>
-        <p class="text-gray-400 font-medium">Tu carrito está vacío</p>
-        <p class="text-gray-300 text-sm mt-1">Agrega productos para comenzar</p>
-      </div>
-    {% endif %}
-  </div>
-
-  <!-- Footer del carrito -->
-  <div class="shrink-0 border-t border-gray-100 px-6 py-5 bg-white">
-    <div class="flex justify-between items-center mb-1">
-      <span class="text-gray-500 text-sm">Subtotal</span>
-      <span id="subtotal-carrito" class="text-[#002F5C] font-bold text-lg">
-        {% if carrito %}${{ "%.2f"|format(carrito.subtotal) }}{% else %}$0.00{% endif %}
-      </span>
-    </div>
-    <p class="text-xs text-gray-400 mb-4">IVA e impuestos se calculan en el checkout</p>
-    <a href="{{ url_for('carrito_bp.checkout') }}"
-       class="block w-full bg-[#008DC0] hover:bg-[#0074A0] text-white text-center
-              font-bold py-3.5 rounded-xl transition text-sm">
-      Proceder al pago →
-    </a>
-    <button onclick="cerrarCarrito()"
-            class="block w-full mt-2 text-center text-gray-400 hover:text-[#002F5C]
-                   text-sm py-2 transition">
-      Seguir comprando
-    </button>
-  </div>
-</aside>
-
-<!-- =========================================================
-     BARRA SUPERIOR DE FILTROS + BOTÓN CARRITO
-     ========================================================= -->
-<section class="bg-white border-b border-gray-200 py-4 px-6 sticky top-[64px] z-30">
+<section class="bg-white border-b border-gray-200 py-4 px-6 sticky top-[64px] z-30 shadow-sm">
   <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-4 justify-between">
-    <!-- Búsqueda -->
-    <form method="GET" action="{{ url_for('carrito_bp.catalogo') }}"
-          class="flex gap-2 flex-1 min-w-64">
-      <input type="text" name="q" value="{{ busqueda }}"
-             placeholder="Buscar productos..."
-             class="flex-1 border border-gray-200 rounded-lg px-4 py-2 text-sm
-                    focus:outline-none focus:ring-2 focus:ring-[#008DC0] bg-gray-50">
-      {% if categoria_activa %}
-        <input type="hidden" name="categoria" value="{{ categoria_activa }}">
-      {% endif %}
+    <form method="GET" action="{{ url_for('carrito_bp.catalogo') }}" class="flex gap-2 flex-1 min-w-[300px]">
+      <div class="relative flex-1">
+        <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </span>
+        <input type="text" name="q" value="{{ busqueda or '' }}" placeholder="Buscar productos..."
+          class="w-full border border-gray-200 rounded-lg pl-10 pr-10 py-2 text-sm focus:ring-2 focus:ring-[#008DC0] focus:border-transparent outline-none bg-gray-50">
+        {% if busqueda %}
+        <a href="{{ url_for('carrito_bp.catalogo') }}"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </a>
+        {% endif %}
+      </div>
       <button type="submit"
-              class="bg-[#008DC0] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#0074A0] transition">
-        Buscar
-      </button>
+        class="bg-[#008DC0] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#0074A0] transition shadow-md">Buscar</button>
     </form>
 
-    <!-- Filtros por categoría -->
-    <div class="flex gap-2 flex-wrap">
-      <a href="{{ url_for('carrito_bp.catalogo', q=busqueda) }}"
-         class="px-3 py-1.5 rounded-full text-xs font-medium border transition
-                {% if not categoria_activa %}bg-[#002F5C] text-white border-[#002F5C]
-                {% else %}bg-white text-gray-600 border-gray-200 hover:border-[#008DC0]{% endif %}">
+    <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+      <a href="{{ url_for('carrito_bp.catalogo') }}"
+        class="px-4 py-1.5 rounded-full text-xs font-bold border transition whitespace-nowrap {{ 'bg-[#002F5C] text-white border-[#002F5C]' if not categoria_activa else 'bg-white text-gray-600 border-gray-200 hover:border-[#008DC0]' }}">
         Todos
       </a>
       {% for cat in categorias %}
-      <a href="{{ url_for('carrito_bp.catalogo', categoria=cat.id_categoria, q=busqueda) }}"
-         class="px-3 py-1.5 rounded-full text-xs font-medium border transition
-                {% if categoria_activa == cat.id_categoria %}bg-[#008DC0] text-white border-[#008DC0]
-                {% else %}bg-white text-gray-600 border-gray-200 hover:border-[#008DC0]{% endif %}">
+      <a href="{{ url_for('carrito_bp.catalogo', categoria=cat.id_categoria) }}"
+        class="px-4 py-1.5 rounded-full text-xs font-bold border transition whitespace-nowrap {{ 'bg-[#008DC0] text-white border-[#008DC0]' if categoria_activa == cat.id_categoria else 'bg-white text-gray-600 border-gray-200 hover:border-[#008DC0]' }}">
         {{ cat.nombre }}
       </a>
       {% endfor %}
     </div>
-
-    <!-- Botón carrito -->
-    <button onclick="abrirCarrito()"
-            class="relative flex items-center gap-2 bg-[#002F5C] text-white
-                   px-4 py-2.5 rounded-xl font-medium text-sm hover:bg-[#001F3F] transition shrink-0">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-      </svg>
-      Mi carrito
-      <span id="badge-flotante"
-            class="absolute -top-2 -right-2 bg-[#008DC0] text-white text-xs
-                   font-bold w-5 h-5 rounded-full flex items-center justify-center
-                   {% if not items_carrito %}hidden{% endif %}">
-        {{ items_carrito|length }}
-      </span>
-    </button>
   </div>
 </section>
 
-<!-- Toast de advertencia stock -->
-<div id="toast-stock"
-     class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden
-            bg-amber-500 text-white text-sm font-medium px-6 py-3 rounded-xl
-            shadow-lg max-w-sm text-center">
-</div>
-
-<!-- Toast de éxito -->
-<div id="toast-ok"
-     class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 hidden
-            bg-emerald-500 text-white text-sm font-medium px-6 py-3 rounded-xl
-            shadow-lg max-w-sm text-center">
-</div>
-
-<!-- =========================================================
-     GRID DE PRODUCTOS
-     ========================================================= -->
-<section class="bg-[#F4F8FC] min-h-screen py-12 px-6">
+<section class="py-12 px-6">
   <div class="max-w-7xl mx-auto">
-
-    <div class="mb-8">
-      <h1 class="text-[#002F5C] text-3xl font-bold">
-        Catálogo de productos
-        {% if busqueda %}
-          <span class="text-[#008DC0]">— "{{ busqueda }}"</span>
-        {% endif %}
-      </h1>
-      <p class="text-gray-500 mt-1 text-sm">{{ productos_lista|length }} productos disponibles</p>
-    </div>
-
     {% if productos_lista %}
-    <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {% for producto, stock in productos_lista %}      
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden
-                  hover:-translate-y-1 transition-transform duration-300 flex flex-col">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+      {% for producto, stock in productos_lista %}
+      {% set estado_stk = producto.existencia.estado_stock if producto.existencia else 'BAJO' %}
 
-        <!-- Imagen -->
-        <div class="bg-[#A5CDE3] border-t-4 border-[#008DC0] flex items-center justify-center h-44 relative">
-          <img src="{{ url_for('static', filename=producto.enlace_fotografia) }}"
-               alt="{{ producto.nombre }}"
-               class="max-h-full w-auto object-cover">
-          {% if stock == 0 %}
-          <span class="absolute top-2 right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-            Sin stock
-          </span>
+      <div
+        class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-300 group">
 
-          {% elif stock <= 10 %}
-          <span class="absolute top-2 right-2 bg-amber-400 text-white text-xs font-bold px-2 py-1 rounded-full">
-            Stock bajo
-          </span>
+        <div
+          class="bg-[#A5CDE3] h-52 flex items-center justify-center p-6 relative group-hover:bg-[#96C0D8] transition-colors">
+          <img src="{{ url_for('static', filename=producto.enlace_fotografia) }}" alt="{{ producto.nombre }}"
+            class="max-h-full max-w-full object-contain drop-shadow-2xl group-hover:scale-110 transition-transform duration-500">
 
-          {% elif stock <= 50 %}
-          <span class="absolute top-2 right-2 bg-blue-400 text-white text-xs font-bold px-2 py-1 rounded-full">
-            Stock medio
-          </span>
-
-          {% else %}
-          <span class="absolute top-2 right-2 bg-green-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-            Stock alto
-          </span>
-          {% endif %}
+          <div class="absolute top-4 right-4">
+            {% if stock <= 0 %} <span
+              class="bg-red-500 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase shadow-lg">Sin
+              Stock</span>
+              {% elif estado_stk == 'BAJO' %}
+              <span
+                class="bg-amber-400 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase shadow-lg">Stock
+                Bajo</span>
+              {% else %}
+              <span
+                class="bg-emerald-500 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase shadow-lg">Stock
+                Ideal</span>
+              {% endif %}
+          </div>
         </div>
 
-        <!-- Info -->
-        <div class="p-5 flex flex-col flex-1">
-          <span class="inline-block mb-2 bg-[#E5F3FA] text-[#008DC0] text-xs font-bold
-                       px-3 py-1 rounded-full uppercase tracking-wide self-start">
-            {{ producto.categoria.nombre }}
-          </span>
+        <div class="p-6 flex flex-col flex-1">
+          <span class="text-[#008DC0] text-[10px] font-black uppercase tracking-widest mb-1">{{ producto.category_name
+            if producto.category_name else producto.categoria.nombre }}</span>
+          <h3 class="text-[#002F5C] font-extrabold text-lg leading-tight mb-2">{{ producto.nombre }}</h3>
+          <p class="text-gray-400 text-xs line-clamp-2 mb-4 flex-1">{{ producto.descripcion }}</p>
 
-          <h3 class="text-[#002F5C] font-bold text-base mb-1 leading-tight">{{ producto.nombre }}</h3>
-          <p class="text-gray-400 text-xs mb-3 flex-1 line-clamp-2">{{ producto.descripcion }}</p>
-
-          <!-- Atributos -->
-          <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-xs text-gray-500 mb-4">
-            {% if producto.color %}
-            <div class="flex items-center gap-1.5">
-              <span class="inline-block w-3 h-3 rounded-full border border-gray-200"
-                    style="background: {{ producto.color.codigo_hex or '#9E9E9E' }}"></span>
-              {{ producto.color.nombre }}
+          <div class="flex items-center justify-between mb-4 pt-4 border-t border-gray-50">
+            <div class="text-xs text-gray-500">
+              <span class="block">Stock: <b class="text-[#002F5C]">{{ stock|int }}</b> pzas</span>
             </div>
-            {% endif %}
-            {% if producto.resistencia_mpa %}
-            <div class="flex items-center gap-1">
-              <span class="text-[#008DC0]">⚡</span>
-              {{ producto.resistencia_mpa }} MPa
-            </div>
-            {% endif %}
-            <div class="flex items-center gap-1 col-span-2">
-              <span class="text-[#008DC0]">📦</span>
-              Stock: <span class="font-semibold ml-0.5">{{ stock|int }} piezas {{ producto.unidad_medida.clave if producto.unidad_medida else 'ud.' }}</span>
+            <div class="text-right">
+              <span class="text-[#002F5C] font-black text-xl">${{ "%.2f"|format(producto.precio_base) }}</span>
+              <span class="text-gray-400 text-[10px] block">/ {{ producto.unidad_medida.nombre if producto.unidad_medida
+                else 'Pza' }}</span>
             </div>
           </div>
 
-          <!-- Precio -->
-          <div class="flex items-center justify-between mb-4">
-            <span class="text-[#002F5C] font-bold text-xl">
-              ${{ "%.2f"|format(producto.precio_base) }}
-            </span>
-            <span class="text-gray-400 text-xs">/ {{ producto.unidad_medida.nombre if producto.unidad_medida else 'ud.' }}</span>
-          </div>
-
-          <!-- Controles cantidad + agregar -->
-          <div class="flex gap-2 mt-auto">
-            <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+          <div class="flex gap-2">
+            <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
               <button type="button"
-                      onclick="this.nextElementSibling.value = Math.max(1, parseInt(this.nextElementSibling.value)-1)"
-                      class="px-2.5 py-2 text-gray-500 hover:bg-gray-100 text-lg font-bold">−</button>
-              <input type="number" value="1" min="1" step="1"
-                     id="cant-prod-{{ producto.id_producto }}"
-                     class="w-12 text-center text-sm font-semibold border-x border-gray-200
-                            py-2 focus:outline-none bg-white">
-              <button type="button"
-                      onclick="this.previousElementSibling.value = parseInt(this.previousElementSibling.value)+1"
-                      class="px-2.5 py-2 text-gray-500 hover:bg-gray-100 text-lg font-bold">+</button>
+                onclick="const i = this.nextElementSibling; i.value = Math.max(1, parseInt(i.value)-1)"
+                class="px-3 py-1.5 text-gray-500 hover:text-[#008DC0] hover:bg-gray-100 transition font-semibold">
+                −
+              </button>
+              <input type="number" value="1" min="1" id="cant-prod-{{ producto.id_producto }}"
+                class="w-12 text-center text-sm font-semibold bg-transparent border-none focus:ring-0 focus:outline-none">
+              <button type="button" onclick="const i = this.previousElementSibling; i.value = parseInt(i.value)+1"
+                class="px-3 py-1.5 text-gray-500 hover:text-[#008DC0] hover:bg-gray-100 transition font-semibold">
+                +
+              </button>
             </div>
-            <button onclick="agregarAlCarrito({{ producto.id_producto }})"
-                    class="flex-1 bg-[#008DC0] hover:bg-[#0074A0] text-white font-semibold
-                           text-sm py-2 rounded-lg transition flex items-center justify-center gap-2">
+            <button onclick="agregar_tienda({{ producto.id_producto }})"
+              class="flex-1 bg-[#002F5C] hover:bg-[#008DC0] text-white font-bold text-xs py-3 rounded-xl transition-all shadow-lg shadow-blue-900/10 active:scale-95 flex items-center justify-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                <path stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
               Agregar
             </button>
@@ -296,146 +114,13 @@
       </div>
       {% endfor %}
     </div>
-
     {% else %}
-    <div class="text-center py-24 text-gray-400">
-      <p class="text-5xl mb-4">🔍</p>
-      <p class="text-xl font-semibold">Sin resultados</p>
-      <p class="text-sm mt-2">Intenta con otro término o categoría.</p>
+    <div class="text-center py-24">
+      <p class="text-gray-400 text-lg">No se encontraron productos con esos criterios.</p>
       <a href="{{ url_for('carrito_bp.catalogo') }}"
-         class="mt-6 inline-block bg-[#008DC0] text-white px-6 py-3 rounded-xl font-medium hover:bg-[#0074A0] transition">
-        Ver todos los productos
-      </a>
+        class="text-[#008DC0] font-bold hover:underline mt-4 inline-block">Ver todo el catálogo</a>
     </div>
     {% endif %}
-
   </div>
 </section>
-
-<!-- =========================================================
-     JAVASCRIPT
-     ========================================================= -->
-<script>
-const CSRF_TOKEN = "{{ csrf_token() }}";
-const AUTENTICADO = {{ 'true' if current_user.is_authenticated else 'false' }};
-
-function abrirCarrito() {
-  if (!AUTENTICADO) {
-    window.location.href = "{{ url_for('security.login') }}?next={{ url_for('carrito_bp.catalogo') }}";
-    return;
-  }
-  document.getElementById('drawer-carrito').classList.remove('translate-x-full');
-  document.getElementById('overlay-carrito').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-}
-
-function cerrarCarrito() {
-  document.getElementById('drawer-carrito').classList.add('translate-x-full');
-  document.getElementById('overlay-carrito').classList.add('hidden');
-  document.body.style.overflow = '';
-}
-
-function mostrarToast(id, mensaje, duracion = 4000) {
-  const t = document.getElementById(id);
-  t.textContent = mensaje;
-  t.classList.remove('hidden');
-  setTimeout(() => t.classList.add('hidden'), duracion);
-}
-
-function actualizarBadges(totalItems) {
-  const badges = [document.getElementById('badge-flotante'), document.getElementById('badge-header')];
-  badges.forEach(b => {
-    if (!b) return;
-    b.textContent = totalItems;
-    if (totalItems > 0) b.classList.remove('hidden');
-    else b.classList.add('hidden');
-  });
-}
-
-async function agregarAlCarrito(productoId) {
-  if (!AUTENTICADO) {
-    window.location.href = "{{ url_for('security.login') }}?next={{ url_for('carrito_bp.catalogo') }}";
-    return;
-  }
-  const cantInput = document.getElementById('cant-prod-' + productoId);
-  const cantidad  = parseInt(cantInput ? cantInput.value : 1);
-
-  const resp = await fetch("{{ url_for('carrito_bp.agregar_al_carrito') }}", {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
-    body: JSON.stringify({ producto_id: productoId, cantidad: cantidad }),
-  });
-  const data = await resp.json();
-
-  if (data.exito) {
-    actualizarBadges(data.total_items);
-    document.getElementById('subtotal-carrito').textContent = data.subtotal;
-
-    if (data.advertencia) {
-      mostrarToast('toast-stock', '⚠️ ' + data.advertencia, 6000);
-    } else {
-      mostrarToast('toast-ok', '✓ ' + data.mensaje);
-    }
-
-    // Actualizar/agregar ítem en el drawer sin recargar
-    refrescarDrawer();
-  } else {
-    mostrarToast('toast-stock', '✗ ' + (data.mensaje || 'Error al agregar.'));
-  }
-}
-
-async function quitarItem(itemId) {
-  const resp = await fetch("{{ url_for('carrito_bp.quitar_del_carrito', item_id=0) }}".replace('0', itemId), {
-    method: 'POST',
-    headers: { 'X-CSRFToken': CSRF_TOKEN },
-  });
-  const data = await resp.json();
-  if (data.exito) {
-    document.getElementById('item-' + itemId)?.remove();
-    actualizarBadges(data.total_items);
-    document.getElementById('subtotal-carrito').textContent = data.subtotal;
-    if (data.total_items === 0) {
-      document.getElementById('lista-items-carrito').innerHTML = `
-        <div class="flex flex-col items-center justify-center h-full text-center py-16">
-          <p class="text-gray-400 font-medium">Tu carrito está vacío</p>
-        </div>`;
-    }
-  }
-}
-
-async function cambiarCantidad(itemId, delta) {
-  const span    = document.getElementById('cant-' + itemId);
-  const nuevaCant = Math.max(1, parseInt(span.textContent) + delta);
-  span.textContent = nuevaCant;
-
-  const resp = await fetch("{{ url_for('carrito_bp.actualizar_cantidad', item_id=0) }}".replace('0', itemId), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
-    body: JSON.stringify({ cantidad: nuevaCant }),
-  });
-  const data = await resp.json();
-  if (data.exito) {
-    document.getElementById('sub-' + itemId).textContent = data.subtotal_item;
-    document.getElementById('subtotal-carrito').textContent = data.subtotal;
-    actualizarBadges(data.total_items);
-    if (data.advertencia) mostrarToast('toast-stock', '⚠️ ' + data.advertencia, 5000);
-  }
-}
-
-async function refrescarDrawer() {
-  // Recarga el contenido del drawer via fetch del mismo catálogo (simplificado)
-  // En producción esto se haría con un endpoint dedicado que devuelva los ítems JSON
-  // Por ahora forzamos una recarga silenciosa del bloque de ítems
-  try {
-    const resp = await fetch(window.location.href);
-    const html  = await resp.text();
-    const parser = new DOMParser();
-    const doc   = parser.parseFromString(html, 'text/html');
-    const nuevoLista = doc.getElementById('lista-items-carrito');
-    if (nuevoLista) {
-      document.getElementById('lista-items-carrito').innerHTML = nuevoLista.innerHTML;
-    }
-  } catch(e) { /* silencioso */ }
-}
-</script>
 {% endblock %}

@@ -16,9 +16,11 @@ class Merma(db.Model):
     usuario_id     = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario',                  ondelete='SET NULL'))
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
     movimiento_id  = db.Column(db.BigInteger, db.ForeignKey('movimientos_inventario.id_movimiento_in', ondelete='SET NULL'))
+    produccion_id   = db.Column(db.BigInteger, db.ForeignKey('producciones.id_produccion', ondelete='SET NULL'), nullable=True)
 
     usuario    = db.relationship('User',                backref='mermas')
     movimiento = db.relationship('MovimientosInventario', backref='merma')
+    produccion = db.relationship('Produccion', backref='mermas_imputadas')
 
     @property
     def id(self):

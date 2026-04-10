@@ -10,68 +10,81 @@
 <!-- KPIs -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     {{ components.kpi_card(
-        'Total Órdenes',
-        'kpi-total-ordenes',
-        kpis.total_ordenes|string,
-        'slate',
-        '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>'
+    'Total Órdenes',
+    'kpi-total-ordenes',
+    kpis.total_ordenes|string,
+    'slate',
+    '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>'
     ) }}
     {{ components.kpi_card(
-        'Pendientes',
-        'kpi-pendientes',
-        kpis.pendientes|string,
-        'amber',
-        '<svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+    'Pendientes',
+    'kpi-pendientes',
+    kpis.pendientes|string,
+    'amber',
+    '<svg class="w-6 h-6 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>'
     ) }}
     {{ components.kpi_card(
-        'Recibidas',
-        'kpi-recibidas',
-        kpis.recibidas|string,
-        'green',
-        '<svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+    'Recibidas',
+    'kpi-recibidas',
+    kpis.recibidas|string,
+    'green',
+    '<svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>'
     ) }}
     {{ components.kpi_card(
-        'Canceladas',
-        'kpi-canceladas',
-        kpis.canceladas|string,
-        'red',
-        '<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>'
+    'Canceladas',
+    'kpi-canceladas',
+    kpis.canceladas|string,
+    'red',
+    '<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>'
     ) }}
 </div>
 
 <!-- Table -->
 {{ components.crud_table(
-    id_table='compras',
-    api_endpoint='/compras',
-    title='Registro de Compras',
-    columns=[
-        {'field': 'folio',            'label': 'Folio',     'sortable': true},
-        {'field': 'proveedor_nombre', 'label': 'Proveedor', 'sortable': true},
-        {'field': 'fecha_compra',     'label': 'Fecha',     'sortable': true},
-        {'field': 'total',            'label': 'Total',     'sortable': true},
-        {'field': 'estado',           'label': 'Estado',    'sortable': true}
-    ],
-    search_placeholder='Buscar por folio o proveedor...',
-    filters=[
-        {'type': 'select', 'name': 'estado', 'label_default': 'Todos los estados',
-         'options': [
-            {'value': 'CREADA',    'label': 'Creadas'},
-            {'value': 'RECIBIDA',  'label': 'Recibidas'},
-            {'value': 'CANCELADA', 'label': 'Canceladas'}
-         ]},
-        {'type': 'select', 'name': 'proveedor', 'label_default': 'Todos los proveedores',
-         'options': proveedores_options}
-    ],
-    btn_new_label='Nueva Compra'
+id_table='compras',
+api_endpoint='/compras',
+title='Registro de Compras',
+columns=[
+{'field': 'folio', 'label': 'Folio', 'sortable': true},
+{'field': 'proveedor_nombre', 'label': 'Proveedor', 'sortable': true},
+{'field': 'fecha_compra', 'label': 'Fecha', 'sortable': true},
+{'field': 'total', 'label': 'Total', 'sortable': true},
+{'field': 'estado', 'label': 'Estado', 'sortable': true}
+],
+search_placeholder='Buscar por folio o proveedor...',
+filters=[
+{'type': 'select', 'name': 'estado', 'label_default': 'Todos los estados',
+'options': [
+{'value': 'CREADA', 'label': 'Creadas'},
+{'value': 'RECIBIDA', 'label': 'Recibidas'},
+{'value': 'CANCELADA', 'label': 'Canceladas'}
+]},
+{'type': 'select', 'name': 'proveedor', 'label_default': 'Todos los proveedores',
+'options': proveedores_options}
+],
+btn_new_label='Nueva Compra'
 ) }}
 
 <!-- Modal -->
 {% set form_fields = [
-    {'name': 'proveedor_id',  'label': 'Proveedor',    'type': 'select',         'required': true, 'options': proveedores_options},
-    {'name': 'fecha_compra',  'label': 'Fecha',        'type': 'date',           'required': true}
+{'name': 'proveedor_id', 'label': 'Proveedor', 'type': 'select', 'required': true, 'options': proveedores_options},
+{'name': 'fecha_compra', 'label': 'Fecha', 'type': 'date', 'required': true}
 ] %}
 
-{% call components.crud_modal('compras', form_fields, id_field='id_compra', modal_title='Orden de Compra', modal_size='xl') %}
+{% call components.crud_modal('compras', form_fields, id_field='id_compra', modal_title='Orden de Compra',
+modal_size='xl') %}
 
 <!-- Materiales Section -->
 <div class="sm:col-span-2">
@@ -79,14 +92,15 @@
         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">
             Materiales <span class="text-red-500 ml-0.5">*</span>
         </label>
-        <button type="button" id="add-material-btn" class="inline-flex items-center gap-1.5 text-sm font-medium text-[#008DC0] hover:text-[#00A8E8] transition-colors">
+        <button type="button" id="add-material-btn"
+            class="inline-flex items-center gap-1.5 text-sm font-medium text-[#008DC0] hover:text-[#00A8E8] transition-colors">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
             Agregar material
         </button>
     </div>
-    
+
     <div class="bg-[#0B2239] rounded-xl border border-[#1E3A5F] p-4">
         <div class="grid grid-cols-12 gap-3 mb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">
             <div class="col-span-5">Material</div>
@@ -94,11 +108,13 @@
             <div class="col-span-3">Precio Unit.</div>
             <div class="col-span-1"></div>
         </div>
-        
+
         <div id="materiales-container" class="space-y-3">
             <div class="material-row grid grid-cols-12 gap-3 items-center">
                 <div class="col-span-5">
-                    <select name="materia_prima_id[]" class="w-full px-3 py-2.5 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none" required>
+                    <select name="materia_prima_id[]"
+                        class="w-full px-3 py-2.5 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
+                        required>
                         <option value="">Seleccionar...</option>
                         {% for m in materias_options %}
                         <option value="{{ m.value }}">{{ m.label }}</option>
@@ -106,21 +122,27 @@
                     </select>
                 </div>
                 <div class="col-span-3">
-                    <input type="number" name="cantidad[]" step="0.001" placeholder="0.000" class="w-full px-3 py-2.5 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none" required>
+                    <input type="number" name="cantidad[]" step="0.001" placeholder="0.000"
+                        class="w-full px-3 py-2.5 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
+                        required>
                 </div>
                 <div class="col-span-3">
-                    <input type="number" name="precio_unitario[]" step="0.01" placeholder="0.00" class="w-full px-3 py-2.5 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none" required>
+                    <input type="number" name="precio_unitario[]" step="0.01" placeholder="0.00"
+                        class="w-full px-3 py-2.5 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
+                        required>
                 </div>
                 <div class="col-span-1 flex justify-center">
-                    <button type="button" class="remove-material-btn p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/20 rounded-lg transition-all">
+                    <button type="button"
+                        class="remove-material-btn p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/20 rounded-lg transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                     </button>
                 </div>
             </div>
         </div>
-        
+
         <div class="mt-4 pt-4 border-t border-[#1E3A5F] flex justify-end">
             <div class="flex items-center gap-3">
                 <span class="text-sm font-medium text-gray-400">Total:</span>
@@ -128,241 +150,321 @@
             </div>
         </div>
     </div>
-    
+
     <input type="hidden" name="detalles_json" id="detalles_json">
 </div>
 
 {% endcall %}
 
+<div id="modal-estado-compra" class="hidden fixed inset-0 z-[60] items-center justify-center p-4 sm:p-6" role="dialog"
+    aria-modal="true">
+    <div class="absolute inset-0 bg-[#0B2239]/90 backdrop-blur-sm transition-opacity" onclick="cerrarModalEstado()">
+    </div>
+
+    <div
+        class="relative w-full max-w-md mx-auto bg-[#0F2A44] rounded-2xl shadow-2xl border border-[#1E3A5F] flex flex-col">
+        <div class="flex items-center justify-between px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239] rounded-t-2xl">
+            <div>
+                <p class="text-xs font-bold text-[#008DC0] uppercase tracking-widest mb-1">Confirmación</p>
+                <h3 class="text-lg font-bold text-white" id="titulo-modal-estado">Cambiar Estado</h3>
+            </div>
+            <button type="button" onclick="cerrarModalEstado()"
+                class="p-2 -mr-2 text-gray-400 hover:text-white hover:bg-[#1E3A5F] rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <form id="form-estado-compra" class="p-6">
+            <input type="hidden" id="compra-id-estado">
+            <input type="hidden" id="nuevo-estado-compra">
+
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Observaciones
+                    (Opcional)</label>
+                <textarea id="observaciones-estado" rows="3"
+                    class="w-full px-4 py-3 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#008DC0]/40 focus:border-[#008DC0] transition-all resize-y"
+                    placeholder="Ej: La mercancía llegó en buen estado..."></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 mt-2">
+                <button type="button" onclick="cerrarModalEstado()"
+                    class="px-5 py-2.5 text-sm font-semibold text-gray-300 bg-[#1E3A5F] hover:bg-[#2A4A6F] rounded-xl transition-all">Cancelar</button>
+                <button type="submit" id="btn-confirmar-estado"
+                    class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-white bg-[#008DC0] hover:bg-[#007AAD] rounded-xl shadow-lg shadow-[#008DC0]/25 transition-all">Confirmar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script src="{{ url_for('static', filename='js/crud.js') }}"></script>
 <script>
-function actualizarTotalYJson() {
-    let total = 0;
-    const rows = document.querySelectorAll('#materiales-container .material-row');
-    const detalles = [];
-    
-    rows.forEach(row => {
-        const mpSelect = row.querySelector('select[name="materia_prima_id[]"]');
-        const cantidad = parseFloat(row.querySelector('input[name="cantidad[]"]').value) || 0;
-        const precio = parseFloat(row.querySelector('input[name="precio_unitario[]"]').value) || 0;
-        
-        if (mpSelect.value && cantidad > 0 && precio > 0) {
-            const subtotal = cantidad * precio;
-            total += subtotal;
-            detalles.push({
-                materia_prima_id: mpSelect.value,
-                cantidad: cantidad,
-                precio_unitario: precio
+    function actualizarTotalYJson() {
+        let total = 0;
+        const rows = document.querySelectorAll('#materiales-container .material-row');
+        const detalles = [];
+
+        rows.forEach(row => {
+            const mpSelect = row.querySelector('select[name="materia_prima_id[]"]');
+            const cantidad = parseFloat(row.querySelector('input[name="cantidad[]"]').value) || 0;
+            const precio = parseFloat(row.querySelector('input[name="precio_unitario[]"]').value) || 0;
+
+            if (mpSelect.value && cantidad > 0 && precio > 0) {
+                const subtotal = cantidad * precio;
+                total += subtotal;
+                detalles.push({
+                    materia_prima_id: mpSelect.value,
+                    cantidad: cantidad,
+                    precio_unitario: precio
+                });
+            }
+        });
+
+        document.getElementById('total-preview').textContent = total.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('detalles_json').value = JSON.stringify(detalles);
+    }
+
+    document.getElementById('add-material-btn')?.addEventListener('click', function () {
+        const container = document.getElementById('materiales-container');
+        const firstRow = container.querySelector('.material-row');
+        const newRow = firstRow.cloneNode(true);
+        newRow.querySelectorAll('input, select').forEach(el => el.value = '');
+        container.appendChild(newRow);
+
+        newRow.querySelector('.remove-material-btn').addEventListener('click', function () {
+            if (container.querySelectorAll('.material-row').length > 1) {
+                newRow.remove();
+                actualizarTotalYJson();
+            } else {
+                alert('Debe haber al menos un material.');
+            }
+        });
+
+        actualizarTotalYJson();
+    });
+
+    document.getElementById('materiales-container')?.addEventListener('click', function (e) {
+        const btn = e.target.closest('.remove-material-btn');
+        if (btn) {
+            const row = btn.closest('.material-row');
+            if (document.querySelectorAll('#materiales-container .material-row').length > 1) {
+                row.remove();
+                actualizarTotalYJson();
+            } else {
+                alert('Debe haber al menos un material.');
+            }
+        }
+    });
+
+    document.getElementById('materiales-container')?.addEventListener('input', function (e) {
+        if (e.target.matches('input, select')) actualizarTotalYJson();
+    });
+
+    function fillCompraForm(item) {
+        if (item.estado !== 'CREADA') {
+            alert('No se puede editar una compra que ya ha sido recibida o cancelada.');
+            return false;
+        }
+
+        document.getElementById('proveedor_id').value = item.proveedor_id;
+
+        if (item.fecha_compra) {
+            document.getElementById('fecha_compra').value = item.fecha_compra;
+        }
+
+        const container = document.getElementById('materiales-container');
+        while (container.querySelectorAll('.material-row').length > 1) {
+            container.querySelector('.material-row:last-child').remove();
+        }
+
+        const firstRow = container.querySelector('.material-row');
+        firstRow.querySelectorAll('input, select').forEach(el => el.value = '');
+
+        if (item.detalles && item.detalles.length) {
+            item.detalles.forEach((det, idx) => {
+                let row;
+                if (idx === 0) row = firstRow;
+                else {
+                    row = firstRow.cloneNode(true);
+                    container.appendChild(row);
+                }
+                row.querySelector('select[name="materia_prima_id[]"]').value = det.materia_prima_id;
+                row.querySelector('input[name="cantidad[]"]').value = det.cantidad;
+                row.querySelector('input[name="precio_unitario[]"]').value = det.precio_unitario;
             });
         }
-    });
-    
-    document.getElementById('total-preview').textContent = total.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('detalles_json').value = JSON.stringify(detalles);
-}
 
-document.getElementById('add-material-btn')?.addEventListener('click', function () {
-    const container = document.getElementById('materiales-container');
-    const firstRow = container.querySelector('.material-row');
-    const newRow = firstRow.cloneNode(true);
-    newRow.querySelectorAll('input, select').forEach(el => el.value = '');
-    container.appendChild(newRow);
-    
-    newRow.querySelector('.remove-material-btn').addEventListener('click', function () {
-        if (container.querySelectorAll('.material-row').length > 1) {
-            newRow.remove();
-            actualizarTotalYJson();
-        } else {
-            alert('Debe haber al menos un material.');
-        }
-    });
-    
-    actualizarTotalYJson();
-});
-
-document.getElementById('materiales-container')?.addEventListener('click', function (e) {
-    const btn = e.target.closest('.remove-material-btn');
-    if (btn) {
-        const row = btn.closest('.material-row');
-        if (document.querySelectorAll('#materiales-container .material-row').length > 1) {
-            row.remove();
-            actualizarTotalYJson();
-        } else {
-            alert('Debe haber al menos un material.');
-        }
+        actualizarTotalYJson();
+        return true;
     }
-});
 
-document.getElementById('materiales-container')?.addEventListener('input', function (e) {
-    if (e.target.matches('input, select')) actualizarTotalYJson();
-});
+    const PROVEEDORES_OPTIONS = {{ proveedores_options | tojson }};
 
-function fillCompraForm(item) {
-    if (item.estado !== 'CREADA') {
-        alert('No se puede editar una compra que ya ha sido recibida o cancelada.');
-        return false;
-    }
-    
-    document.getElementById('proveedor_id').value = item.proveedor_id;
-    
-    if (item.fecha_compra) {
-        document.getElementById('fecha_compra').value = item.fecha_compra;
-    }
-    
-    const container = document.getElementById('materiales-container');
-    while (container.querySelectorAll('.material-row').length > 1) {
-        container.querySelector('.material-row:last-child').remove();
-    }
-    
-    const firstRow = container.querySelector('.material-row');
-    firstRow.querySelectorAll('input, select').forEach(el => el.value = '');
-    
-    if (item.detalles && item.detalles.length) {
-        item.detalles.forEach((det, idx) => {
-            let row;
-            if (idx === 0) row = firstRow;
-            else {
-                row = firstRow.cloneNode(true);
-                container.appendChild(row);
-            }
-            row.querySelector('select[name="materia_prima_id[]"]').value = det.materia_prima_id;
-            row.querySelector('input[name="cantidad[]"]').value = det.cantidad;
-            row.querySelector('input[name="precio_unitario[]"]').value = det.precio_unitario;
-        });
-    }
-    
-    actualizarTotalYJson();
-    return true;
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    const mgr = new CrudManager({
-        id: 'compras',
-        apiEndpoint: '/compras',
-        sortBy: 'fecha_compra',
-        columns: [
-            { 
-                field: 'folio', 
-                label: 'Folio', 
-                sortable: true, 
-                render: (val) => `<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-[#1E3A5F] text-white">${val}</span>` 
-            },
-            { 
-                field: 'proveedor_nombre', 
-                label: 'Proveedor', 
-                sortable: true,
-                render: (val) => `<span class="font-medium text-white">${val}</span>`
-            },
-            { 
-                field: 'fecha_compra', 
-                label: 'Fecha', 
-                sortable: true,
-                render: (val) => `<span class="text-gray-400">${formatearFecha(val, 'date')}</span>`
-            },
-            { 
-                field: 'total', 
-                label: 'Total', 
-                sortable: true, 
-                render: (val) => `<span class="font-semibold text-white">${window.APP_CONFIG.moneda} ${parseFloat(val).toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>` 
-            },
-            { 
-                field: 'estado', 
-                label: 'Estado', 
-                sortable: true, 
-                render: (val) => {
-                    const colors = { 
-                        CREADA: 'bg-amber-500/20 text-amber-400', 
-                        RECIBIDA: 'bg-emerald-500/20 text-emerald-400', 
-                        CANCELADA: 'bg-red-500/20 text-red-400' 
-                    };
-                    return `<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${colors[val] || 'bg-gray-500/20 text-gray-400'}">${val}</span>`;
-                } 
-            }
-        ],
-        formFields: [
-            { name: 'proveedor_id', label: 'Proveedor', type: 'select', required: true, options: {{ proveedores_options | tojson }} },
-            { name: 'fecha_compra', label: 'Fecha', type: 'date', required: true }
-        ],
-        onEdit: fillCompraForm,
-        onSubmit: (formData) => {
-            const fechaInput = document.getElementById('fecha_compra');
-            if (!fechaInput.value) {
-                alert('Debes seleccionar una fecha.');
-                return false;
-            }
-            actualizarTotalYJson();
-            return formData;
-        }
-    });
-
-    const originalRender = mgr.renderTabla.bind(mgr);
-    mgr.renderTabla = function(items) {
-        originalRender(items);
-        if (!items || !items.length) return;
-
-        const total = items.length;
-        const pendientes = items.filter(i => i.estado === 'CREADA').length;
-        const recibidas = items.filter(i => i.estado === 'RECIBIDA').length;
-        const canceladas = items.filter(i => i.estado === 'CANCELADA').length;
-        
-        document.getElementById('kpi-total-ordenes').textContent = total;
-        document.getElementById('kpi-pendientes').textContent = pendientes;
-        document.getElementById('kpi-recibidas').textContent = recibidas;
-        document.getElementById('kpi-canceladas').textContent = canceladas;
-
-        const filas = document.querySelectorAll('#tabla-compras tbody tr');
-        filas.forEach((fila, idx) => {
-            const item = items[idx];
-            if (!item) return;
-            const estado = item.estado;
-            const compraId = item.id;
-            const divAcciones = fila.querySelector('td:last-child div');
-            if (!divAcciones) return;
-
-            const btns = divAcciones.querySelectorAll('button');
-            if (btns.length >= 2) btns[1].remove();
-            const btnEditar = btns[0];
-            if (btnEditar && estado !== 'CREADA') btnEditar.remove();
-            
-            if (estado !== 'CANCELADA') {
-                if (!divAcciones.querySelector('.btn-cambiar-estado')) {
-                    const btnCambio = document.createElement('button');
-                    btnCambio.textContent = estado === 'RECIBIDA' ? 'Anular' : 'Recibir';
-                    btnCambio.className = `btn-cambiar-estado text-xs font-medium transition-colors ml-2 ${
-                        estado === 'RECIBIDA' 
-                            ? 'text-amber-400 hover:text-amber-300' 
-                            : 'text-emerald-400 hover:text-emerald-300'
-                    }`;
-                    btnCambio.addEventListener('click', async (e) => {
-                        e.preventDefault();
-                        const nuevoEstado = estado === 'RECIBIDA' ? 'CANCELADA' : 'RECIBIDA';
-                        const observaciones = prompt('Observaciones (opcional):');
-                        const csrf = document.querySelector('input[name="csrf_token"]')?.value;
-                        
-                        try {
-                            const res = await fetch(`/compras/cambiar_estado/${compraId}`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-                                body: JSON.stringify({ estado: nuevoEstado, observaciones: observaciones || '' })
-                            });
-                            const data = await res.json();
-                            if (data.success) {
-                                mgr.cargarDatos();
-                            } else {
-                                alert(data.message);
-                            }
-                        } catch (err) {
-                            alert('Error de conexión.');
-                        }
-                    });
-                    divAcciones.appendChild(btnCambio);
+    document.addEventListener('DOMContentLoaded', function () {
+        const mgr = new CrudManager({
+            id: 'compras',
+            apiEndpoint: '/compras',
+            sortBy: 'fecha_compra',
+            columns: [
+                {
+                    field: 'folio',
+                    label: 'Folio',
+                    sortable: true,
+                    render: (val) => `<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-[#1E3A5F] text-white">${val}</span>`
+                },
+                {
+                    field: 'proveedor_nombre',
+                    label: 'Proveedor',
+                    sortable: true,
+                    render: (val) => `<span class="font-medium text-white">${val}</span>`
+                },
+                {
+                    field: 'fecha_compra',
+                    label: 'Fecha',
+                    sortable: true,
+                    render: (val) => `<span class="text-gray-400">${formatearFecha(val, 'date')}</span>`
+                },
+                {
+                    field: 'total',
+                    label: 'Total',
+                    sortable: true,
+                    render: (val) => `<span class="font-semibold text-white">${window.APP_CONFIG.moneda} ${parseFloat(val).toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`
+                },
+                {
+                    field: 'estado',
+                    label: 'Estado',
+                    sortable: true,
+                    render: (val) => {
+                        const colors = {
+                            CREADA: 'bg-amber-500/20 text-amber-400',
+                            RECIBIDA: 'bg-emerald-500/20 text-emerald-400',
+                            CANCELADA: 'bg-red-500/20 text-red-400'
+                        };
+                        return `<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${colors[val] || 'bg-gray-500/20 text-gray-400'}">${val}</span>`;
+                    }
                 }
+            ],
+            formFields: [
+                { name: 'proveedor_id', label: 'Proveedor', type: 'select', required: true, options: PROVEEDORES_OPTIONS },
+                { name: 'fecha_compra', label: 'Fecha', type: 'date', required: true }
+            ],
+            onEdit: fillCompraForm,
+            onSubmit: (formData) => {
+                const fechaInput = document.getElementById('fecha_compra');
+                if (!fechaInput.value) {
+                    alert('Debes seleccionar una fecha.');
+                    return false;
+                }
+                actualizarTotalYJson();
+                return formData;
             }
         });
-    };
-    
-    mgr.cargarDatos();
-    window.crudManagers['compras'] = mgr;
-});
+
+        const originalRender = mgr.renderTabla.bind(mgr);
+        mgr.renderTabla = function (items) {
+            originalRender(items);
+            if (!items || !items.length) return;
+
+            const total = items.length;
+            const pendientes = items.filter(i => i.estado === 'CREADA').length;
+            const recibidas = items.filter(i => i.estado === 'RECIBIDA').length;
+            const canceladas = items.filter(i => i.estado === 'CANCELADA').length;
+
+            document.getElementById('kpi-total-ordenes').textContent = total;
+            document.getElementById('kpi-pendientes').textContent = pendientes;
+            document.getElementById('kpi-recibidas').textContent = recibidas;
+            document.getElementById('kpi-canceladas').textContent = canceladas;
+
+            const filas = document.querySelectorAll('#tabla-compras tbody tr');
+            filas.forEach((fila, idx) => {
+                const item = items[idx];
+                if (!item) return;
+                const estado = item.estado;
+                const compraId = item.id;
+                const divAcciones = fila.querySelector('td:last-child div');
+                if (!divAcciones) return;
+
+                const btns = divAcciones.querySelectorAll('button');
+                if (btns.length >= 2) btns[1].remove();
+                const btnEditar = btns[0];
+                if (btnEditar && estado !== 'CREADA') btnEditar.remove();
+
+                if (estado !== 'CANCELADA') {
+                    if (!divAcciones.querySelector('.btn-cambiar-estado')) {
+                        const btnCambio = document.createElement('button');
+                        btnCambio.textContent = estado === 'RECIBIDA' ? 'Anular' : 'Recibir';
+                        btnCambio.className = `btn-cambiar-estado text-xs font-medium transition-colors ml-2 ${estado === 'RECIBIDA'
+                            ? 'text-amber-400 hover:text-amber-300'
+                            : 'text-emerald-400 hover:text-emerald-300'
+                            }`;
+                        btnCambio.addEventListener('click', (e) => {
+                            e.preventDefault();
+                            const nuevoEstado = estado === 'RECIBIDA' ? 'CANCELADA' : 'RECIBIDA';
+                            abrirModalEstado(compraId, nuevoEstado);
+                        });
+                        divAcciones.appendChild(btnCambio);
+                    }
+                }
+            });
+        };
+
+        mgr.cargarDatos();
+        window.crudManagers['compras'] = mgr;
+
+        function abrirModalEstado(id, nuevoEstado) {
+            document.getElementById('compra-id-estado').value = id;
+            document.getElementById('nuevo-estado-compra').value = nuevoEstado;
+            document.getElementById('observaciones-estado').value = '';
+
+            const titulo = document.getElementById('titulo-modal-estado');
+            const btn = document.getElementById('btn-confirmar-estado');
+
+            if (nuevoEstado === 'RECIBIDA') {
+                titulo.textContent = 'Recibir Orden de Compra';
+                btn.textContent = 'Recibir mercancía';
+                btn.className = 'inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl shadow-lg shadow-emerald-600/25 transition-all';
+            } else {
+                titulo.textContent = 'Anular Orden de Compra';
+                btn.textContent = 'Anular orden';
+                btn.className = 'inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-red-600 hover:bg-red-500 rounded-xl shadow-lg shadow-red-600/25 transition-all';
+            }
+
+            const modal = document.getElementById('modal-estado-compra');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        window.cerrarModalEstado = function () {
+            const modal = document.getElementById('modal-estado-compra');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('form-estado-compra').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const compraId = document.getElementById('compra-id-estado').value;
+            const nuevoEstado = document.getElementById('nuevo-estado-compra').value;
+            const observaciones = document.getElementById('observaciones-estado').value;
+            const csrf = document.querySelector('input[name="csrf_token"]')?.value;
+
+            try {
+                const res = await fetch(`/compras/cambiar_estado/${compraId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                    body: JSON.stringify({ estado: nuevoEstado, observaciones: observaciones || '' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    cerrarModalEstado();
+                    window.crudManagers['compras'].cargarDatos();
+                } else {
+                    alert(data.message);
+                }
+            } catch (err) {
+                alert('Error de conexión.');
+            }
+        });
+    });
 </script>
 {% endblock %}

@@ -19,9 +19,13 @@ class Produccion(db.Model):
     )
     observaciones  = db.Column(db.String(500))
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+    pedido_id = db.Column(db.BigInteger, db.ForeignKey('pedidos_cliente.id_pedido_cliente', ondelete='SET NULL'), nullable=True)
+    solicitud_id = db.Column(db.BigInteger, db.ForeignKey('solicitudes_produccion.id_solicitud', ondelete='SET NULL'), nullable=True)
 
     producto = db.relationship('Productos', backref='producciones')
     receta   = db.relationship('Recetas',   backref='producciones')
+    pedido = db.relationship('PedidoCliente', backref='producciones')
+    solicitud = db.relationship('SolicitudProduccion', backref='produccion')
 
     @property
     def id(self):

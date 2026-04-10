@@ -13,7 +13,7 @@ class Venta(db.Model):
     folio           = db.Column(db.String(40), nullable=False, unique=True)
     cliente_id      = db.Column(db.BigInteger, db.ForeignKey('clientes.id_cliente'), nullable=False)
     usuario_id      = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario'), nullable=True)
-    metodo_pago     = db.Column(db.Enum('EFECTIVO', 'TRANSFERENCIA', 'CHEQUE', 'CREDITO'), nullable=False)
+    metodo_pago = db.Column(db.Enum('EFECTIVO', 'TRANSFERENCIA', 'CHEQUE', 'CREDITO', 'TARJETA', 'OXXO'), nullable=False)
     estado          = db.Column(db.Enum('PENDIENTE', 'COBRADO', 'CREDITO', 'CANCELADO'), nullable=False, default='PENDIENTE')
     subtotal        = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
     iva             = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
@@ -31,7 +31,8 @@ class VentaDetalle(db.Model):
     id_detalle      = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     venta_id        = db.Column(db.BigInteger, db.ForeignKey('ventas.id_venta'), nullable=False)
     producto_id     = db.Column(db.BigInteger, db.ForeignKey('productos.id_producto'), nullable=False)
-    cantidad        = db.Column(db.Numeric(14, 3), nullable=False)
+    cantidad = db.Column(db.Integer, nullable=False)
+    costo_unitario  = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
     precio_unitario = db.Column(db.Numeric(12, 2), nullable=False)
     total_linea     = db.Column(db.Numeric(12, 2), nullable=False)
 
@@ -87,7 +88,9 @@ class Cliente(db.Model):
     es_activo           = db.Column(db.SmallInteger, nullable=False, default=1)
     fecha_creacion      = db.Column(db.DateTime, nullable=False, default=datetime.now)
     fecha_actualizacion = db.Column(db.DateTime, nullable=True, onupdate=datetime.now)
-
+    usuario_id = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario'), unique=True, nullable=True)
+    
+    usuario = db.relationship('User', backref=db.backref('cliente_info', uselist=False))
     detalle_info        = db.relationship('ClienteDetalle', backref='cliente', uselist=False, cascade='all, delete-orphan')
 
 class ClienteDetalle(db.Model):

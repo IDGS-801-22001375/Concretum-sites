@@ -1,20 +1,212 @@
 {% extends "base.html" %}
-{% import "_macros.html" as macros %}
 {% import 'macros/crud_components.html' as components %}
+
+{% block title %}Control de Producción{% endblock %}
 
 {% block content %}
 
-{{ components.page_header('Control de Producción', 'Gestión de fabricación') }}
+{{ components.page_header('Control de Producción', 'Gestión de fabricación de productos y seguimiento de órdenes') }}
 
-<script src="https://cdn.tailwindcss.com"></script>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    {{ components.kpi_card('Órdenes Activas', 'kpi-activas', '0', 'amber', '<svg class="w-6 h-6 text-amber-400"
+        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4l3 3m9-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>') }}
+    {{ components.kpi_card('Finalizadas', 'kpi-finalizadas', '0', 'green', '<svg class="w-6 h-6 text-emerald-400"
+        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>') }}
+    {{ components.kpi_card('Canceladas', 'kpi-canceladas', '0', 'red', '<svg class="w-6 h-6 text-red-400" fill="none"
+        stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    </svg>') }}
+    {{ components.kpi_card('Total Histórico', 'kpi-total', '0', 'slate', '<svg class="w-6 h-6 text-gray-400" fill="none"
+        stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 17v-6h13M9 5h13M5 19h.01M5 5h.01M5 12h.01" />
+    </svg>') }}
+</div>
 
-<!-- CARDS -->
-{% include "produccion/pedidos_produccion/_card-producciones.html" %}
+<div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden shadow-sm mb-8">
+    <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239] flex justify-between items-center">
+        <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Órdenes en Producción
+        </h2>
+    </div>
+    <div class="p-6 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4" id="contenedor-activas">
+        <p class="text-gray-500 text-sm text-center col-span-full py-4">Cargando órdenes activas...</p>
+    </div>
+</div>
 
-<!-- GRID -->
-{% include "produccion/pedidos_produccion/_form-producciones.html" %}
+{{ components.crud_table(
+id_table='produccion',
+api_endpoint='/produccion-rectas/historial',
+title='Historial de Producción',
+columns=[
+{'field': 'id_produccion', 'label': 'Orden', 'sortable': true},
+{'field': 'producto_nombre', 'label': 'Producto', 'sortable': true},
+{'field': 'cantidad_producida', 'label': 'Cant. Lotes', 'sortable': true},
+{'field': 'fecha_inicio', 'label': 'Fecha Inicio', 'sortable': true},
+{'field': 'estado', 'label': 'Estado', 'sortable': true}
+],
+search_placeholder='Buscar por producto...',
+btn_new_label='Iniciar Producción',
+show_actions=false
+) }}
 
-<!-- HISTORIAL -->
-{% include "produccion/pedidos_produccion/_historial-producciones.html" %}
+{% set form_fields = [
+{'name': 'receta_id', 'label': 'Receta a Fabricar', 'type': 'select', 'required': true, 'options': recetas_options,
+'full_width': true},
+{'name': 'cantidad', 'label': 'Lotes a Producir', 'type': 'number', 'step': '0.01', 'required': true},
+{'name': 'fecha_inicio', 'label': 'Fecha de Inicio', 'type': 'date', 'required': true},
+{'name': 'observaciones', 'label': 'Observaciones', 'type': 'textarea', 'required': false, 'full_width': true}
+] %}
 
+{% call components.crud_modal('produccion', form_fields, id_field='id_produccion', modal_title='Nueva Orden de
+Producción', modal_size='md') %}
+{% endcall %}
+
+<script src="{{ url_for('static', filename='js/crud.js') }}"></script>
+<script>
+    // Variables globales para la API
+    const CSRF_TOKEN = "{{ csrf_token() }}";
+    const API_FINALIZAR = "{{ url_for('produccion_recetas_bp.finalizar_manual', id=0) }}";
+    const API_CANCELAR = "{{ url_for('produccion_recetas_bp.cancelar_orden', id=0) }}";
+
+    // Cargar datos dinámicos (KPIs y Tarjetas Activas)
+    async function cargarDatosDinamicos() {
+        try {
+            const res = await fetch('/produccion-rectas/api/kpis_y_activas');
+            const data = await res.json();
+
+            // Actualizar KPIs
+            document.getElementById('kpi-activas').textContent = data.kpis.activas;
+            document.getElementById('kpi-finalizadas').textContent = data.kpis.finalizadas;
+            document.getElementById('kpi-canceladas').textContent = data.kpis.canceladas;
+            document.getElementById('kpi-total').textContent = data.kpis.total;
+
+            // Renderizar Tarjetas Activas
+            const contenedor = document.getElementById('contenedor-activas');
+            if (data.ordenes_activas.length === 0) {
+                contenedor.innerHTML = `<p class="text-gray-500 text-sm text-center col-span-full py-8">No hay órdenes en proceso en este momento.</p>`;
+            } else {
+                contenedor.innerHTML = data.ordenes_activas.map(o => `
+                    <div class="bg-[#0B2239] border border-[#1E3A5F] rounded-xl p-4 flex flex-col justify-between">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <p class="text-xs text-[#008DC0] font-mono mb-0.5">#${o.id}</p>
+                                <p class="text-white font-bold text-sm truncate pr-2">${o.producto}</p>
+                            </div>
+                            <span class="bg-amber-500/20 text-amber-400 text-[10px] font-bold px-2 py-1 rounded border border-amber-500/20">EN PROCESO</span>
+                        </div>
+                        <div class="w-full bg-[#1E3A5F] rounded-full h-1.5 mb-4">
+                            <div class="bg-amber-400 h-1.5 rounded-full animate-pulse" style="width: 50%"></div>
+                        </div>
+                        <div class="flex gap-2 mt-auto">
+                            <button onclick="accionOrden(${o.id}, 'finalizar')" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 text-xs font-semibold py-2 rounded-lg border border-emerald-600/30 transition-colors">
+                                Finalizar
+                            </button>
+                            <button onclick="accionOrden(${o.id}, 'cancelar')" class="flex-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 text-xs font-semibold py-2 rounded-lg border border-red-600/30 transition-colors">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (e) {
+            console.error("Error cargando dashboard de producción", e);
+        }
+    }
+
+    // Acción AJAX para Finalizar o Cancelar
+    async function accionOrden(id, accion) {
+        if (!confirm(`¿Estás seguro de ${accion} esta orden?`)) return;
+
+        const url = accion === 'finalizar' ? API_FINALIZAR.replace('0', id) : API_CANCELAR.replace('0', id);
+
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': CSRF_TOKEN }
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                // Recargar todo sin parpadear la página
+                cargarDatosDinamicos();
+                window.crudManagers['produccion'].cargarDatos();
+            } else {
+                alert(data.message);
+            }
+        } catch (e) {
+            alert('Error de red al intentar procesar la solicitud.');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Fijar la fecha de hoy por defecto en el form
+        const fechaInput = document.getElementById('fecha_inicio');
+        if (fechaInput) fechaInput.valueAsDate = new Date();
+
+        // Iniciar CrudManager de la tabla historial
+        window.crudManagers['produccion'] = new CrudManager({
+            id: 'produccion',
+            apiEndpoint: '/produccion-rectas/historial',
+            sortBy: 'id_produccion',
+            columns: [
+                { field: 'id_produccion', label: 'Orden', sortable: true, render: val => `<span class="font-mono text-[#008DC0] text-sm font-semibold">${val}</span>` },
+                { field: 'producto_nombre', label: 'Producto', sortable: true, render: val => `<span class="font-medium text-white">${val}</span>` },
+                { field: 'cantidad_producida', label: 'Cant.', sortable: true, render: val => `<span class="text-gray-300 font-mono">${val}</span>` },
+                { field: 'fecha_inicio', label: 'Fecha', sortable: true, render: val => `<span class="text-gray-400 text-sm">${val}</span>` },
+                {
+                    field: 'estado', label: 'Estado', sortable: true,
+                    render: val => {
+                        const bg = val === 'FINALIZADA' ? 'bg-emerald-500/20 text-emerald-400' : (val === 'EN_PROCESO' ? 'bg-amber-500/20 text-amber-400' : 'bg-red-500/20 text-red-400');
+                        return `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider ${bg}">${val}</span>`;
+                    }
+                }
+            ],
+            // Al hacer submit del modal, lo mandamos por fetch
+            onSubmit: async function (formData) {
+                // Cancelamos el comportamiento por defecto del crud_manager que intenta actualizar la tabla internamente.
+                // En su lugar, hacemos el fetch manualmente.
+                const formElement = document.getElementById('form-produccion');
+                const fd = new FormData(formElement);
+
+                try {
+                    const res = await fetch('/produccion-rectas/crear', {
+                        method: 'POST',
+                        body: fd
+                    });
+                    const result = await res.json();
+
+                    if (result.success) {
+                        window.closeModal_produccion();
+                        cargarDatosDinamicos();
+                        window.crudManagers['produccion'].cargarDatos();
+                    } else {
+                        alert(result.message);
+                    }
+                } catch (e) {
+                    alert('Error enviando la orden.');
+                }
+                return false; // Retornamos false para decirle al crud_manager que nosotros manejamos la petición
+            }
+        });
+
+        // Primera carga
+        cargarDatosDinamicos();
+
+        // Auto refresco cada 10 segundos para ver si las órdenes "en simulación" cambian
+        setInterval(cargarDatosDinamicos, 10000);
+    });
+</script>
 {% endblock %}

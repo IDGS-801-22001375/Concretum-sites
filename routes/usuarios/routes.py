@@ -24,7 +24,7 @@ def registrar_auditoria(usuario_accion, accion, detalles):
 
 @usuarios_bp.route('/usuarios', methods=['GET', 'POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN')
+@roles_accepted('ADMINISTRADOR')
 def index():
     roles_list = Role.query.filter_by(es_activo=True).all()
     role_options = [{'value': r.id_rol, 'label': r.name} for r in roles_list]
@@ -32,7 +32,7 @@ def index():
 
 @usuarios_bp.route('/usuarios/api', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN')
+@roles_accepted('ADMINISTRADOR')
 def api_usuarios():
     """API para obtener usuarios paginados, filtrados y ordenados"""
     # Parámetros de paginación
@@ -93,7 +93,7 @@ def api_usuarios():
 
 @usuarios_bp.route('/usuarios/guardar', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN')
+@roles_accepted('ADMINISTRADOR')
 def guardar_usuario():
     form = UsuarioForm()
     if form.validate_on_submit():
@@ -152,7 +152,7 @@ def guardar_usuario():
 
 @usuarios_bp.route('/usuarios/obtener/<int:id>', methods=['GET'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN')
+@roles_accepted('ADMINISTRADOR')
 def obtener_usuario(id):
     user = User.query.get_or_404(id)
     return jsonify({
@@ -165,7 +165,7 @@ def obtener_usuario(id):
 
 @usuarios_bp.route('/usuarios/alternar_estado/<int:id>', methods=['POST'])
 @login_required
-@roles_accepted('ADMINISTRADOR', 'ADMIN', 'SUPER_ADMIN')
+@roles_accepted('ADMINISTRADOR')
 def alternar_estado(id):
     if id == current_user.id:
         return jsonify({'success': False, 'message': 'No puedes desactivar tu propia cuenta.'}), 400

@@ -1,591 +1,505 @@
 {% extends "layout.html" %}
-
 {% block content %}
-<script src="https://cdn.tailwindcss.com"></script>
 
-<!-- =========================================================
-     HEADER DEL PORTAL
-     ========================================================= -->
-<div class="bg-[#002F5C] py-10 px-6">
-  <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-4">
-      <div class="w-14 h-14 rounded-full bg-[#008DC0] flex items-center justify-center text-white font-bold text-xl uppercase">
-        {{ current_user.username[:2] }}
-      </div>
-      <div>
-        <p class="text-white font-bold text-xl">Hola, {{ current_user.username }}</p>
-        <p class="text-blue-200 text-sm">{{ current_user.email }}</p>
-      </div>
-    </div>
-    <a href="{{ url_for('carrito_bp.catalogo') }}"
-       class="bg-[#008DC0] hover:bg-[#0074A0] text-white font-semibold px-5 py-2.5 rounded-xl transition text-sm flex items-center gap-2">
+<div class="fixed top-24 right-5 z-[100] flex flex-col gap-3 pointer-events-none" id="flash-container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  {% for category, message in messages %}
+  <div class="flash-message flex items-start gap-3 px-4 py-4 rounded-xl border shadow-lg bg-white pointer-events-auto animate-slide-in
+                    {% if category == 'error' or category == 'danger' %}border-red-500 text-red-700
+                    {% elif category == 'success' %}border-emerald-500 text-emerald-700
+                    {% else %}border-[#008DC0] text-[#008DC0]{% endif %}" role="alert">
+
+    {% if category == 'success' %}
+    <svg class="w-5 h-5 flex-shrink-0 text-emerald-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    {% elif category == 'error' or category == 'danger' %}
+    <svg class="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    {% else %}
+    <svg class="w-5 h-5 flex-shrink-0 text-[#008DC0] mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+    {% endif %}
+
+    <span class="text-sm font-medium flex-1">{{ message }}</span>
+    <button type="button" onclick="this.parentElement.remove()"
+      class="opacity-60 hover:opacity-100 flex-shrink-0 transition-opacity">
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
       </svg>
-      Ir al catálogo
-    </a>
+    </button>
   </div>
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
 </div>
 
-<!-- =========================================================
-     TABS DE NAVEGACIÓN
-     ========================================================= -->
-<div class="bg-white border-b border-gray-200 sticky top-0 z-20">
-  <div class="max-w-7xl mx-auto px-6">
-    <nav class="flex overflow-x-auto gap-1 -mb-px">
-      {% set tabs = [
-          ('pedidos',       'Mis pedidos',     '📦'),
-          ('cotizaciones',  'Cotizaciones',    '📄'),
-          ('notificaciones','Notificaciones',  '🔔'),
-          ('produccion',    'Producción',      '⚙️'),
-          ('contacto',      'Contacto',        '💬'),
-          ('cuenta',        'Mi cuenta',       '⚙️'),
-      ] %}
-      {% for id, label, icono in tabs %}
-      <button onclick="mostrarTab('{{ id }}')"
-              id="tab-btn-{{ id }}"
-              class="tab-btn flex items-center gap-2 whitespace-nowrap px-5 py-4 text-sm font-medium
-                     border-b-2 transition-colors
-                     {% if loop.first %}border-[#008DC0] text-[#008DC0]{% else %}border-transparent text-gray-500 hover:text-[#002F5C]{% endif %}">
-        <span class="text-base">{{ icono }}</span>
-        {{ label }}
-        {% if id == 'notificaciones' and no_leidas > 0 %}
-        <span class="bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-          {{ no_leidas }}
-        </span>
-        {% endif %}
+<div class="bg-white border-b border-gray-200 sticky top-[64px] z-30 shadow-sm">
+  <div class="max-w-5xl mx-auto px-6">
+    <nav class="flex gap-8 overflow-x-auto no-scrollbar" aria-label="Tabs">
+      <button onclick="cambiarTab('pedidos')"
+        class="tab-btn py-4 text-sm font-bold border-b-4 transition whitespace-nowrap flex items-center gap-2 text-[#008DC0] border-[#008DC0]"
+        data-tab="pedidos">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+        </svg>
+        Mis Pedidos
       </button>
-      {% endfor %}
+
+      <button onclick="cambiarTab('notificaciones')"
+        class="tab-btn py-4 text-sm font-bold border-b-4 border-transparent text-gray-500 hover:text-[#008DC0] transition whitespace-nowrap flex items-center gap-2"
+        data-tab="notificaciones">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+        Notificaciones
+        <span id="badge-notif-contador"
+          class="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-full ml-1 {% if no_leidas == 0 %}hidden{% endif %}">{{
+          no_leidas }}</span>
+      </button>
+
+      <button onclick="cambiarTab('datos')"
+        class="tab-btn py-4 text-sm font-bold border-b-4 border-transparent text-gray-500 hover:text-[#008DC0] transition whitespace-nowrap flex items-center gap-2"
+        data-tab="datos">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        Configuración de Cuenta
+      </button>
+
+      <button onclick="cambiarTab('produccion')"
+        class="tab-btn py-4 text-sm font-bold border-b-4 border-transparent text-gray-500 hover:text-[#008DC0] transition whitespace-nowrap flex items-center gap-2"
+        data-tab="produccion">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+        </svg>
+        Seguimiento de Fabricación
+      </button>
+
+      <button onclick="cambiarTab('contacto')"
+        class="tab-btn py-4 text-sm font-bold border-b-4 border-transparent text-gray-500 hover:text-[#008DC0] transition whitespace-nowrap flex items-center gap-2"
+        data-tab="contacto">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        Soporte
+      </button>
     </nav>
   </div>
 </div>
 
-<!-- =========================================================
-     CONTENIDO TABS
-     ========================================================= -->
-<div class="bg-[#F4F8FC] min-h-screen py-10 px-4">
-  <div class="max-w-7xl mx-auto">
+<div class="bg-[#F4F8FC] min-h-screen py-10 px-6">
+  <div class="max-w-5xl mx-auto">
 
-    <!-- ── MÉTRICAS RÁPIDAS ────────────────────── -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-      <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center shadow-sm">
-        <p class="text-3xl font-bold text-[#008DC0]">{{ pedidos|length }}</p>
-        <p class="text-gray-500 text-xs mt-1 font-medium">Total pedidos</p>
+    <div id="tab-pedidos" class="tab-content block">
+      <div class="mb-6 flex justify-between items-center">
+        <h2 class="text-[#002F5C] font-bold text-2xl">Historial de Pedidos</h2>
       </div>
-      <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center shadow-sm">
-        <p class="text-3xl font-bold text-emerald-500">
-          {{ pedidos|selectattr('estado', 'eq', 'ENTREGADO')|list|length }}
-        </p>
-        <p class="text-gray-500 text-xs mt-1 font-medium">Entregados</p>
-      </div>
-      <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center shadow-sm">
-        <p class="text-3xl font-bold text-amber-500">{{ solicitudes|length }}</p>
-        <p class="text-gray-500 text-xs mt-1 font-medium">En producción</p>
-      </div>
-      <div class="bg-white rounded-2xl border border-gray-100 p-5 text-center shadow-sm">
-        <p class="text-3xl font-bold text-[#002F5C]">
-          ${{ "{:,.0f}".format(pedidos | sum(attribute='total') | float) }}
-        </p>
-        <p class="text-gray-500 text-xs mt-1 font-medium">Total gastado MXN</p>
-      </div>
-    </div>
-
-    <!-- ─────────────────────────────────────────────────────
-         TAB: PEDIDOS
-         ───────────────────────────────────────────────────── -->
-    <div id="tab-pedidos" class="tab-content">
-      <h2 class="text-[#002F5C] font-bold text-xl mb-4">Historial de pedidos</h2>
 
       {% if pedidos %}
-      <div class="space-y-4">
-        {% for pedido in pedidos %}
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <!-- Encabezado del pedido -->
-          <div class="flex flex-wrap items-center justify-between gap-3 px-6 py-4 border-b border-gray-50 bg-[#F9FBFD]">
-            <div>
-              <span class="text-[#002F5C] font-bold text-sm">{{ pedido.folio }}</span>
-              <span class="text-gray-400 text-xs ml-3">
-                {{ pedido.fecha_pedido.strftime('%d %b %Y, %H:%M') }}
-              </span>
-            </div>
-            <div class="flex items-center gap-3">
-              {% set colores_estado = {
-                'PENDIENTE':     'bg-gray-100 text-gray-600',
-                'PAGADO':        'bg-blue-100 text-blue-700',
-                'EN_PRODUCCION': 'bg-amber-100 text-amber-700',
-                'ENVIADO':       'bg-purple-100 text-purple-700',
-                'ENTREGADO':     'bg-emerald-100 text-emerald-700',
-                'CANCELADO':     'bg-red-100 text-red-600',
-              } %}
-              <span class="px-3 py-1 rounded-full text-xs font-semibold
-                           {{ colores_estado.get(pedido.estado, 'bg-gray-100 text-gray-600') }}">
-                {{ pedido.etiqueta_estado }}
-              </span>
-              <span class="text-[#002F5C] font-bold text-sm">
-                ${{ "{:,.2f}".format(pedido.total|float) }} MXN
-              </span>
-            </div>
-          </div>
-          <!-- Ítems del pedido -->
-          <div class="px-6 py-4">
-            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {% for det in pedido.detalles %}
-              <div class="flex items-center gap-3 bg-gray-50 rounded-xl p-3">
-                <img src="{{ url_for('static', filename=det.producto.enlace_fotografia) }}"
-                     alt="{{ det.producto.nombre }}"
-                     class="w-12 h-12 object-cover rounded-lg bg-[#A5CDE3] shrink-0">
-                <div class="min-w-0">
-                  <p class="text-sm font-semibold text-[#002F5C] truncate">{{ det.producto.nombre }}</p>
-                  <p class="text-xs text-gray-400">× {{ det.cantidad|int }} · ${{ "{:,.2f}".format(det.precio_unitario|float) }}/ud.</p>
-                  {% if not det.stock_suficiente %}
-                  <span class="inline-block mt-1 bg-amber-100 text-amber-700 text-xs px-2 py-0.5 rounded-full font-medium">
-                    En producción
-                  </span>
-                  {% endif %}
-                </div>
+      <div class="space-y-6">
+        {% for ped in pedidos %}
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition">
+          <div
+            class="bg-[#F9FBFD] px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full bg-[#E5F3FA] flex items-center justify-center text-[#008DC0]">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
               </div>
-              {% endfor %}
+              <div>
+                <h3 class="text-[#002F5C] font-black text-lg tracking-tight">{{ ped.folio }}</h3>
+                <p class="text-xs font-semibold text-gray-400">{{ ped.fecha_pedido.strftime('%d de %B, %Y a las %H:%M')
+                  }}</p>
+              </div>
+            </div>
+            <div>
+              <span class="px-4 py-1.5 rounded-full text-xs font-bold shadow-sm uppercase tracking-wider
+                {% if ped.estado == 'COTIZACION' %}bg-amber-100 text-amber-700 border border-amber-200
+                {% elif ped.estado == 'AUTORIZADO' %}bg-blue-100 text-blue-700 border border-blue-200
+                {% elif ped.estado == 'ENTREGADO' %}bg-emerald-100 text-emerald-700 border border-emerald-200
+                {% elif ped.estado == 'RECHAZADO' %}bg-red-100 text-red-700 border border-red-200
+                {% else %}bg-gray-100 text-gray-700 border border-gray-200{% endif %}">
+                {{ ped.estado }}
+              </span>
             </div>
           </div>
-          <!-- Pie del pedido -->
-          <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400">
-            <span>Método: {{ pedido.metodo_pago }}</span>
-            <a href="#" class="text-[#008DC0] font-medium hover:underline">
-              Ver factura →
-            </a>
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-
-      {% else %}
-      <div class="text-center py-20 text-gray-400">
-        <p class="text-5xl mb-3">📦</p>
-        <p class="font-semibold text-lg">Aún no tienes pedidos</p>
-        <p class="text-sm mt-1">Explora nuestro catálogo y realiza tu primer compra.</p>
-        <a href="{{ url_for('carrito_bp.catalogo') }}"
-           class="mt-4 inline-block bg-[#008DC0] text-white px-6 py-3 rounded-xl font-medium text-sm hover:bg-[#0074A0] transition">
-          Ir al catálogo
-        </a>
-      </div>
-      {% endif %}
-    </div>
-
-    <!-- ─────────────────────────────────────────────────────
-         TAB: COTIZACIONES
-         ───────────────────────────────────────────────────── -->
-    <div id="tab-cotizaciones" class="tab-content hidden">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-[#002F5C] font-bold text-xl">Mis cotizaciones</h2>
-        <a href="https://wa.me/524770000000?text=Hola,%20quisiera%20solicitar%20una%20cotización"
-           target="_blank"
-           class="bg-[#008DC0] text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-[#0074A0] transition">
-          + Solicitar cotización
-        </a>
-      </div>
-
-      {% if cotizaciones %}
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <table class="w-full text-sm">
-          <thead class="bg-[#F4F8FC] text-gray-500 text-xs uppercase tracking-wide">
-            <tr>
-              <th class="px-6 py-3 text-left">Folio</th>
-              <th class="px-6 py-3 text-left">Fecha</th>
-              <th class="px-6 py-3 text-left">Estado</th>
-              <th class="px-6 py-3 text-right">Total</th>
-              <th class="px-6 py-3 text-right">Vence</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-50">
-            {% for cot in cotizaciones %}
-            <tr class="hover:bg-gray-50 transition">
-              <td class="px-6 py-4 font-semibold text-[#002F5C]">{{ cot.folio }}</td>
-              <td class="px-6 py-4 text-gray-400">{{ cot.fecha_creacion.strftime('%d %b %Y') }}</td>
-              <td class="px-6 py-4">
-                <span class="px-2 py-1 rounded-full text-xs font-semibold
-                  {% if cot.estado == 'ACEPTADA' %}bg-emerald-100 text-emerald-700
-                  {% elif cot.estado == 'RECHAZADA' or cot.estado == 'EXPIRADA' %}bg-red-100 text-red-600
-                  {% else %}bg-blue-100 text-blue-700{% endif %}">
-                  {{ cot.estado }}
-                </span>
-              </td>
-              <td class="px-6 py-4 text-right font-bold text-[#002F5C]">
-                ${{ "{:,.2f}".format(cot.total|float) }}
-              </td>
-              <td class="px-6 py-4 text-right text-gray-400">
-                {{ cot.fecha_expiracion.strftime('%d %b %Y') if cot.fecha_expiracion else '—' }}
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% else %}
-      <div class="text-center py-20 text-gray-400">
-        <p class="text-5xl mb-3">📄</p>
-        <p class="font-semibold text-lg">Sin cotizaciones aún</p>
-        <p class="text-sm mt-1">Contáctanos para solicitar una cotización personalizada.</p>
-      </div>
-      {% endif %}
-    </div>
-
-    <!-- ─────────────────────────────────────────────────────
-         TAB: NOTIFICACIONES
-         ───────────────────────────────────────────────────── -->
-    <div id="tab-notificaciones" class="tab-content hidden">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-[#002F5C] font-bold text-xl">
-          Notificaciones
-          {% if no_leidas > 0 %}
-          <span class="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-            {{ no_leidas }} nuevas
-          </span>
-          {% endif %}
-        </h2>
-        {% if no_leidas > 0 %}
-        <button onclick="marcarTodasLeidas()"
-                class="text-sm text-[#008DC0] hover:underline font-medium">
-          Marcar todas como leídas
-        </button>
-        {% endif %}
-      </div>
-
-      {% if notificaciones %}
-      <div class="space-y-3" id="lista-notificaciones">
-        {% set iconos_tipo = {
-            'INFO':       ('💡', 'bg-blue-50 border-blue-100'),
-            'PRODUCCION': ('⚙️', 'bg-amber-50 border-amber-100'),
-            'STOCK':      ('📦', 'bg-red-50 border-red-100'),
-            'PAGO':       ('✅', 'bg-emerald-50 border-emerald-100'),
-            'ENTREGA':    ('🚚', 'bg-purple-50 border-purple-100'),
-        } %}
-        {% for notif in notificaciones %}
-        {% set icono_data = iconos_tipo.get(notif.tipo, ('ℹ️', 'bg-gray-50 border-gray-100')) %}
-        <div id="notif-{{ notif.id_notificacion }}"
-             class="flex gap-4 rounded-2xl border p-4 transition cursor-pointer
-                    {{ icono_data[1] }} {% if not notif.leida %}ring-2 ring-[#008DC0]/20{% endif %}"
-             onclick="leerNotificacion({{ notif.id_notificacion }})">
-          <div class="text-2xl shrink-0 mt-0.5">{{ icono_data[0] }}</div>
-          <div class="flex-1 min-w-0">
-            <div class="flex items-start justify-between gap-2">
-              <p class="font-semibold text-[#002F5C] text-sm">{{ notif.titulo }}</p>
-              {% if not notif.leida %}
-              <span class="bg-[#008DC0] w-2.5 h-2.5 rounded-full shrink-0 mt-1"></span>
+          <div class="p-6 flex flex-col md:flex-row justify-between gap-6">
+            <div class="space-y-2 text-sm text-gray-600 flex-1">
+              <div class="flex gap-2"><strong class="text-[#002F5C] min-w-[120px]">Método de pago:</strong> {{
+                ped.metodo_pago }}</div>
+              <div class="flex gap-2"><strong class="text-[#002F5C] min-w-[120px]">Dirección de envío:</strong> {{
+                ped.direccion_entrega or 'No especificada' }}</div>
+              {% if ped.notas %}
+              <div class="flex gap-2"><strong class="text-[#002F5C] min-w-[120px]">Instrucciones:</strong> <span
+                  class="bg-gray-50 p-2 rounded-lg border border-gray-100 flex-1">{{ ped.notas }}</span></div>
               {% endif %}
             </div>
-            <p class="text-gray-500 text-xs mt-1 leading-relaxed">{{ notif.mensaje }}</p>
-            <p class="text-gray-300 text-xs mt-2">{{ notif.fecha_creacion.strftime('%d %b %Y, %H:%M') }}</p>
+            <div
+              class="md:text-right border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6 flex flex-col justify-center">
+              <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total de la Orden</p>
+              <p class="text-3xl font-black text-[#008DC0]">${{ "{:,.2f}".format(ped.total|float) }}</p>
+            </div>
           </div>
         </div>
         {% endfor %}
       </div>
       {% else %}
-      <div class="text-center py-20 text-gray-400">
-        <p class="text-5xl mb-3">🔔</p>
-        <p class="font-semibold text-lg">Sin notificaciones</p>
-        <p class="text-sm mt-1">Aquí aparecerán las actualizaciones de tus pedidos.</p>
+      <div class="bg-white rounded-3xl border border-gray-100 p-12 text-center shadow-sm">
+        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        </div>
+        <h3 class="text-[#002F5C] font-bold text-xl mb-2">Aún no tienes pedidos</h3>
+        <p class="text-gray-500 mb-6">Explora nuestro catálogo y realiza tu primera orden.</p>
+        <a href="{{ url_for('carrito_bp.catalogo') }}"
+          class="inline-flex bg-[#008DC0] hover:bg-[#0074A0] text-white font-bold py-3 px-6 rounded-xl transition shadow-lg shadow-blue-900/10">Ver
+          Catálogo</a>
       </div>
       {% endif %}
     </div>
 
-    <!-- ─────────────────────────────────────────────────────
-         TAB: PRODUCCIÓN
-         ───────────────────────────────────────────────────── -->
+    <div id="tab-datos" class="tab-content hidden">
+      <div class="mb-6">
+        <h2 class="text-[#002F5C] font-bold text-2xl">Configuración de Cuenta</h2>
+        <p class="text-gray-500 mt-1">Actualiza tus datos de facturación y entrega</p>
+      </div>
+
+      <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="bg-[#F9FBFD] px-8 py-5 border-b border-gray-100">
+          <h3 class="font-bold text-[#002F5C]">Información Fiscal y de Contacto</h3>
+        </div>
+        <form method="POST" action="{{ url_for('carrito_bp.actualizar_datos') }}" class="p-8">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          {% set cl = current_user.cliente_info %}
+          {% set det = cl.detalle_info if cl else None %}
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Razón Social / Nombre
+                Completo</label>
+              <input type="text" name="razon_social" value="{{ cl.razon_social if cl else '' }}" required
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#008DC0] focus:border-transparent bg-gray-50 outline-none transition">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">RFC</label>
+              <input type="text" name="rfc" value="{{ cl.rfc if cl else '' }}"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#008DC0] focus:border-transparent bg-gray-50 outline-none transition uppercase">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Teléfono de
+                Contacto</label>
+              <input type="tel" name="telefono" value="{{ det.telefono if det else '' }}"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#008DC0] focus:border-transparent bg-gray-50 outline-none transition">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Código Postal</label>
+              <input type="text" name="codigo_postal" value="{{ det.codigo_postal if det else '' }}"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#008DC0] focus:border-transparent bg-gray-50 outline-none transition">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Dirección Principal de
+                Entrega</label>
+              <input type="text" name="direccion" value="{{ det.direccion if det else '' }}"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#008DC0] focus:border-transparent bg-gray-50 outline-none transition"
+                placeholder="Calle, Número, Colonia">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Ciudad</label>
+              <input type="text" name="ciudad" value="{{ det.ciudad if det else '' }}"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#008DC0] focus:border-transparent bg-gray-50 outline-none transition">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Estado</label>
+              <input type="text" name="estado" value="{{ det.estado if det else '' }}"
+                class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#008DC0] focus:border-transparent bg-gray-50 outline-none transition">
+            </div>
+          </div>
+
+          <div class="mt-8 pt-6 border-t border-gray-100 flex justify-end">
+            <button type="submit"
+              class="bg-[#002F5C] hover:bg-[#001f3f] text-white px-8 py-3.5 rounded-xl font-bold transition shadow-lg flex items-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="tab-notificaciones" class="tab-content hidden">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+        <div>
+          <h2 class="text-[#002F5C] font-bold text-2xl">Notificaciones</h2>
+          <p class="text-gray-500 mt-1">Mantente al tanto del estado de tus operaciones</p>
+        </div>
+        <button onclick="marcarTodasLeidasDOM()" id="btn-marcar-todas"
+          class="text-sm font-bold text-[#008DC0] bg-[#E5F3FA] hover:bg-[#D0EBF7] px-4 py-2 rounded-lg transition {% if no_leidas == 0 %}hidden{% endif %}">
+          Marcar todas como leídas
+        </button>
+      </div>
+
+      <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="divide-y divide-gray-50" id="lista-notificaciones">
+          {% if notificaciones %}
+          {% for notif in notificaciones %}
+          <div id="notif-{{ notif.id_notificacion }}"
+            class="notif-card flex gap-4 p-6 transition cursor-pointer hover:bg-gray-50 {% if not notif.leida %}bg-[#F4F8FC] border-l-4 border-l-[#008DC0]{% else %}border-l-4 border-l-transparent{% endif %}"
+            onclick="leerNotificacionDOM({{ notif.id_notificacion }})">
+
+            <div class="flex-shrink-0 mt-1">
+              {% if notif.tipo == 'INFO' %}
+              <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600"><svg
+                  class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg></div>
+              {% elif notif.tipo == 'STOCK' or notif.tipo == 'PRODUCCION' %}
+              <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600"><svg
+                  class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg></div>
+              {% elif notif.tipo == 'ENTREGA' %}
+              <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600"><svg
+                  class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg></div>
+              {% else %}
+              <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600"><svg
+                  class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg></div>
+              {% endif %}
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-start mb-1">
+                <h4 class="text-[#002F5C] font-bold text-base title-notif">{{ notif.titulo }}</h4>
+                <span class="text-xs font-semibold text-gray-400 whitespace-nowrap ml-4">{{
+                  notif.fecha_creacion.strftime('%d/%m/%Y') }}</span>
+              </div>
+              <p class="text-gray-600 text-sm leading-relaxed">{{ notif.mensaje }}</p>
+            </div>
+
+            {% if not notif.leida %}
+            <div class="flex-shrink-0 flex items-center">
+              <span class="punto-no-leida bg-[#008DC0] w-3 h-3 rounded-full shadow-sm"></span>
+            </div>
+            {% endif %}
+          </div>
+          {% endfor %}
+          {% else %}
+          <div class="p-12 text-center text-gray-500">
+            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </div>
+            No tienes notificaciones recientes.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
     <div id="tab-produccion" class="tab-content hidden">
-      <h2 class="text-[#002F5C] font-bold text-xl mb-4">Solicitudes de producción</h2>
-      <p class="text-gray-400 text-sm mb-6">
-        Cuando un producto no tiene suficiente stock, generamos automáticamente una solicitud de producción.
-        Aquí puedes ver el estado de cada solicitud.
-      </p>
+      <div class="mb-6">
+        <h2 class="text-[#002F5C] font-bold text-2xl">Seguimiento de Fabricación</h2>
+        <p class="text-gray-500 mt-1">Conoce el estatus de los productos que estamos fabricando especialmente para ti.
+        </p>
+      </div>
 
       {% if solicitudes %}
       <div class="space-y-4">
         {% for sol in solicitudes %}
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
-          <div class="flex flex-wrap items-start justify-between gap-3">
-            <div class="flex items-center gap-3">
+        <div
+          class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div class="flex gap-5 items-center w-full md:w-auto">
+            <div class="w-16 h-16 rounded-xl overflow-hidden bg-gray-50 border border-gray-100 flex-shrink-0">
               <img src="{{ url_for('static', filename=sol.producto.enlace_fotografia) }}"
-                   alt="{{ sol.producto.nombre }}"
-                   class="w-14 h-14 rounded-xl object-cover bg-[#A5CDE3]">
-              <div>
-                <p class="font-bold text-[#002F5C]">{{ sol.producto.nombre }}</p>
-                <p class="text-gray-400 text-xs mt-0.5">
-                  Pedido: {{ sol.pedido.folio }} ·
-                  Faltan: <strong>{{ sol.cantidad_faltante|int }} uds.</strong>
-                </p>
-              </div>
+                alt="{{ sol.producto.nombre }}" class="w-full h-full object-cover">
             </div>
-            <span class="px-3 py-1.5 rounded-full text-xs font-bold
-              {% if sol.estado == 'ACEPTADA' or sol.estado == 'EN_PROCESO' %}bg-amber-100 text-amber-700
-              {% elif sol.estado == 'COMPLETADA' %}bg-emerald-100 text-emerald-700
-              {% elif sol.estado == 'RECHAZADA' %}bg-red-100 text-red-600
-              {% else %}bg-gray-100 text-gray-600{% endif %}">
+            <div>
+              <p class="font-black text-[#002F5C] text-lg">{{ sol.producto.nombre }}</p>
+              <p class="text-sm text-gray-500 font-medium">Asociado al Pedido: <span class="text-[#008DC0]">{{
+                  sol.pedido.folio }}</span></p>
+              <p class="text-sm mt-1">Volumen en fabricación: <strong class="text-gray-900 font-mono">{{
+                  sol.cantidad_faltante|int }}</strong> uds</p>
+            </div>
+          </div>
+
+          <div class="flex flex-col items-start md:items-end w-full md:w-auto">
+            <span class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-2
+              {% if sol.estado == 'PENDIENTE' %}bg-amber-100 text-amber-700 border border-amber-200
+              {% elif sol.estado == 'ACEPTADA' or sol.estado == 'EN_PROCESO' %}bg-blue-100 text-blue-700 border border-blue-200
+              {% elif sol.estado == 'COMPLETADA' %}bg-emerald-100 text-emerald-700 border border-emerald-200
+              {% else %}bg-gray-100 text-gray-700 border border-gray-200{% endif %}">
               {{ sol.estado }}
             </span>
+            <p class="text-xs text-gray-400 font-semibold">Iniciado el {{ sol.fecha_solicitud.strftime('%d/%m/%Y') }}
+            </p>
           </div>
-          {% if sol.observaciones %}
-          <p class="mt-3 text-sm text-gray-500 bg-gray-50 rounded-xl px-4 py-2">
-            {{ sol.observaciones }}
-          </p>
-          {% endif %}
-          <p class="text-xs text-gray-300 mt-3">
-            Solicitado el {{ sol.fecha_solicitud.strftime('%d %b %Y, %H:%M') }}
-            {% if sol.fecha_respuesta %}
-            · Respuesta: {{ sol.fecha_respuesta.strftime('%d %b %Y') }}
-            {% endif %}
-          </p>
-          {% if sol.estado == 'PENDIENTE' %}
-          <div class="mt-3 flex items-center gap-2 text-xs text-amber-600 bg-amber-50 rounded-xl px-3 py-2">
-            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            Solicitud en espera de aprobación por el equipo de producción.
-            Te notificaremos cuando sea aceptada.
-          </div>
-          {% endif %}
         </div>
         {% endfor %}
       </div>
       {% else %}
-      <div class="text-center py-20 text-gray-400">
-        <p class="text-5xl mb-3">⚙️</p>
-        <p class="font-semibold text-lg">Sin solicitudes de producción</p>
-        <p class="text-sm mt-1">Todas tus compras se han cubierto con el stock disponible.</p>
+      <div
+        class="bg-white rounded-3xl border border-gray-100 py-24 px-6 flex flex-col items-center justify-center text-center shadow-sm">
+        <div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-5">
+          <svg class="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+          </svg>
+        </div>
+        <h3 class="text-[#002F5C] font-bold text-xl mb-2">Sin producción activa</h3>
+        <p class="text-gray-500">No hay productos fabricándose actualmente para tus pedidos.</p>
       </div>
       {% endif %}
     </div>
 
-    <!-- ─────────────────────────────────────────────────────
-         TAB: CONTACTO
-         ───────────────────────────────────────────────────── -->
-    <div id="tab-contacto" class="tab-content hidden" id="contacto">
-      <h2 class="text-[#002F5C] font-bold text-xl mb-6">Contactar a Concretum</h2>
-
-      <div class="grid lg:grid-cols-2 gap-8">
-        <!-- Formulario -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 class="text-[#002F5C] font-semibold text-base mb-4">Enviar un mensaje</h3>
-          <form method="POST" action="{{ url_for('carrito_bp.enviar_contacto') }}">
-            {{ form_contacto.hidden_tag() }}
-            <div class="space-y-4">
-              <div>
-                {{ form_contacto.asunto.label(class="block text-sm font-medium text-gray-600 mb-1") }}
-                {{ form_contacto.asunto(
-                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-[#008DC0] bg-gray-50",
-                    placeholder="¿En qué podemos ayudarte?"
-                  ) }}
-              </div>
-              <div>
-                {{ form_contacto.mensaje.label(class="block text-sm font-medium text-gray-600 mb-1") }}
-                {{ form_contacto.mensaje(
-                    class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-[#008DC0] bg-gray-50 resize-none",
-                    rows="5",
-                    placeholder="Descríbenos tu duda o necesidad..."
-                  ) }}
-              </div>
-              <button type="submit"
-                      class="w-full bg-[#008DC0] hover:bg-[#0074A0] text-white font-bold
-                             py-3 rounded-xl transition text-sm">
-                Enviar mensaje
-              </button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Info de contacto -->
-        <div class="space-y-4">
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 class="text-[#002F5C] font-semibold text-base mb-4">Información de contacto</h3>
-            <div class="space-y-3 text-sm text-gray-600">
-              <div class="flex items-start gap-3">
-                <span class="text-[#008DC0] text-lg mt-0.5">📍</span>
-                <p>Blvd. Universidad Tecnológica 225, San Carlos la Roncha,<br>37670 León de los Aldama, Gto.</p>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="text-[#008DC0] text-lg">📞</span>
-                <p>+52 477 123 4567</p>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="text-[#008DC0] text-lg">✉️</span>
-                <p>contacto@concretum.com</p>
-              </div>
-              <div class="flex items-center gap-3">
-                <span class="text-[#008DC0] text-lg">🕐</span>
-                <p>Lun – Vie: 8:00 – 18:00 hrs</p>
-              </div>
-            </div>
+    <div id="tab-contacto" class="tab-content hidden">
+      <div class="mb-6">
+        <h2 class="text-[#002F5C] font-bold text-2xl">Atención a Clientes</h2>
+        <p class="text-gray-500 mt-1">Envíanos un mensaje y te responderemos a la brevedad.</p>
+      </div>
+      <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 max-w-2xl">
+        <form method="POST" action="{{ url_for('carrito_bp.enviar_contacto') }}">
+          {{ form_contacto.hidden_tag() }}
+          <div class="mb-5">
+            {{ form_contacto.asunto.label(class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2")
+            }}
+            {{ form_contacto.asunto(class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:ring-2
+            focus:ring-[#008DC0] focus:border-transparent bg-gray-50 outline-none transition") }}
           </div>
-
-          <a href="https://wa.me/524770000000?text=Hola,%20tengo%20una%20consulta%20sobre%20mi%20pedido"
-             target="_blank"
-             class="flex items-center gap-3 bg-emerald-500 hover:bg-emerald-600 text-white
-                    rounded-2xl p-5 transition font-semibold shadow-sm">
-            <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.890-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+          <div class="mb-6">
+            {{ form_contacto.mensaje.label(class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2")
+            }}
+            {{ form_contacto.mensaje(class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm resize-none
+            focus:ring-2 focus:ring-[#008DC0] focus:border-transparent bg-gray-50 outline-none transition", rows="6") }}
+          </div>
+          <button type="submit"
+            class="w-full sm:w-auto bg-[#008DC0] text-white px-8 py-3.5 rounded-xl font-bold hover:bg-[#0074A0] transition shadow-lg flex items-center justify-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
             </svg>
-            Chatea con nosotros en WhatsApp
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <!-- ─────────────────────────────────────────────────────
-         TAB: MI CUENTA
-         ───────────────────────────────────────────────────── -->
-    <div id="tab-cuenta" class="tab-content hidden">
-      <h2 class="text-[#002F5C] font-bold text-xl mb-6">Configuración de cuenta</h2>
-
-      <div class="grid lg:grid-cols-2 gap-6">
-        <!-- Datos de cuenta -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 class="text-[#002F5C] font-semibold mb-4">Datos del perfil</h3>
-          <div class="flex items-center gap-4 mb-5">
-            <div class="w-16 h-16 rounded-full bg-[#008DC0] flex items-center justify-center
-                        text-white font-bold text-2xl uppercase">
-              {{ current_user.username[:2] }}
-            </div>
-            <div>
-              <p class="font-bold text-[#002F5C]">{{ current_user.username }}</p>
-              <p class="text-gray-400 text-sm">{{ current_user.email }}</p>
-            </div>
-          </div>
-          <div class="space-y-3 text-sm">
-            <div class="flex justify-between py-2 border-b border-gray-50">
-              <span class="text-gray-500">Usuario</span>
-              <span class="font-medium text-[#002F5C]">{{ current_user.username }}</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-gray-50">
-              <span class="text-gray-500">Correo</span>
-              <span class="font-medium text-[#002F5C]">{{ current_user.email }}</span>
-            </div>
-            <div class="flex justify-between py-2 border-b border-gray-50">
-              <span class="text-gray-500">Autenticación 2FA</span>
-              <span class="font-medium {% if current_user.tf_primary_method %}text-emerald-600{% else %}text-gray-400{% endif %}">
-                {% if current_user.tf_primary_method %}Activada{% else %}No activada{% endif %}
-              </span>
-            </div>
-            <div class="flex justify-between py-2">
-              <span class="text-gray-500">Último acceso</span>
-              <span class="font-medium text-[#002F5C]">
-                {% if current_user.ultima_sesion %}
-                  {{ current_user.ultima_sesion.strftime('%d %b %Y, %H:%M') }}
-                {% else %}—{% endif %}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Acciones rápidas -->
-        <div class="space-y-4">
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 class="text-[#002F5C] font-semibold mb-4">Seguridad</h3>
-            <div class="space-y-3">
-              <a href="{{ url_for('configurar_2fa') }}"
-                 class="flex items-center justify-between p-3 rounded-xl bg-gray-50
-                        hover:bg-[#E5F3FA] transition group">
-                <div class="flex items-center gap-3 text-sm">
-                  <span class="text-[#008DC0] text-lg">🔐</span>
-                  <span class="font-medium text-[#002F5C]">Configurar autenticación 2FA</span>
-                </div>
-                <svg class="w-4 h-4 text-gray-300 group-hover:text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-              </a>
-              <a href="{{ url_for('security.register') }}"
-                 class="flex items-center justify-between p-3 rounded-xl bg-gray-50
-                        hover:bg-[#E5F3FA] transition group">
-                <div class="flex items-center gap-3 text-sm">
-                  <span class="text-[#008DC0] text-lg">🔑</span>
-                  <span class="font-medium text-[#002F5C]">Cambiar contraseña</span>
-                </div>
-                <svg class="w-4 h-4 text-gray-300 group-hover:text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                </svg>
-              </a>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 class="text-[#002F5C] font-semibold mb-4">Acciones</h3>
-            <a href="{{ url_for('security.logout') }}"
-               class="flex items-center gap-3 text-sm p-3 rounded-xl bg-red-50 hover:bg-red-100
-                      transition text-red-600 font-medium">
-              <span class="text-lg">🚪</span>
-              Cerrar sesión
-            </a>
-          </div>
-        </div>
+            Enviar Mensaje
+          </button>
+        </form>
       </div>
     </div>
 
   </div>
 </div>
 
-<!-- Flash messages -->
-{% with mensajes = get_flashed_messages(with_categories=true) %}
-{% if mensajes %}
-<div class="fixed bottom-6 right-6 z-50 space-y-2">
-  {% for categoria, mensaje in mensajes %}
-  <div class="px-5 py-3 rounded-xl shadow-lg text-sm font-medium
-              {% if categoria == 'success' %}bg-emerald-500 text-white
-              {% elif categoria == 'danger' %}bg-red-500 text-white
-              {% else %}bg-[#002F5C] text-white{% endif %}">
-    {{ mensaje }}
-  </div>
-  {% endfor %}
-</div>
-{% endif %}
-{% endwith %}
-
-<!-- =========================================================
-     JAVASCRIPT
-     ========================================================= -->
 <script>
-const CSRF_TOKEN = "{{ csrf_token() }}";
+  function cambiarTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(el => {
+      el.classList.remove('block');
+      el.classList.add('hidden');
+    });
 
-function mostrarTab(id) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
-  document.querySelectorAll('.tab-btn').forEach(b => {
-    b.classList.remove('border-[#008DC0]', 'text-[#008DC0]');
-    b.classList.add('border-transparent', 'text-gray-500');
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.remove('border-[#008DC0]', 'text-[#008DC0]');
+      btn.classList.add('border-transparent', 'text-gray-500');
+    });
+
+    const targetEl = document.getElementById('tab-' + tabId);
+    if (targetEl) {
+      targetEl.classList.remove('hidden');
+      targetEl.classList.add('block');
+    }
+
+    const activeBtn = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+    if (activeBtn) {
+      activeBtn.classList.remove('border-transparent', 'text-gray-500');
+      activeBtn.classList.add('border-[#008DC0]', 'text-[#008DC0]');
+    }
+    window.location.hash = tabId;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const hash = window.location.hash.replace('#', '');
+    if (['pedidos', 'datos', 'notificaciones', 'produccion', 'contacto'].includes(hash)) {
+      cambiarTab(hash);
+    } else {
+      cambiarTab('pedidos');
+    }
+
+    // Auto-eliminar los mensajes flash a los 5 segundos
+    setTimeout(() => {
+      document.querySelectorAll('.flash-message').forEach(alert => {
+        alert.style.opacity = '0';
+        alert.style.transform = 'translateX(100%)';
+        alert.style.transition = 'all 0.3s ease';
+        setTimeout(() => alert.remove(), 300);
+      });
+    }, 5000);
   });
-  document.getElementById('tab-' + id)?.classList.remove('hidden');
-  const btn = document.getElementById('tab-btn-' + id);
-  btn?.classList.remove('border-transparent', 'text-gray-500');
-  btn?.classList.add('border-[#008DC0]', 'text-[#008DC0]');
-}
 
-async function leerNotificacion(id) {
-  const el = document.getElementById('notif-' + id);
-  if (!el) return;
-  el.classList.remove('ring-2', 'ring-[#008DC0]/20');
-  el.querySelector('.bg-\\[\\#008DC0\\]')?.remove();
+  async function leerNotificacionDOM(id) {
+    try {
+      await fetch(`/tienda/notificaciones/leer/${id}`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': "{{ csrf_token() }}" }
+      });
+      const notifEl = document.getElementById('notif-' + id);
+      if (notifEl) {
+        notifEl.classList.remove('bg-[#F4F8FC]', 'border-l-[#008DC0]');
+        notifEl.classList.add('border-l-transparent');
+        const punto = notifEl.querySelector('.punto-no-leida');
+        if (punto) punto.remove();
 
-  await fetch("{{ url_for('carrito_bp.marcar_leida', notif_id=0) }}".replace('0', id), {
-    method: 'POST',
-    headers: { 'X-CSRFToken': CSRF_TOKEN }
-  });
-}
+        let badge = document.getElementById('badge-notif-contador');
+        let noLeidasActual = document.querySelectorAll('.punto-no-leida').length;
+        if (badge) {
+          badge.textContent = noLeidasActual;
+          if (noLeidasActual === 0) {
+            badge.classList.add('hidden');
+            document.getElementById('btn-marcar-todas').classList.add('hidden');
+          }
+        }
+      }
+    } catch (e) { console.error(e); }
+  }
 
-async function marcarTodasLeidas() {
-  await fetch("{{ url_for('carrito_bp.marcar_todas_leidas') }}", {
-    method: 'POST',
-    headers: { 'X-CSRFToken': CSRF_TOKEN }
-  });
-  document.querySelectorAll('#lista-notificaciones > div').forEach(el => {
-    el.classList.remove('ring-2', 'ring-[#008DC0]/20');
-  });
-  document.querySelectorAll('.bg-\\[\\#008DC0\\].rounded-full').forEach(b => b.remove());
-}
-
-// Mostrar tab desde hash URL (ej: /mi-cuenta#contacto)
-const hash = window.location.hash.replace('#', '');
-const tabsValidos = ['pedidos','cotizaciones','notificaciones','produccion','contacto','cuenta'];
-if (hash && tabsValidos.includes(hash)) {
-  mostrarTab(hash);
-}
+  async function marcarTodasLeidasDOM() {
+    try {
+      await fetch('/tienda/notificaciones/leer-todas', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': "{{ csrf_token() }}" }
+      });
+      document.querySelectorAll('.notif-card').forEach(el => {
+        el.classList.remove('bg-[#F4F8FC]', 'border-l-[#008DC0]');
+        el.classList.add('border-l-transparent');
+        const punto = el.querySelector('.punto-no-leida');
+        if (punto) punto.remove();
+      });
+      document.getElementById('badge-notif-contador').classList.add('hidden');
+      document.getElementById('btn-marcar-todas').classList.add('hidden');
+    } catch (e) { console.error(e); }
+  }
 </script>
+
 {% endblock %}
