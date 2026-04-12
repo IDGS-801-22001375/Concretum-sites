@@ -237,7 +237,7 @@ modal_size='xl') %}
                 newRow.remove();
                 actualizarTotalYJson();
             } else {
-                alert('Debe haber al menos un material.');
+                mostrarAlerta('Debe haber al menos un material.', 'error');
             }
         });
 
@@ -252,7 +252,7 @@ modal_size='xl') %}
                 row.remove();
                 actualizarTotalYJson();
             } else {
-                alert('Debe haber al menos un material.');
+                mostrarAlerta('Debe haber al menos un material.', 'error');
             }
         }
     });
@@ -263,7 +263,7 @@ modal_size='xl') %}
 
     function fillCompraForm(item) {
         if (item.estado !== 'CREADA') {
-            alert('No se puede editar una compra que ya ha sido recibida o cancelada.');
+            mostrarAlerta('No se puede editar una compra que ya ha sido recibida o cancelada.', 'error');
             return false;
         }
 
@@ -353,7 +353,7 @@ modal_size='xl') %}
             onSubmit: (formData) => {
                 const fechaInput = document.getElementById('fecha_compra');
                 if (!fechaInput.value) {
-                    alert('Debes seleccionar una fecha.');
+                    mostrarAlerta('Debes seleccionar una fecha.', 'error');
                     return false;
                 }
                 actualizarTotalYJson();
@@ -459,10 +459,10 @@ modal_size='xl') %}
                     cerrarModalEstado();
                     window.crudManagers['compras'].cargarDatos();
                 } else {
-                    alert(data.message);
+                    mostrarAlerta(data.message, 'error');
                 }
             } catch (err) {
-                alert('Error de conexión.');
+                mostrarAlerta('Error de conexión.', 'error');
             }
         });
     });

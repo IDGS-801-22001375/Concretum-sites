@@ -447,10 +447,10 @@ modal_size='md') %}
                     cargarMovimientos();
                     cargarKPIs();
                 } else {
-                    alert(data.message || 'Error al procesar.');
+                    mostrarAlerta(data.message || 'Error al procesar.', 'error');
                 }
             } catch (e) {
-                alert('Error de conexión.');
+                mostrarAlerta('Error de conexión.', 'error');
             }
         });
 

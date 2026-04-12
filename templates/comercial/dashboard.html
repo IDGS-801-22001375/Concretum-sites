@@ -156,7 +156,7 @@
 <!-- KPIs -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
   {{ components.kpi_card(
-  'Ventas del Día',
+  'Ventas',
   'kpi-ventas-dia',
   ventas_dia|default('0.00'),
   'blue',
@@ -188,7 +188,7 @@
   moneda='$'
   ) }}
   {{ components.kpi_card(
-  'Utilidad del Día',
+  'Utilidad',
   'kpi-utilidad',
   utilidad_dia|default('0.00'),
   'red',

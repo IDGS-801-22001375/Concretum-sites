@@ -208,7 +208,7 @@ modal_size='md') %}
                 const cantidad = parseFloat(formData.get('cantidad'));
 
                 if (cantidad > stock) {
-                    alert('La cantidad de merma no puede superar el stock disponible.');
+                    mostrarAlerta('La cantidad de merma no puede superar el stock disponible.', 'error');
                     return false; // Evita que se envíe el formulario
                 }
 

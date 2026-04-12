@@ -200,3 +200,10 @@ def alternar_estado(id):
     estado_txt = "Activado" if p.es_active == 1 else "Desactivado"
     db.session.commit()
     return jsonify({'success': True, 'message': f'Producto {estado_txt.lower()} correctamente.'})
+
+@productos_bp.route('/productos/<int:id>/ver')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'PRODUCCION')
+def ver_detalle_producto(id):
+    producto = Productos.query.get_or_404(id)
+    return render_template('produccion/productos/detalle_producto.html', producto=producto)

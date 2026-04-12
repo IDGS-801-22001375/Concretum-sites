@@ -373,3 +373,73 @@ def aceptar_solicitud(solicitud_id):
         db.session.rollback()
         flash(f'Error al procesar la solicitud: {str(e)}', 'danger')
         return redirect(url_for('produccion_recetas_bp.solicitudes_pendientes'))
+    
+@produccion_recetas_bp.route('/pedido/<int:pedido_id>')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'PRODUCCION')
+def ver_pedido_produccion(pedido_id):
+    pedido = PedidoCliente.query.get_or_404(pedido_id)
+    # Ocultamos datos del cliente
+    return render_template('produccion/pedido_detalle_produccion.html', pedido=pedido)
+
+@produccion_recetas_bp.route('/solicitud/<int:solicitud_id>/detalle')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'PRODUCCION')
+def detalle_solicitud_materiales(solicitud_id):
+    solicitud = SolicitudProduccion.query.get_or_404(solicitud_id)
+    receta = Recetas.query.filter_by(producto_id=solicitud.producto_id, es_active=1).first()
+    if not receta:
+        return jsonify({'error': 'No hay receta activa'}), 404
+    lotes = math.ceil(float(solicitud.cantidad_faltante) / float(receta.cuanto_produce))
+    materiales = []
+    for det in receta.detalles:
+        mp = det.materia_prima
+        existencia = mp.existencia
+        necesario = det.cantidad * lotes
+        # Conversión de unidades (reutilizar función convertir_unidades)
+        necesario_convertido = convertir_unidades(necesario, det.unidad_medida.clave, mp.unidad_medida)
+        materiales.append({
+            'nombre': mp.nombre,
+            'necesario': round(necesario_convertido, 3),
+            'unidad': mp.unidad_medida,
+            'stock_actual': float(existencia.stock_actual) if existencia else 0
+        })
+    return jsonify({
+        'producto_nombre': solicitud.producto.nombre,
+        'cantidad_faltante': float(solicitud.cantidad_faltante),
+        'receta_descripcion': receta.descripcion,
+        'materiales': materiales
+    })
+
+@produccion_recetas_bp.route('/solicitud/<int:solicitud_id>/ver')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'PRODUCCION')
+def detalle_solicitud(solicitud_id):
+    solicitud = SolicitudProduccion.query.get_or_404(solicitud_id)
+    # Calcular materiales necesarios vs stock actual
+    receta = Recetas.query.filter_by(producto_id=solicitud.producto_id, es_active=1).first()
+    materiales = []
+    if receta:
+        lotes = math.ceil(float(solicitud.cantidad_faltante) / float(receta.cuanto_produce))
+        for det in receta.detalles:
+            mp = det.materia_prima
+            existencia = mp.existencia
+            necesario = det.cantidad * lotes
+            # Conversión de unidades (reutilizar función)
+            necesario_convertido = convertir_unidades(necesario, det.unidad_medida.clave, mp.unidad_medida)
+            materiales.append({
+                'nombre': mp.nombre,
+                'necesario': round(necesario_convertido, 3),
+                'unidad': mp.unidad_medida,
+                'stock_actual': float(existencia.stock_actual) if existencia else 0
+            })
+    return render_template('produccion/solicitud_detalle.html', solicitud=solicitud, materiales=materiales)
+
+@produccion_recetas_bp.route('/produccion/<int:id>/ver')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'PRODUCCION')
+def detalle_produccion(id):
+    produccion = Produccion.query.get_or_404(id)
+    # Obtener consumos de materia prima
+    consumos = ProduccionConsumo.query.filter_by(produccion_id=id).all()
+    return render_template('produccion/detalle_produccion.html', produccion=produccion, consumos=consumos)

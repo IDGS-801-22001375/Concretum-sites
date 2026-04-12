@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle de Receta - {{ receta.descripcion }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <a href="{{ url_for('recetas_bp.get_recetas') }}" class="text-[#008DC0] hover:underline flex items-center gap-2">
+            ← Volver a recetas
+        </a>
+    </div>
+
+    <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden shadow-sm">
+        <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
+            <h1 class="text-2xl font-bold text-white">{{ receta.descripcion }}</h1>
+            <p class="text-sm text-gray-400 mt-1">ID: {{ receta.id_receta }}</p>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Producto resultante</p>
+                    <p class="text-white font-semibold text-lg">{{ receta.producto.nombre }}</p>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Rendimiento por lote</p>
+                    <p class="text-white font-semibold text-lg">{{ receta.cuanto_produce }} unidades</p>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Tiempo de producción</p>
+                    <p class="text-white font-semibold text-lg">{{ receta.tiempo_produccion }} horas</p>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Resistencia</p>
+                    <p class="text-white font-semibold text-lg">{{ receta.resistencia }} kg/cm²</p>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-white font-bold text-lg mb-4">Ingredientes (Materia prima por lote)</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-[#0B2239] border-b border-[#1E3A5F]">
+                                <th class="px-4 py-3 text-left text-gray-400">Material</th>
+                                <th class="px-4 py-3 text-right text-gray-400">Cantidad</th>
+                                <th class="px-4 py-3 text-left text-gray-400">Unidad</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#1E3A5F]">
+                            {% for detalle in receta.detalles %}
+                            <tr class="hover:bg-[#123555]/50">
+                                <td class="px-4 py-3 text-white">{{ detalle.materia_prima.nombre }}</td>
+                                <td class="px-4 py-3 text-right font-mono text-white">{{ detalle.cantidad }}</td>
+                                <td class="px-4 py-3 text-gray-400">{{ detalle.unidad_medida.nombre }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold
+                    {% if receta.es_active %}bg-emerald-500/20 text-emerald-400{% else %}bg-red-500/20 text-red-400{% endif %}">
+                    <span class="w-1.5 h-1.5 rounded-full {% if receta.es_active %}bg-emerald-500{% else %}bg-red-500{% endif %}"></span>
+                    {% if receta.es_active %}Activa{% else %}Inactiva{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

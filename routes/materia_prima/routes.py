@@ -68,6 +68,7 @@ def api_materia_prima():
             'nombre': mp.nombre,
             'unidad_medida': mp.unidad_medida,
             'proveedor_id': mp.proveedor_id,
+            'proveedor_nombre': mp.proveedor.razon_social if mp.proveedor else 'N/A',
             'stock_minimo': float(mp.stock_minimo),
             'costo_unitario': float(mp.costo_unitario),
             'stock': float(stock),

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle de Producto - {{ producto.nombre }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <a href="{{ url_for('productos_bp.get_datos') }}" class="text-[#008DC0] hover:underline flex items-center gap-2">
+            ← Volver al catálogo de productos
+        </a>
+    </div>
+
+    <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden shadow-sm">
+        <div class="flex flex-col md:flex-row gap-6 p-6 border-b border-[#1E3A5F] bg-[#0B2239]">
+            <div class="w-48 h-48 rounded-xl overflow-hidden bg-[#A5CDE3] flex items-center justify-center p-4">
+                <img src="{{ url_for('static', filename=producto.enlace_fotografia) }}" alt="{{ producto.nombre }}" class="max-h-full max-w-full object-contain">
+            </div>
+            <div class="flex-1">
+                <h1 class="text-2xl font-bold text-white">{{ producto.nombre }}</h1>
+                <p class="text-gray-400 mt-1">{{ producto.descripcion }}</p>
+                <div class="flex flex-wrap gap-3 mt-4">
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-[#008DC0]/20 text-[#008DC0]">{{ producto.categoria.nombre }}</span>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400">{{ producto.color.nombre if producto.color else 'Sin color' }}</span>
+                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400">{{ producto.unidad_medida.nombre if producto.unidad_medida else 'N/A' }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">SKU</p>
+                    <p class="text-white font-mono font-semibold text-lg">{{ producto.sku }}</p>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Precio base</p>
+                    <p class="text-white font-bold text-xl">${{ "%.2f"|format(producto.precio_base) }}</p>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Resistencia MPA</p>
+                    <p class="text-white font-semibold">{{ producto.resistencia_mpa }} MPA</p>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Stock actual</p>
+                    <p class="text-white font-semibold {% if producto.existencia and producto.existencia.stock_actual <= 0 %}text-red-400{% else %}text-emerald-400{% endif %}">
+                        {{ producto.existencia.stock_actual if producto.existencia else 0 }} {{ producto.unidad_medida.nombre if producto.unidad_medida else 'uds' }}
+                    </p>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-white font-bold text-lg mb-4">Recetas asociadas</h3>
+                {% if producto.recetas %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-[#0B2239] border-b border-[#1E3A5F]">
+                                <th class="px-4 py-3 text-left text-gray-400">Descripción</th>
+                                <th class="px-4 py-3 text-right text-gray-400">Rendimiento (uds)</th>
+                                <th class="px-4 py-3 text-center text-gray-400">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#1E3A5F]">
+                            {% for receta in producto.recetas %}
+                            <tr class="hover:bg-[#123555]/50">
+                                <td class="px-4 py-3 text-white">{{ receta.descripcion }}</td>
+                                <td class="px-4 py-3 text-right font-mono text-white">{{ receta.cuanto_produce }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    {% if receta.es_active %}
+                                    <span class="px-2 py-0.5 rounded-full text-xs bg-emerald-500/20 text-emerald-400">Activa</span>
+                                    {% else %}
+                                    <span class="px-2 py-0.5 rounded-full text-xs bg-red-500/20 text-red-400">Inactiva</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-sm">Este producto no tiene recetas asociadas.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

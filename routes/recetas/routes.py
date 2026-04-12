@@ -1,22 +1,17 @@
+from flask import render_template, request, jsonify, url_for
+from flask_security import login_required, roles_accepted, current_user
+from models import db, Recetas, RecetaDetalle, Productos, MateriaPrima, UnidadMedida
+from . import recetas_bp
+from sqlalchemy import or_, asc, desc
 import datetime
 import json
-from flask import render_template, request, jsonify
-from flask_security import login_required, roles_accepted, current_user
-from routes.recetas import recetas_bp
-from models import db, Recetas, RecetaDetalle, MateriaPrima, UnidadMedida, Productos
 
-def get_productos_opts():
-    return [{'value': p.id_producto, 'label': p.nombre} for p in Productos.query.filter_by(es_active=1).all()]
-
-def get_materia_prima_opts():
-    return [{'value': mp.id_materia_prima, 'label': mp.nombre} for mp in MateriaPrima.query.filter_by(es_activo=True).all()]
-
-def get_unidades_opts():
-    return [{'value': u.id_unidad, 'label': u.nombre} for u in UnidadMedida.query.filter_by(es_active=True).all()]
-
+# ------------------------------------------------------------
+# FUNCIONES AUXILIARES
+# ------------------------------------------------------------
 def registrar_auditoria(usuario_accion, accion, detalles):
+    from app import mongo_db
     try:
-        from app import mongo_db
         mongo_db.auditoria_eventos.insert_one({
             "usuario_id": usuario_accion,
             "evento": accion,
@@ -28,47 +23,58 @@ def registrar_auditoria(usuario_accion, accion, detalles):
     except Exception as e:
         print(f"Error Mongo: {e}")
 
-@recetas_bp.route('/recetas', methods=['GET'])
+# ------------------------------------------------------------
+# VISTA PRINCIPAL (CRUD)
+# ------------------------------------------------------------
+@recetas_bp.route('/recetas')
 @login_required
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
 def get_recetas():
     # KPIs
     total = Recetas.query.count()
     activas = Recetas.query.filter_by(es_active=1).count()
-    
-    kpis = {
-        'total': total,
-        'activas': activas
-    }
+    kpis = {'total': total, 'activas': activas}
 
-    return render_template(
-        'produccion/recetas/recetas.html',
-        kpis=kpis,
-        productos_options=get_productos_opts(),
-        mp_options=get_materia_prima_opts(),
-        unidades_options=get_unidades_opts()
-    )
+    # Opciones para selects
+    productos = Productos.query.filter_by(es_active=1).all()
+    productos_options = [{'value': p.id_producto, 'label': f"{p.sku} - {p.nombre}"} for p in productos]
 
+    mp = MateriaPrima.query.filter_by(es_activo=True).all()
+    mp_options = [{'value': m.id_materia_prima, 'label': f"{m.sku} - {m.nombre}"} for m in mp]
+
+    unidades = UnidadMedida.query.filter_by(es_active=True).all()
+    unidades_options = [{'value': u.id_unidad, 'label': u.nombre} for u in unidades]
+
+    return render_template('produccion/recetas/recetas.html',
+                           kpis=kpis,
+                           productos_options=productos_options,
+                           mp_options=mp_options,
+                           unidades_options=unidades_options)
+
+# ------------------------------------------------------------
+# API: LISTAR RECETAS (paginado, búsqueda)
+# ------------------------------------------------------------
 @recetas_bp.route('/recetas/api', methods=['GET'])
 @login_required
+@roles_accepted('ADMINISTRADOR', 'PRODUCCION')
 def api_recetas():
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
-    search = request.args.get('search', '')
     sort_by = request.args.get('sort_by', 'descripcion')
     sort_order = request.args.get('sort_order', 'asc')
+    search = request.args.get('search', '')
 
     query = Recetas.query
-
     if search:
-        query = query.filter(Recetas.descripcion.ilike(f'%{search}%') | Recetas.producto.has(Productos.nombre.ilike(f'%{search}%')))
+        query = query.filter(or_(
+            Recetas.descripcion.ilike(f'%{search}%'),
+            Recetas.producto.has(Productos.nombre.ilike(f'%{search}%'))
+        ))
 
     if sort_order == 'asc':
-        from sqlalchemy import asc
-        query = query.order_by(asc(getattr(Recetas, sort_by, Recetas.fecha_creacion)))
+        query = query.order_by(asc(getattr(Recetas, sort_by, Recetas.descripcion)))
     else:
-        from sqlalchemy import desc
-        query = query.order_by(desc(getattr(Recetas, sort_by, Recetas.fecha_creacion)))
+        query = query.order_by(desc(getattr(Recetas, sort_by, Recetas.descripcion)))
 
     paginated = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -76,13 +82,20 @@ def api_recetas():
     for r in paginated.items:
         items.append({
             'id': r.id_receta,
-            'producto_nombre': r.producto.nombre if r.producto else 'N/A',
-            'categoria': r.producto.categoria.nombre if r.producto and r.producto.categoria else 'N/A',
+            'producto_nombre': r.producto.nombre,
             'descripcion': r.descripcion,
+            'categoria': r.producto.categoria.nombre if r.producto.categoria else 'Sin categoría',
             'cuanto_produce': r.cuanto_produce,
-            'tiempo_produccion': float(r.tiempo_produccion),
-            'resistencia': float(r.resistencia),
-            'es_activo': r.es_active == 1
+            'tiempo_produccion': r.tiempo_produccion,
+            'resistencia': r.resistencia,
+            'es_activo': r.es_active == 1,
+            'detalles': [{
+                'materia_prima_id': d.materia_prima_id,
+                'materia_prima_nombre': d.materia_prima.nombre,
+                'cantidad': d.cantidad,
+                'unidad_id': d.unidad_id,
+                'unidad_nombre': d.unidad_medida.nombre
+            } for d in r.detalles]
         })
 
     return jsonify({
@@ -93,106 +106,134 @@ def api_recetas():
         'per_page': paginated.per_page
     })
 
-@recetas_bp.route('/recetas/obtener/<int:id>', methods=['GET'])
-@login_required
-def obtener_receta(id):
-    r = Recetas.query.get_or_404(id)
-    detalles = [{
-        'materia_prima_id': d.materia_prima_id,
-        'cantidad': float(d.cantidad),
-        'unidad_id': d.unidad_id
-    } for d in r.detalles]
-
-    return jsonify({
-        'id_receta': r.id_receta,
-        'producto_id': r.producto_id,
-        'descripcion': r.descripcion,
-        'cuanto_produce': r.cuanto_produce,
-        'tiempo_produccion': float(r.tiempo_produccion),
-        'resistencia': float(r.resistencia),
-        'detalles': detalles
-    })
-
+# ------------------------------------------------------------
+# GUARDAR RECETA (CREAR O EDITAR)
+# ------------------------------------------------------------
 @recetas_bp.route('/recetas/guardar', methods=['POST'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
 def guardar_receta():
     data = request.form
     id_receta = data.get('id_receta')
-    detalles_json = data.get('detalles_json')
 
+    # Validar campos principales
+    if not data.get('producto_id') or not data.get('descripcion') or not data.get('cuanto_produce') or not data.get('tiempo_produccion') or not data.get('resistencia'):
+        return jsonify({'success': False, 'message': 'Faltan campos obligatorios'}), 400
+
+    # Obtener detalles del JSON
+    detalles_json = data.get('detalles_json')
+    if not detalles_json:
+        return jsonify({'success': False, 'message': 'Debe agregar al menos un ingrediente'}), 400
     try:
         detalles = json.loads(detalles_json)
     except:
-        return jsonify({'success': False, 'message': 'Formato de ingredientes inválido.'}), 400
+        return jsonify({'success': False, 'message': 'Formato de ingredientes inválido'}), 400
 
     if not detalles:
-        return jsonify({'success': False, 'message': 'Debe agregar al menos un ingrediente a la receta.'}), 400
+        return jsonify({'success': False, 'message': 'Debe agregar al menos un ingrediente'}), 400
 
-    try:
-        if id_receta:
-            # Editar
-            receta = Recetas.query.get_or_404(int(id_receta))
-            receta.producto_id = data.get('producto_id')
-            receta.descripcion = data.get('descripcion')
-            receta.cuanto_produce = data.get('cuanto_produce')
-            receta.tiempo_produccion = data.get('tiempo_produccion')
-            receta.resistencia = data.get('resistencia')
-            receta.fecha_actualizacion = datetime.datetime.now()
+    if id_receta:
+        # Edición
+        receta = Recetas.query.get_or_404(int(id_receta))
+        receta.producto_id = int(data['producto_id'])
+        receta.descripcion = data['descripcion']
+        receta.cuanto_produce = int(data['cuanto_produce'])
+        receta.tiempo_produccion = float(data['tiempo_produccion'])
+        receta.resistencia = float(data['resistencia'])
 
-            # Eliminar viejos detalles y meter los nuevos
-            RecetaDetalle.query.filter_by(receta_id=receta.id_receta).delete()
+        # Eliminar detalles antiguos
+        RecetaDetalle.query.filter_by(receta_id=receta.id_receta).delete()
 
-            for d in detalles:
-                detalle = RecetaDetalle(
-                    receta_id=receta.id_receta,
-                    materia_prima_id=int(d['materia_prima_id']),
-                    cantidad=float(d['cantidad']),
-                    unidad_id=int(d['unidad_id'])
-                )
-                db.session.add(detalle)
-
-            db.session.commit()
-            registrar_auditoria(current_user.id, "Editar Receta", f"Receta editada ID: {receta.id_receta}")
-            return jsonify({'success': True, 'message': 'Receta actualizada correctamente.'})
-        else:
-            # Crear
-            nueva_receta = Recetas(
-                producto_id=data.get('producto_id'),
-                descripcion=data.get('descripcion'),
-                cuanto_produce=data.get('cuanto_produce'),
-                tiempo_produccion=data.get('tiempo_produccion'),
-                resistencia=data.get('resistencia'),
-                es_active=1,
-                fecha_creacion=datetime.datetime.now()
+        # Crear nuevos detalles
+        for d in detalles:
+            detalle = RecetaDetalle(
+                receta_id=receta.id_receta,
+                materia_prima_id=int(d['materia_prima_id']),
+                cantidad=float(d['cantidad']),
+                unidad_id=int(d['unidad_id'])
             )
-            db.session.add(nueva_receta)
-            db.session.flush()
+            db.session.add(detalle)
 
-            for d in detalles:
-                detalle = RecetaDetalle(
-                    receta_id=nueva_receta.id_receta,
-                    materia_prima_id=int(d['materia_prima_id']),
-                    cantidad=float(d['cantidad']),
-                    unidad_id=int(d['unidad_id'])
-                )
-                db.session.add(detalle)
+        db.session.commit()
+        registrar_auditoria(current_user.id, "Editar Receta", f"Receta editada: {receta.descripcion}")
+        return jsonify({'success': True, 'message': 'Receta actualizada correctamente.'})
+    else:
+        # Creación
+        receta = Recetas(
+            producto_id=int(data['producto_id']),
+            descripcion=data['descripcion'],
+            cuanto_produce=int(data['cuanto_produce']),
+            tiempo_produccion=float(data['tiempo_produccion']),
+            resistencia=float(data['resistencia']),
+            es_active=1,
+            fecha_creacion=datetime.datetime.now()
+        )
+        db.session.add(receta)
+        db.session.flush()  # Para obtener el ID
 
-            db.session.commit()
-            registrar_auditoria(current_user.id, "Crear Receta", f"Nueva receta creada ID: {nueva_receta.id_receta}")
-            return jsonify({'success': True, 'message': 'Receta registrada correctamente.'})
+        for d in detalles:
+            detalle = RecetaDetalle(
+                receta_id=receta.id_receta,
+                materia_prima_id=int(d['materia_prima_id']),
+                cantidad=float(d['cantidad']),
+                unidad_id=int(d['unidad_id'])
+            )
+            db.session.add(detalle)
 
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'message': f'Error interno: {str(e)}'}), 500
+        db.session.commit()
+        registrar_auditoria(current_user.id, "Crear Receta", f"Receta creada: {receta.descripcion}")
+        return jsonify({'success': True, 'message': 'Receta creada correctamente.'})
 
+# ------------------------------------------------------------
+# OBTENER RECETA (para editar)
+# ------------------------------------------------------------
+@recetas_bp.route('/recetas/obtener/<int:id>', methods=['GET'])
+@login_required
+@roles_accepted('ADMINISTRADOR', 'PRODUCCION')
+def obtener_receta(id):
+    receta = Recetas.query.get_or_404(id)
+    detalles = [{
+        'materia_prima_id': d.materia_prima_id,
+        'cantidad': d.cantidad,
+        'unidad_id': d.unidad_id
+    } for d in receta.detalles]
+    return jsonify({
+        'id': receta.id_receta,
+        'producto_id': receta.producto_id,
+        'descripcion': receta.descripcion,
+        'cuanto_produce': receta.cuanto_produce,
+        'tiempo_produccion': receta.tiempo_produccion,
+        'resistencia': receta.resistencia,
+        'detalles': detalles
+    })
+
+# ------------------------------------------------------------
+# ALTERNAR ESTADO (ACTIVAR/DESACTIVAR)
+# ------------------------------------------------------------
 @recetas_bp.route('/recetas/alternar_estado/<int:id>', methods=['POST'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
 def alternar_estado(id):
-    r = Recetas.query.get_or_404(id)
-    r.es_active = 0 if r.es_active == 1 else 1
-    estado_txt = "Activada" if r.es_active == 1 else "Desactivada"
+    receta = Recetas.query.get_or_404(id)
+    receta.es_active = 0 if receta.es_active == 1 else 1
+    estado_txt = "Activada" if receta.es_active == 1 else "Desactivada"
+    registrar_auditoria(current_user.id, "Estado Receta", f"Receta {receta.descripcion} {estado_txt}")
     db.session.commit()
-    registrar_auditoria(current_user.id, "Estado Receta", f"Receta {estado_txt}: ID {r.id_receta}")
     return jsonify({'success': True, 'message': f'Receta {estado_txt.lower()} correctamente.'})
+
+# ------------------------------------------------------------
+# DETALLE DE RECETA (página completa, no modal)
+# ------------------------------------------------------------
+@recetas_bp.route('/recetas/<int:id>')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'PRODUCCION')
+def ver_detalle_receta(id):
+    receta = Recetas.query.get_or_404(id)
+    return render_template('produccion/receta_detalle.html', receta=receta)
+
+@recetas_bp.route('/producto-tiene-receta/<int:producto_id>')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'PRODUCCION')
+def producto_tiene_receta(producto_id):
+    tiene = Recetas.query.filter_by(producto_id=producto_id, es_active=1).first() is not None
+    return jsonify({'tiene_receta': tiene})

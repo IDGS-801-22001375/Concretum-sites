@@ -58,8 +58,7 @@ columns=[
 {'field': 'estado', 'label': 'Estado', 'sortable': true}
 ],
 search_placeholder='Buscar por producto...',
-btn_new_label='Iniciar Producción',
-show_actions=false
+btn_new_label='Iniciar Producción'
 ) }}
 
 {% set form_fields = [
@@ -76,24 +75,19 @@ Producción', modal_size='md') %}
 
 <script src="{{ url_for('static', filename='js/crud.js') }}"></script>
 <script>
-    // Variables globales para la API
     const CSRF_TOKEN = "{{ csrf_token() }}";
     const API_FINALIZAR = "{{ url_for('produccion_recetas_bp.finalizar_manual', id=0) }}";
     const API_CANCELAR = "{{ url_for('produccion_recetas_bp.cancelar_orden', id=0) }}";
 
-    // Cargar datos dinámicos (KPIs y Tarjetas Activas)
     async function cargarDatosDinamicos() {
         try {
             const res = await fetch('/produccion-rectas/api/kpis_y_activas');
             const data = await res.json();
-
-            // Actualizar KPIs
             document.getElementById('kpi-activas').textContent = data.kpis.activas;
             document.getElementById('kpi-finalizadas').textContent = data.kpis.finalizadas;
             document.getElementById('kpi-canceladas').textContent = data.kpis.canceladas;
             document.getElementById('kpi-total').textContent = data.kpis.total;
 
-            // Renderizar Tarjetas Activas
             const contenedor = document.getElementById('contenedor-activas');
             if (data.ordenes_activas.length === 0) {
                 contenedor.innerHTML = `<p class="text-gray-500 text-sm text-center col-span-full py-8">No hay órdenes en proceso en este momento.</p>`;
@@ -126,37 +120,27 @@ Producción', modal_size='md') %}
         }
     }
 
-    // Acción AJAX para Finalizar o Cancelar
     async function accionOrden(id, accion) {
         if (!confirm(`¿Estás seguro de ${accion} esta orden?`)) return;
-
         const url = accion === 'finalizar' ? API_FINALIZAR.replace('0', id) : API_CANCELAR.replace('0', id);
-
         try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'X-CSRFToken': CSRF_TOKEN }
-            });
+            const res = await fetch(url, { method: 'POST', headers: { 'X-CSRFToken': CSRF_TOKEN } });
             const data = await res.json();
-
             if (data.success) {
-                // Recargar todo sin parpadear la página
                 cargarDatosDinamicos();
                 window.crudManagers['produccion'].cargarDatos();
             } else {
-                alert(data.message);
+                mostrarAlerta(data.message || 'Error al procesar.', 'error');
             }
         } catch (e) {
-            alert('Error de red al intentar procesar la solicitud.');
+            mostrarAlerta('Error de conexión.', 'error');
         }
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-        // Fijar la fecha de hoy por defecto en el form
         const fechaInput = document.getElementById('fecha_inicio');
         if (fechaInput) fechaInput.valueAsDate = new Date();
 
-        // Iniciar CrudManager de la tabla historial
         window.crudManagers['produccion'] = new CrudManager({
             id: 'produccion',
             apiEndpoint: '/produccion-rectas/historial',
@@ -174,38 +158,48 @@ Producción', modal_size='md') %}
                     }
                 }
             ],
-            // Al hacer submit del modal, lo mandamos por fetch
             onSubmit: async function (formData) {
-                // Cancelamos el comportamiento por defecto del crud_manager que intenta actualizar la tabla internamente.
-                // En su lugar, hacemos el fetch manualmente.
                 const formElement = document.getElementById('form-produccion');
                 const fd = new FormData(formElement);
-
                 try {
-                    const res = await fetch('/produccion-rectas/crear', {
-                        method: 'POST',
-                        body: fd
-                    });
+                    const res = await fetch('/produccion-rectas/crear', { method: 'POST', body: fd });
                     const result = await res.json();
-
                     if (result.success) {
                         window.closeModal_produccion();
                         cargarDatosDinamicos();
                         window.crudManagers['produccion'].cargarDatos();
                     } else {
-                        alert(result.message);
+                        mostrarAlerta(result.message, 'error');
                     }
                 } catch (e) {
-                    alert('Error enviando la orden.');
+                    mostrarAlerta('Error enviando la orden.', 'error');
                 }
-                return false; // Retornamos false para decirle al crud_manager que nosotros manejamos la petición
+                return false;
             }
         });
 
-        // Primera carga
-        cargarDatosDinamicos();
+        // Sobrescribir render para agregar columna de acciones con "Ver detalle"
+        const originalRender = window.crudManagers['produccion'].renderTabla.bind(window.crudManagers['produccion']);
+        window.crudManagers['produccion'].renderTabla = function(items) {
+            originalRender(items);
+            const rows = document.querySelectorAll('#tabla-produccion tbody tr');
+            rows.forEach((row, idx) => {
+                if (!items[idx]) return;
+                const id = items[idx].id_produccion.replace('#', '');
+                // Eliminar cualquier botón existente (editar/desactivar) que pudiera haber sido agregado por defecto
+                const lastCell = row.querySelector('td:last-child');
+                if (lastCell) {
+                    lastCell.innerHTML = '';
+                    const btnDetalle = document.createElement('a');
+                    btnDetalle.href = `/produccion-rectas/produccion/${id}/ver`;
+                    btnDetalle.className = 'inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-[#008DC0] bg-[#008DC0]/10 hover:bg-[#008DC0]/20 border border-[#008DC0]/20 rounded-xl transition-all';
+                    btnDetalle.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg> Ver detalle`;
+                    lastCell.appendChild(btnDetalle);
+                }
+            });
+        };
 
-        // Auto refresco cada 10 segundos para ver si las órdenes "en simulación" cambian
+        cargarDatosDinamicos();
         setInterval(cargarDatosDinamicos, 10000);
     });
 </script>

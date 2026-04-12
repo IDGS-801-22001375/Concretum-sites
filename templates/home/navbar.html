@@ -37,6 +37,20 @@
                         Iniciar sesión
                     </a>
                 </li>
+            {% else %}
+                <li>
+                    {% if current_user.has_role('CLIENTE') %}
+                        <a href="{{ url_for('carrito_bp.dashboard_cliente') }}"
+                            class="bg-[#008DC0] text-white px-4 py-2 rounded-md font-roboto font-medium hover:bg-transparent hover:text-white hover:border hover:border-[white] transition-all duration-300 shadow-md">
+                            Ir a Mi Panel
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('comercial_bp.dashboard') }}"
+                            class="bg-emerald-600 text-white px-4 py-2 rounded-md font-roboto font-medium hover:bg-transparent hover:text-emerald-400 hover:border hover:border-emerald-400 transition-all duration-300 shadow-md">
+                            Panel de Empleado
+                        </a>
+                    {% endif %}
+                </li>
             {% endif %}
         </ul>
     </div>

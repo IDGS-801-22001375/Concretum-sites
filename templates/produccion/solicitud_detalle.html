@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle de Solicitud de Producción{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <a href="{{ url_for('produccion_recetas_bp.solicitudes_pendientes') }}" class="text-[#008DC0] hover:underline flex items-center gap-2">
+            ← Volver a solicitudes
+        </a>
+    </div>
+
+    <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden shadow-sm">
+        <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
+            <h1 class="text-2xl font-bold text-white">Solicitud #{{ solicitud.id_solicitud }}</h1>
+            <p class="text-sm text-gray-400 mt-1">Producto: {{ solicitud.producto.nombre }}</p>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Cantidad faltante</p>
+                    <p class="text-white font-semibold text-lg">{{ solicitud.cantidad_faltante|int }} unidades</p>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Fecha de solicitud</p>
+                    <p class="text-white font-semibold text-lg">{{ solicitud.fecha_solicitud.strftime('%d/%m/%Y %H:%M') }}</p>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Estado actual</p>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold
+                        {% if solicitud.estado == 'PENDIENTE' %}bg-amber-500/20 text-amber-400
+                        {% elif solicitud.estado == 'ACEPTADA' %}bg-[#008DC0]/20 text-[#008DC0]
+                        {% elif solicitud.estado == 'EN_PROCESO' %}bg-purple-500/20 text-purple-400
+                        {% elif solicitud.estado == 'COMPLETADA' %}bg-emerald-500/20 text-emerald-400
+                        {% else %}bg-gray-500/20 text-gray-400{% endif %}">
+                        {{ solicitud.estado }}
+                    </span>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-white font-bold text-lg mb-4">Materiales requeridos vs stock actual</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-[#0B2239] border-b border-[#1E3A5F]">
+                                <th class="px-4 py-3 text-left text-gray-400">Material</th>
+                                <th class="px-4 py-3 text-right text-gray-400">Necesario</th>
+                                <th class="px-4 py-3 text-right text-gray-400">Stock actual</th>
+                                <th class="px-4 py-3 text-center text-gray-400">¿Suficiente?</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#1E3A5F]">
+                            {% for mp in materiales %}
+                            <tr class="hover:bg-[#123555]/50">
+                                <td class="px-4 py-3 text-white">{{ mp.nombre }}</td>
+                                <td class="px-4 py-3 text-right font-mono text-white">{{ mp.necesario }} {{ mp.unidad }}</td>
+                                <td class="px-4 py-3 text-right font-mono text-white">{{ mp.stock_actual }} {{ mp.unidad }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    {% if mp.stock_actual >= mp.necesario %}
+                                    <span class="text-emerald-400">Sí</span>
+                                    {% else %}
+                                    <span class="text-red-400">No</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                {% if solicitud.estado == 'PENDIENTE' %}
+                <form method="POST" action="{{ url_for('produccion_recetas_bp.aceptar_solicitud', solicitud_id=solicitud.id_solicitud) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition-all shadow-lg shadow-emerald-600/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Aceptar y producir
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

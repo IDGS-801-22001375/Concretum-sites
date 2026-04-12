@@ -533,3 +533,16 @@ def enviar_contacto():
     else:
         flash('Por favor completa todos los campos requeridos.', 'danger')
     return redirect(url_for('carrito_bp.dashboard_cliente') + '#contacto')
+
+
+@carrito_bp.route('/pedido/<int:pedido_id>')
+@login_required
+def ver_pedido_cliente(pedido_id):
+    pedido = PedidoCliente.query.filter_by(id_pedido_cliente=pedido_id, usuario_id=current_user.id).first_or_404()
+    return render_template('tienda/pedido_detalle_cliente.html', pedido=pedido)
+
+@carrito_bp.route('/notificaciones/no-leidas')
+@login_required
+def notificaciones_no_leidas():
+    count = NotificacionCliente.query.filter_by(usuario_id=current_user.id, leida=0).count()
+    return jsonify({'count': count})

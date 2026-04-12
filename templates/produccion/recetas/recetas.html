@@ -5,8 +5,7 @@
 
 {% block content %}
 
-{{ components.page_header('Fórmulas / Recetas de Producción', 'Define las recetas y fórmulas para la fabricación de
-productos') }}
+{{ components.page_header('Fórmulas / Recetas de Producción', 'Define las recetas y fórmulas para la fabricación de productos') }}
 
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
     {{ components.kpi_card('Total Recetas', 'kpi-total-recetas', kpis.total|string, 'slate', '<svg
@@ -27,35 +26,29 @@ productos') }}
 </div>
 
 {{ components.crud_table(
-id_table='recetas',
-api_endpoint='/produccion/recetas/api',
-title='Catálogo de Recetas',
-columns=[
-{'field': 'producto_nombre', 'label': 'Producto', 'sortable': true},
-{'field': 'descripcion', 'label': 'Descripción', 'sortable': true},
-{'field': 'categoria', 'label': 'Categoría', 'sortable': false},
-{'field': 'cuanto_produce', 'label': 'Rendimiento (uds)', 'sortable': true},
-{'field': 'es_activo', 'label': 'Estado', 'sortable': true}
-],
-search_placeholder='Buscar por producto o descripción...',
-btn_new_label='Nueva Receta'
+    id_table='recetas',
+    api_endpoint='/produccion/recetas/api',
+    title='Catálogo de Recetas',
+    columns=[
+        {'field': 'producto_nombre', 'label': 'Producto', 'sortable': true},
+        {'field': 'descripcion', 'label': 'Descripción', 'sortable': true},
+        {'field': 'categoria', 'label': 'Categoría', 'sortable': false},
+        {'field': 'cuanto_produce', 'label': 'Rendimiento (uds)', 'sortable': true},
+        {'field': 'es_activo', 'label': 'Estado', 'sortable': true}
+    ],
+    search_placeholder='Buscar por producto o descripción...',
+    btn_new_label='Nueva Receta'
 ) }}
 
 {% set form_fields = [
-{'name': 'producto_id', 'label': 'Producto Resultante', 'type': 'select', 'required': true, 'options':
-productos_options, 'full_width': true},
-{'name': 'descripcion', 'label': 'Descripción de Fórmula', 'type': 'text', 'required': true, 'placeholder': 'Ej: Mezcla
-estándar block hueco'},
-{'name': 'cuanto_produce', 'label': 'Rendimiento (Unidades)', 'type': 'number', 'required': true, 'placeholder': 'Ej:
-120'},
-{'name': 'tiempo_produccion', 'label': 'Tiempo de Producción (Horas)', 'type': 'number', 'step': '0.1', 'required':
-true, 'placeholder': 'Ej: 6.5'},
-{'name': 'resistencia', 'label': 'Resistencia (kg/cm²)', 'type': 'number', 'step': '0.1', 'required': true,
-'placeholder': 'Ej: 150'}
+    {'name': 'producto_id', 'label': 'Producto Resultante', 'type': 'select', 'required': true, 'options': productos_options, 'full_width': true},
+    {'name': 'descripcion', 'label': 'Descripción de Fórmula', 'type': 'text', 'required': true, 'placeholder': 'Ej: Mezcla estándar block hueco'},
+    {'name': 'cuanto_produce', 'label': 'Rendimiento (Unidades)', 'type': 'number', 'required': true, 'placeholder': 'Ej: 120'},
+    {'name': 'tiempo_produccion', 'label': 'Tiempo de Producción (Horas)', 'type': 'number', 'step': '0.1', 'required': true, 'placeholder': 'Ej: 6.5'},
+    {'name': 'resistencia', 'label': 'Resistencia (kg/cm²)', 'type': 'number', 'step': '0.1', 'required': true, 'placeholder': 'Ej: 150'}
 ] %}
 
-{% call components.crud_modal('recetas', form_fields, id_field='id_receta', modal_title='Fórmula / Receta',
-modal_size='xl') %}
+{% call components.crud_modal('recetas', form_fields, id_field='id_receta', modal_title='Fórmula / Receta', modal_size='xl') %}
 
 <input type="hidden" name="detalles_json" id="detalles_json">
 
@@ -80,13 +73,10 @@ modal_size='xl') %}
         </div>
 
         <div id="ingredientes-container" class="space-y-3">
-            <div
-                class="ingrediente-row grid grid-cols-1 sm:grid-cols-12 gap-3 items-center bg-[#0F2A44] sm:bg-transparent p-3 sm:p-0 rounded-lg border border-[#1E3A5F] sm:border-none">
+            <div class="ingrediente-row grid grid-cols-1 sm:grid-cols-12 gap-3 items-center bg-[#0F2A44] sm:bg-transparent p-3 sm:p-0 rounded-lg border border-[#1E3A5F] sm:border-none">
                 <div class="sm:col-span-5">
                     <label class="sm:hidden block text-xs text-gray-400 mb-1">Materia Prima</label>
-                    <select
-                        class="mp-select w-full px-3 py-2 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] outline-none"
-                        required>
+                    <select class="mp-select w-full px-3 py-2 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] outline-none" required>
                         <option value="">Seleccionar...</option>
                         {% for m in mp_options %}
                         <option value="{{ m.value }}">{{ m.label }}</option>
@@ -95,15 +85,11 @@ modal_size='xl') %}
                 </div>
                 <div class="sm:col-span-3">
                     <label class="sm:hidden block text-xs text-gray-400 mb-1">Cantidad</label>
-                    <input type="number" step="any" placeholder="0.00"
-                        class="cant-input w-full px-3 py-2 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] outline-none"
-                        required>
+                    <input type="number" step="any" placeholder="0.00" class="cant-input w-full px-3 py-2 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] outline-none" required>
                 </div>
                 <div class="sm:col-span-3">
                     <label class="sm:hidden block text-xs text-gray-400 mb-1">Unidad</label>
-                    <select
-                        class="unidad-select w-full px-3 py-2 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] outline-none"
-                        required>
+                    <select class="unidad-select w-full px-3 py-2 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] outline-none" required>
                         <option value="">Seleccionar...</option>
                         {% for u in unidades_options %}
                         <option value="{{ u.value }}">{{ u.label }}</option>
@@ -111,11 +97,9 @@ modal_size='xl') %}
                     </select>
                 </div>
                 <div class="sm:col-span-1 flex justify-end sm:justify-center mt-2 sm:mt-0">
-                    <button type="button"
-                        class="btn-remove-ingrediente p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/20 rounded-lg transition-all">
+                    <button type="button" class="btn-remove-ingrediente p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/20 rounded-lg transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                     </button>
                 </div>
@@ -133,7 +117,6 @@ modal_size='xl') %}
             const mpId = row.querySelector('.mp-select').value;
             const cant = row.querySelector('.cant-input').value;
             const unidadId = row.querySelector('.unidad-select').value;
-
             if (mpId && cant && unidadId) {
                 detalles.push({
                     materia_prima_id: mpId,
@@ -146,15 +129,12 @@ modal_size='xl') %}
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-
-        // --- LOGICA DEL GRID DINAMICO DE INGREDIENTES ---
         const container = document.getElementById('ingredientes-container');
         const btnAdd = document.getElementById('btn-add-ingrediente');
 
         btnAdd.addEventListener('click', function () {
             const firstRow = container.querySelector('.ingrediente-row');
             const newRow = firstRow.cloneNode(true);
-            // Limpiar valores clonados
             newRow.querySelectorAll('input, select').forEach(el => el.value = '');
             container.appendChild(newRow);
             actualizarJsonIngredientes();
@@ -167,7 +147,7 @@ modal_size='xl') %}
                     btnRemove.closest('.ingrediente-row').remove();
                     actualizarJsonIngredientes();
                 } else {
-                    alert("La receta debe tener al menos un ingrediente.");
+                    mostrarAlerta("La receta debe tener al menos un ingrediente.", "error");
                 }
             }
         });
@@ -175,7 +155,6 @@ modal_size='xl') %}
         container.addEventListener('input', actualizarJsonIngredientes);
         container.addEventListener('change', actualizarJsonIngredientes);
 
-        // --- CRUD MANAGER ---
         window.crudManagers['recetas'] = new CrudManager({
             id: 'recetas',
             apiEndpoint: '/produccion/recetas',
@@ -198,10 +177,9 @@ modal_size='xl') %}
                 { name: 'resistencia', label: 'Resistencia', type: 'number', required: true }
             ],
             onEdit: function (item) {
-                // Llenar datos principales
-                document.getElementById('id_receta').value = item.id_receta;
+                const idField = document.getElementById('id_recetas');
+                if (idField) idField.value = item.id;
 
-                // Llenar el grid de ingredientes
                 while (container.querySelectorAll('.ingrediente-row').length > 1) {
                     container.querySelector('.ingrediente-row:last-child').remove();
                 }
@@ -212,7 +190,6 @@ modal_size='xl') %}
                     item.detalles.forEach((det, idx) => {
                         let row = idx === 0 ? firstRow : firstRow.cloneNode(true);
                         if (idx > 0) container.appendChild(row);
-
                         row.querySelector('.mp-select').value = det.materia_prima_id;
                         row.querySelector('.cant-input').value = det.cantidad;
                         row.querySelector('.unidad-select').value = det.unidad_id;
@@ -225,6 +202,43 @@ modal_size='xl') %}
                 return formData;
             }
         });
-    });
+
+        // Agregar botón "Ver detalle" en la tabla SIN BORRAR los otros
+        const originalRenderRecetas = window.crudManagers['recetas'].renderTabla.bind(window.crudManagers['recetas']);
+        window.crudManagers['recetas'].renderTabla = function(items) {
+            originalRenderRecetas(items);
+            const rows = document.querySelectorAll('#tabla-recetas tbody tr');
+            rows.forEach((row, idx) => {
+                if (!items[idx]) return;
+                const id = items[idx].id;
+                
+                // En vez de agarrar el td y borrarlo, agarramos el div adentro del td
+                const divAcciones = row.querySelector('td:last-child div');
+                
+                if (divAcciones) {
+                    // Creamos el nuevo botón con el mismo estilo de los otros
+                    const btnDetalle = document.createElement('a');
+                    btnDetalle.href = `/produccion/recetas/${id}`;
+                    btnDetalle.innerHTML = `
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        Detalle
+                    `;
+                    // Clases para que se vea igual que el de Editar pero en cyan
+                    btnDetalle.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#008DC0] hover:text-white border border-transparent hover:border-[#008DC0] hover:bg-[#008DC0]/20 rounded-lg transition-all';
+                    btnDetalle.title = 'Ver detalles de la receta';
+                    
+                    // Lo insertamos al principio del contenedor (antes del botón de Editar)
+                    divAcciones.insertBefore(btnDetalle, divAcciones.firstChild);
+                }
+            });
+        };
+    }); // FIN DEL DOMContentLoaded
+
+    function verDetalleReceta(id) {
+        window.location.href = `/produccion/recetas/${id}`;
+    }
 </script>
 {% endblock %}
