@@ -235,23 +235,9 @@ Producción', modal_size='md') %}
                     }
                 }
             ],
-            onSubmit: async function (formData) {
-                const formElement = document.getElementById('form-produccion');
-                const fd = new FormData(formElement);
-                try {
-                    const res = await fetch('/produccion-rectas/crear', { method: 'POST', body: fd });
-                    const result = await res.json();
-                    if (result.success) {
-                        window.closeModal_produccion();
-                        cargarDatosDinamicos();
-                        window.crudManagers['produccion'].cargarDatos();
-                    } else {
-                        mostrarAlerta(result.message, 'error');
-                    }
-                } catch (e) {
-                    mostrarAlerta('Error enviando la orden.', 'error');
-                }
-                return false;
+            onSubmit: function (formData) {
+                setTimeout(cargarDatosDinamicos, 800);
+                return formData;
             }
         });
 

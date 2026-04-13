@@ -135,33 +135,32 @@ def obtener_producto(id):
 @login_required
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
 def guardar_producto():
-    form = ProductoForm() 
+    form = ProductoForm()
     
+    form.categoria_id.choices = [(c.id_categoria, c.nombre) for c in CategoriasProducto.query.filter_by(es_active=1).all()]
+    form.unidad_medida_id.choices = [(u.id_unidad, u.nombre) for u in UnidadMedida.query.filter_by(es_active=1).all()]
+    form.color_id.choices = [(c.id_color, c.nombre) for c in Color.query.filter_by(es_active=True).all()]
+
     if request.form.get('id_producto') and not request.files.get('enlace_fotografia'):
         form.enlace_fotografia.validators = []
 
     if not form.validate_on_submit():
         errores = {field: errors[0] for field, errors in form.errors.items()}
-        return jsonify({'success': False, 'message': 'Errores de validación.', 'errors': errores}), 400
+        return jsonify({'success': False, 'message': 'Revisa los campos en rojo.', 'errors': errores}), 400
 
     data = request.form
     id_prod = data.get('id_producto')
-    
+
     enlace_fotografia = request.files.get('enlace_fotografia')
-    filename = None
-    if enlace_fotografia and enlace_fotografia.filename:
-        filename = convertir_ruta_imagen(enlace_fotografia)
     filename = None
     if enlace_fotografia and enlace_fotografia.filename:
         filename = convertir_ruta_imagen(enlace_fotografia)
 
     if id_prod:
-        # Edición
         p = Productos.query.get_or_404(int(id_prod))
 
-        # Validar SKU único
         if data.get('sku') != p.sku and Productos.query.filter_by(sku=data.get('sku')).first():
-            return jsonify({'success': False, 'message': 'El SKU ya está registrado en otro producto.'}), 400
+            return jsonify({'success': False, 'errors': {'sku': 'El SKU ya está registrado en otro producto.'}}), 400
 
         p.categoria_id = data.get('categoria_id')
         p.sku = data.get('sku')
@@ -178,12 +177,11 @@ def guardar_producto():
         db.session.commit()
         return jsonify({'success': True, 'message': 'Producto actualizado exitosamente.'})
     else:
-        # Creación
         if Productos.query.filter_by(sku=data.get('sku')).first():
-            return jsonify({'success': False, 'message': 'El SKU ya está registrado.'}), 400
+            return jsonify({'success': False, 'errors': {'sku': 'El SKU ya está registrado.'}}), 400
 
         if not filename:
-            return jsonify({'success': False, 'message': 'La imagen es obligatoria.'}), 400
+            return jsonify({'success': False, 'errors': {'enlace_fotografia': 'La imagen es obligatoria.'}}), 400
 
         nuevo_producto = Productos(
             categoria_id=data.get('categoria_id'),
@@ -200,7 +198,6 @@ def guardar_producto():
         db.session.add(nuevo_producto)
         db.session.flush()
 
-        # Crear registro de existencias en 0 automáticamente
         nueva_existencia = Existencias(
             producto_id=nuevo_producto.id_producto,
             stock_actual=0.000,

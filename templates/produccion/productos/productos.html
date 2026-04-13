@@ -128,12 +128,11 @@ unidades_options},
                 { name: 'precio_base', label: 'Precio', type: 'number', required: true }
             ],
             onEdit: function (item) {
-                const idField = document.getElementById('id_productos');
+                const idField = document.getElementById('id_producto');
                 if (idField) idField.value = item.id;
             },
             onSubmit: function (formData) {
-                this.save(formData);
-                return false;
+                return formData;
             }
         });
 
@@ -170,28 +169,6 @@ unidades_options},
                 }
             });
         };
-
-        const form = document.getElementById('form-productos');
-        form.addEventListener('submit', async function (e) {
-            e.preventDefault();
-            const formData = new FormData(form);
-            try {
-                const response = await fetch('/produccion/productos/guardar', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-                if (result.success) {
-                    window.closeModal_productos();
-                    window.crudManagers['productos'].cargarDatos();
-                } else {
-                    mostrarAlerta(result.message || 'Error al guardar el producto', 'error');
-                }
-            } catch (error) {
-                console.error(error);
-                mostrarAlerta('Error en la comunicación con el servidor', 'error');
-            }
-        });
     });
 </script>
 {% endblock %}

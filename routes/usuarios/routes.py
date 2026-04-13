@@ -25,7 +25,7 @@ def registrar_auditoria(usuario_accion, accion, detalles):
         "usuario_id": usuario_accion,
         "evento": accion,
         "detalles": detalles,
-        "modulo": "Nombre del Modulo",
+        "modulo": "Usuarios",
         "user_agent": user_agent,
         "ip": ip_addr,
         "fecha_creacion": datetime.datetime.utcnow()

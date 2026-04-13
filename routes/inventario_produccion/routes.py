@@ -23,7 +23,7 @@ def registrar_auditoria(usuario_accion, accion, detalles):
         "usuario_id": usuario_accion,
         "evento": accion,
         "detalles": detalles,
-        "modulo": "Nombre del Modulo",
+        "modulo": "Inventario",
         "user_agent": user_agent,
         "ip": ip_addr,
         "fecha_creacion": datetime.datetime.utcnow()
@@ -333,7 +333,24 @@ def kpis():
         func.sum(Existencias.stock_actual * Productos.precio_base)
     ).join(Productos).filter(Productos.es_active == 1).scalar() or 0
 
-    alertas = Existencias.query.filter(Existencias.stock_actual < Existencias.stock_minimo).count()
+    alertas_productos = db.session.query(Existencias).join(
+        Productos, 
+        Existencias.producto_id == Productos.id_producto
+    ).filter(
+        Productos.es_active == 1, 
+        Existencias.estado_stock == 'BAJO'
+    ).count()
+
+    alertas_mp = db.session.query(MateriaPrima).join(
+        ExistenciaMateriaPrima,
+        MateriaPrima.id_materia_prima == ExistenciaMateriaPrima.materia_prima_id
+    ).filter(
+        MateriaPrima.es_activo == True,
+        MateriaPrima.stock_minimo > 0,
+        ExistenciaMateriaPrima.stock_actual < MateriaPrima.stock_minimo
+    ).count()
+
+    alertas_totales = alertas_productos + alertas_mp
 
     inicio_mes = datetime.datetime.utcnow().replace(day=1, hour=0, minute=0, second=0)
     movimientos_mes = MovimientosInventario.query.filter(
@@ -343,6 +360,6 @@ def kpis():
     return jsonify({
         'total_productos': total_productos,
         'valor_total': float(valor_total),
-        'alertas': alertas,
+        'alertas': alertas_totales,
         'movimientos_mes': movimientos_mes
     })

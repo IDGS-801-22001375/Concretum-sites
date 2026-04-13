@@ -2,15 +2,17 @@
     class="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0 bg-[#0F2A44] border-r border-[#1E3A5F] flex flex-col overflow-y-auto"
     aria-label="Sidebar">
 
-        <a href="/" class="flex items-center gap-3 px-6 py-5 border-b border-[#1E3A5F] hover:bg-[#123555] transition-colors cursor-pointer">
+    <a href="/"
+        class="flex items-center gap-3 px-6 py-5 border-b border-[#1E3A5F] hover:bg-[#123555] transition-colors cursor-pointer">
         {% if config_empresa and config_empresa.logo %}
         <img src="{{ url_for('static', filename=config_empresa.logo) }}" alt="Logo" class="w-8 h-8 object-contain">
         {% else %}
         <div class="bg-[#008DC0] w-8 h-8 flex items-center justify-center rounded font-bold text-white">CT</div>
         {% endif %}
-        <span class="font-semibold tracking-wide text-white">{{ config_empresa.razon_social if config_empresa else 'CONCRETUM' }}</span>
+        <span class="font-semibold tracking-wide text-white">{{ config_empresa.razon_social if config_empresa else
+            'CONCRETUM' }}</span>
     </a>
-    
+
 
     <nav class="flex-1 px-4 py-6 space-y-6 text-sm">
 
@@ -90,12 +92,18 @@
             <p class="text-gray-400 text-xs mb-2 uppercase">Producción</p>
             <div class="space-y-1">
                 <a href="{{ url_for('productos_bp.get_datos') }}"
-                    class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555] transition-colors {% if request.endpoint and request.endpoint.startswith('productos_bp') %}bg-[#123555] text-[#70A7C7]{% endif %}">
-                    <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                    </svg>
-                    Catálogo de Productos
+                    class="flex items-center justify-between px-3 py-2 rounded hover:bg-[#123555] transition-colors {% if request.endpoint and request.endpoint.startswith('productos_bp') %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                    <span class="flex items-center gap-3">
+                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                        Catálogo de Productos
+                    </span>
+                    {% if sidebar_criticos_prod > 0 %}
+                    <span class="bg-red-500 text-xs px-2 py-0.5 rounded-full text-white">{{ sidebar_criticos_prod
+                        }}</span>
+                    {% endif %}
                 </a>
                 <a href="{{ url_for('recetas_bp.get_recetas') }}"
                     class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555] transition-colors {% if request.endpoint and request.endpoint.startswith('recetas_bp') %}bg-[#123555] text-[#70A7C7]{% endif %}">
@@ -139,18 +147,13 @@
             <p class="text-gray-400 text-xs mb-2 uppercase">Inventario</p>
             <div class="space-y-1">
                 <a href="{{ url_for('stock_bp.index') }}"
-                    class="flex items-center justify-between px-3 py-2 rounded hover:bg-[#123555] transition-colors {% if request.endpoint and request.endpoint.startswith('stock_bp') %}bg-[#123555] text-[#70A7C7]{% endif %}">
-                    <span class="flex items-center gap-3">
-                        <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
-                            </path>
-                        </svg>
-                        Inventario General
-                    </span>
-                    {% if sidebar_criticos_prod > 0 %}
-                    <span class="bg-red-500 text-xs px-2 py-0.5 rounded-full">{{ sidebar_criticos_prod }}</span>
-                    {% endif %}
+                    class="flex items-center gap-3 px-3 py-2 rounded hover:bg-[#123555] transition-colors {% if request.endpoint and request.endpoint.startswith('stock_bp') %}bg-[#123555] text-[#70A7C7]{% endif %}">
+                    <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
+                        </path>
+                    </svg>
+                    Inventario General
                 </a>
 
                 <a href="{{ url_for('materia_prima.index') }}"

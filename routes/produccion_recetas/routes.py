@@ -121,17 +121,22 @@ def api_historial():
 
 # ====================== ACCIONES (CREAR, FINALIZAR, CANCELAR) ======================
 
-@produccion_recetas_bp.route('/crear', methods=['POST'])
+@produccion_recetas_bp.route('/historial/guardar', methods=['POST'])
 @login_required
-def crear_orden():
+def guardar_orden():
     data = request.form
     receta_id = data.get('receta_id')
-    cantidad = float(data.get('cantidad', 0))
+    
+    try:
+        cantidad = float(data.get('cantidad', 0))
+    except (TypeError, ValueError):
+        cantidad = 0
+        
     fecha_inicio = data.get('fecha_inicio')
     observaciones = data.get('observaciones', '')
 
     if not receta_id or cantidad <= 0 or not fecha_inicio:
-        return jsonify({'success': False, 'message': 'Datos inválidos.'}), 400
+        return jsonify({'success': False, 'message': 'Datos inválidos. Verifica que la receta, cantidad y fecha sean correctas.'}), 400
 
     receta = Recetas.query.get_or_404(int(receta_id))
     detalles = RecetaDetalle.query.filter_by(receta_id=receta.id_receta).all()
@@ -146,12 +151,14 @@ def crear_orden():
             return jsonify({'success': False, 'message': f"No hay registro de inventario para {mp.nombre}"}), 400
 
         unidad_origen = UnidadMedida.query.get(det.unidad_id).clave
-        
         cantidad_necesaria = det.cantidad * cantidad
-        cantidad_convertida = convertir_unidades(cantidad_necesaria, unidad_origen, mp.unidad_medida)
+        from decimal import Decimal
 
-        if float(existencia.stock_actual) < cantidad_convertida:
-            return jsonify({'success': False, 'message': f"Stock insuficiente de {mp.nombre}. Necesitas {cantidad_convertida:.2f}, tienes {existencia.stock_actual:.2f}"}), 400
+        cantidad_convertida = convertir_unidades(cantidad_necesaria, unidad_origen, mp.unidad_medida)
+        stock_actual_dec = Decimal(str(existencia.stock_actual))
+
+        if stock_actual_dec < cantidad_convertida:
+            return jsonify({'success': False, 'message': f"Stock insuficiente de {mp.nombre}. Necesitas {float(cantidad_convertida):.2f}, tienes {float(stock_actual_dec):.2f}"}), 400
 
         consumos.append((mp, existencia, cantidad_convertida))
 
@@ -171,7 +178,7 @@ def crear_orden():
 
         # Descontar stock y registrar consumos
         for mp, existencia, cant_conv in consumos:
-            existencia.stock_actual = float(existencia.stock_actual) - cant_conv
+            existencia.stock_actual = Decimal(str(existencia.stock_actual)) - cant_conv
             db.session.add(ProduccionConsumo(
                 produccion_id=produccion.id_produccion,
                 materia_prima_id=mp.id_materia_prima,
@@ -345,7 +352,7 @@ def aceptar_solicitud(solicitud_id):
         db.session.flush()
 
         for mp, existencia, cant_conv in consumos:
-            existencia.stock_actual = float(existencia.stock_actual) - cant_conv
+            existencia.stock_actual = Decimal(str(existencia.stock_actual)) - cant_conv
             db.session.add(ProduccionConsumo(
                 produccion_id=produccion.id_produccion,
                 materia_prima_id=mp.id_materia_prima,
@@ -429,17 +436,17 @@ def detalle_solicitud(solicitud_id):
             existencia = mp.existencia
             necesario = det.cantidad * lotes
             necesario_convertido = convertir_unidades(necesario, det.unidad_medida.clave, mp.unidad_medida)
-            stock_actual = float(existencia.stock_actual) if existencia else 0
             
+            stock_actual = Decimal(str(existencia.stock_actual)) if existencia else Decimal('0')
             faltante = necesario_convertido - stock_actual
             
             materiales.append({
                 'id': mp.id_materia_prima, 
                 'nombre': mp.nombre,
-                'necesario': round(necesario_convertido, 3),
+                'necesario': float(round(necesario_convertido, 3)),
                 'unidad': mp.unidad_medida,
-                'stock_actual': stock_actual,
-                'faltante': round(faltante, 3) if faltante > 0 else 0 
+                'stock_actual': float(stock_actual),
+                'faltante': float(round(faltante, 3)) if faltante > 0 else 0.0 
             })
             
     return render_template('produccion/solicitud_detalle.html', solicitud=solicitud, materiales=materiales)

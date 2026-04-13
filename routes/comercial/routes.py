@@ -34,10 +34,10 @@ def registrar_auditoria(usuario_accion, accion, detalles):
         "usuario_id": usuario_accion,
         "evento": accion,
         "detalles": detalles,
-        "modulo": "Nombre del Modulo",
+        "modulo": "Comercial", 
         "user_agent": user_agent,
         "ip": ip_addr,
-        "fecha_creacion": datetime.datetime.utcnow()
+        "fecha_creacion": datetime.utcnow() # <--- CORRECCIÓN AQUÍ
     }
     
     threading.Thread(target=_guardar_en_mongo, args=(datos_auditoria,)).start()
@@ -481,14 +481,16 @@ def realizar_corte():
 
     corte_existente = CorteCaja.query.filter(
         CorteCaja.periodo_inicio >= inicio_hoy,
-        CorteCaja.periodo_inicio <= fin_hoy,
-        CorteCaja.estado == 'ABIERTO'
+        CorteCaja.periodo_inicio <= fin_hoy
     ).first()
 
     if corte_existente:
-        flash('Ya existe un corte abierto para hoy. Ciérralo antes de iniciar uno nuevo.', 'warning')
+        if corte_existente.estado == 'ABIERTO':
+            flash('Ya tienes un corte abierto para hoy. Ciérralo antes de iniciar uno nuevo.', 'warning')
+        else:
+            # Si ya está CERRADO, bloqueamos que hagan otro corte hoy
+            flash('Ya realizaste y cerraste el corte de caja de hoy.', 'error')
         return redirect(url_for('comercial_bp.corte'))
-    # ────────────────────────────────────────────────────────────
 
     ventas_hoy = Venta.query.filter(
         Venta.fecha_venta >= inicio_hoy,

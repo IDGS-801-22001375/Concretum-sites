@@ -6,6 +6,7 @@ from flask_wtf.recaptcha import RecaptchaField
 from flask_security.forms import RegisterForm
 from models import db, User, Role
 import datetime
+import re
 
 class LoginFormSimple(FlaskForm):
     email = StringField('Correo Electrónico', validators=[DataRequired(), Email()])
@@ -91,3 +92,14 @@ class ExtendedRegisterForm(FlaskForm):
     password = PasswordField('Contraseña', validators=[DataRequired(), Length(min=8)])
     password_confirm = PasswordField('Confirmar Contraseña', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Registrarse')
+
+    def validate_password(self, field):
+        password = field.data
+        if not re.search(r'[A-Z]', password):
+            raise ValidationError('La contraseña debe contener al menos una letra mayúscula.')
+        if not re.search(r'[a-z]', password):
+            raise ValidationError('La contraseña debe contener al menos una letra minúscula.')
+        if not re.search(r'\d', password):
+            raise ValidationError('La contraseña debe contener al menos un número.')
+        if not re.search(r'[@$!%*?&._-]', password):
+            raise ValidationError('La contraseña debe contener al menos un carácter especial (@, $, !, %, *, ?, &, ., _, -).')
