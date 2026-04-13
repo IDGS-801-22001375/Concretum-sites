@@ -47,83 +47,83 @@
     <div id="overlay-carrito" class="fixed inset-0 bg-black/50 z-[45] hidden transition-opacity"
         onclick="cerrarCarrito()"></div>
     <aside id="drawer-carrito"
-        class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
-        <div class="bg-[#002F5C] px-6 py-4 flex items-center justify-between shrink-0">
-            <div class="flex items-center gap-3">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <span class="text-white font-bold text-lg">Mi Carrito</span>
-                <span id="badge-header"
-                    class="bg-[#008DC0] text-white text-xs font-bold px-2 py-0.5 rounded-full {% if total_items_carrito == 0 %}hidden{% endif %}">
-                    {{ total_items_carrito }}
-                </span>
-            </div>
-            <button onclick="cerrarCarrito()" class="text-white hover:text-[#008DC0] transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+    class="fixed top-0 right-0 h-full w-full max-w-md bg-white z-50 translate-x-full transition-transform duration-300 shadow-2xl flex flex-col">
+    <div class="bg-[#002F5C] px-6 py-4 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span class="text-white font-bold text-lg">Mi Carrito</span>
+            <span id="badge-header"
+                class="bg-[#008DC0] text-white text-xs font-bold px-2 py-0.5 rounded-full {% if total_items_carrito == 0 %}hidden{% endif %}">
+                {{ total_items_carrito }}
+            </span>
         </div>
+        <button onclick="cerrarCarrito()" class="text-white hover:text-[#008DC0] transition">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
 
-        <div id="lista-items-carrito" class="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-            {% if items_carrito_global %}
-            {% for item in items_carrito_global %}
-            <div id="item-{{ item.id_item }}" class="flex gap-3 bg-gray-50 rounded-xl p-3 border border-gray-100">
-                <img src="{{ url_for('static', filename=item.producto.enlace_fotografia) }}"
-                    class="w-16 h-16 object-cover rounded-lg bg-[#A5CDE3] shrink-0">
-                <div class="flex-1 min-w-0">
-                    <p class="text-[#002F5C] font-semibold text-sm truncate">{{ item.producto.nombre }}</p>
-                    <p class="text-gray-400 text-xs mt-0.5">${{ "%.2f"|format(item.precio_unitario) }} / ud.</p>
-                    <div class="flex items-center border border-gray-300 rounded-lg mt-2 w-max bg-white">
-                        <button onclick="cambiarCantidadDirecta({{ item.id_item }}, -1)"
-                            class="px-2 py-1 text-gray-500 hover:bg-gray-100 font-bold">-</button>
-                        <input type="number" id="cant-{{ item.id_item }}" value="{{ item.cantidad|int }}" min="1"
-                            class="w-12 text-center text-sm font-semibold border-x border-gray-300 py-1 focus:outline-none"
-                            onchange="actualizarCantidadInput({{ item.id_item }}, this.value)">
-                        <button onclick="cambiarCantidadDirecta({{ item.id_item }}, 1)"
-                            class="px-2 py-1 text-gray-500 hover:bg-gray-100 font-bold">+</button>
-                    </div>
-                </div>
-                <div class="flex flex-col items-end justify-between shrink-0">
-                    <button onclick="quitarItem({{ item.id_item }})"
-                        class="text-gray-300 hover:text-red-500 transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                    <span id="sub-{{ item.id_item }}" class="text-[#002F5C] font-bold text-sm">${{
-                        "%.2f"|format(item.subtotal) }}</span>
+    <div id="lista-items-carrito" class="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {% if items_carrito_global %}
+        {% for item in items_carrito_global %}
+        <div id="item-{{ item.id_item }}" class="flex gap-3 bg-gray-50 rounded-xl p-3 border border-gray-100">
+            <img src="{{ url_for('static', filename=item.producto.enlace_fotografia) }}"
+                class="w-16 h-16 object-cover rounded-lg bg-[#A5CDE3] shrink-0">
+            <div class="flex-1 min-w-0">
+                <p class="text-[#002F5C] font-semibold text-sm truncate">{{ item.producto.nombre }}</p>
+                <p class="text-gray-400 text-xs mt-0.5">${{ "%.2f"|format(item.precio_unitario) }} / ud.</p>
+                <div class="flex items-center gap-1 mt-1">
+                    <button onclick="cambiarCantidadDirecta({{ item.id_item }}, -1)"
+                        class="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-[#008DC0] transition flex items-center justify-center font-bold text-base">−</button>
+                    <input type="number" id="cant-{{ item.id_item }}" value="{{ item.cantidad|int }}" min="1"
+                        max="9999" step="1"
+                        class="w-12 text-center text-sm font-semibold bg-gray-50 rounded-lg border border-gray-200 focus:ring-1 focus:ring-[#008DC0] focus:border-[#008DC0] outline-none">
+                    <button onclick="cambiarCantidadDirecta({{ item.id_item }}, 1)"
+                        class="w-7 h-7 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-[#008DC0] transition flex items-center justify-center font-bold text-base">+</button>
                 </div>
             </div>
-            {% endfor %}
-            {% else %}
-            <div id="carrito-vacio" class="flex flex-col items-center justify-center h-full text-center py-16">
-                <svg class="w-16 h-16 text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                <p class="text-gray-400 font-medium">Tu carrito está vacío</p>
+            <div class="flex flex-col items-end justify-between shrink-0">
+                <button onclick="quitarItem({{ item.id_item }})"
+                    class="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/20 rounded-lg transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+                <span id="sub-{{ item.id_item }}" class="text-[#002F5C] font-bold text-sm">${{
+                    "%.2f"|format(item.subtotal) }}</span>
             </div>
-            {% endif %}
         </div>
+        {% endfor %}
+        {% else %}
+        <div id="carrito-vacio" class="flex flex-col items-center justify-center h-full text-center py-16">
+            <svg class="w-16 h-16 text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <p class="text-gray-400 font-medium">Tu carrito está vacío</p>
+        </div>
+        {% endif %}
+    </div>
 
-        <div class="shrink-0 border-t border-gray-100 px-6 py-5 bg-white">
-            <div class="flex justify-between items-center mb-1">
-                <span class="text-gray-500 text-sm">Subtotal</span>
-                <span id="subtotal-carrito" class="text-[#002F5C] font-bold text-lg">
-                    {% if carrito_global %}${{ "%.2f"|format(carrito_global.subtotal) }}{% else %}$0.00{% endif %}
-                </span>
-            </div>
-            <p class="text-xs text-gray-400 mb-4">IVA e impuestos se calculan en el checkout</p>
-            <a href="{{ url_for('carrito_bp.checkout') }}" onclick="verificarCheckout(event)"
-                class="flex items-center justify-center gap-2 w-full bg-[#008DC0] hover:bg-[#0074A0] text-white font-bold py-3.5 rounded-xl transition text-sm">
-                Solicitar pedido
-            </a>
+    <div class="shrink-0 border-t border-gray-100 px-6 py-5 bg-white">
+        <div class="flex justify-between items-center mb-1">
+            <span class="text-gray-500 text-sm">Subtotal</span>
+            <span id="subtotal-carrito" class="text-[#002F5C] font-bold text-lg">
+                {% if carrito_global %}${{ "%.2f"|format(carrito_global.subtotal) }}{% else %}$0.00{% endif %}
+            </span>
         </div>
-    </aside>
+        <p class="text-xs text-gray-400 mb-4">IVA e impuestos se calculan en el checkout</p>
+        <a href="{{ url_for('carrito_bp.checkout') }}" onclick="verificarCheckout(event)"
+            class="flex items-center justify-center gap-2 w-full bg-[#008DC0] hover:bg-[#0074A0] text-white font-bold py-3.5 rounded-xl transition text-sm">
+            Solicitar pedido
+        </a>
+    </div>
+</aside>
 
     <main>
         {% block content %}{% endblock %}
@@ -132,166 +132,152 @@
     <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
     <script>
         const CSRF_TOKEN = "{{ csrf_token() }}";
-        const AUTENTICADO = {{ 'true' if current_user.is_authenticated else 'false' }};
+const AUTENTICADO = {{ 'true' if current_user.is_authenticated else 'false' }};
 
-        function abrirCarrito() {
-            if (!AUTENTICADO) {
-                window.location.href = "{{ url_for('security.login') }}"; return;
+function abrirCarrito() {
+    if (!AUTENTICADO) {
+        window.location.href = "{{ url_for('security.login') }}"; return;
+    }
+    document.getElementById('drawer-carrito').classList.remove('translate-x-full');
+    document.getElementById('overlay-carrito').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function cerrarCarrito() {
+    document.getElementById('drawer-carrito').classList.add('translate-x-full');
+    document.getElementById('overlay-carrito').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+
+function mostrarToast(id, mensaje, duracion = 4000) {
+    const t = document.getElementById(id);
+    const msgEl = document.getElementById(id + '-msg');
+    if (msgEl) msgEl.textContent = mensaje;
+    t.classList.remove('hidden');
+    setTimeout(() => t.classList.add('hidden'), duracion);
+}
+
+function actualizarBadges(totalItems) {
+    document.querySelectorAll('.badge-carrito').forEach(b => {
+        b.textContent = totalItems;
+        if (totalItems > 0) b.classList.remove('hidden'); else b.classList.add('hidden');
+    });
+    const headerBadge = document.getElementById('badge-header');
+    if (headerBadge) {
+        headerBadge.textContent = totalItems;
+        if (totalItems > 0) headerBadge.classList.remove('hidden'); else headerBadge.classList.add('hidden');
+    }
+}
+
+function verificarCheckout(event) {
+    const itemsList = document.querySelectorAll('#lista-items-carrito > div[id^="item-"]');
+    if (itemsList.length === 0) {
+        event.preventDefault();
+        mostrarToast('toast-stock', 'Debes agregar al menos un producto para solicitar un pedido.');
+    }
+}
+
+// ACTUALIZAR CANTIDAD
+async function ejecutarActualizacion(itemId, cantidad) {
+    const resp = await fetch("{{ url_for('carrito_bp.actualizar_cantidad', item_id=0) }}".replace('0', itemId), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+        body: JSON.stringify({ cantidad: cantidad })
+    });
+    const data = await resp.json();
+    if (data.exito) {
+        document.getElementById('sub-' + itemId).textContent = data.subtotal_item;
+        document.getElementById('subtotal-carrito').textContent = data.subtotal;
+        actualizarBadges(data.total_items);
+        if (data.advertencia) mostrarToast('toast-stock', data.advertencia, 5000);
+    }
+}
+
+async function actualizarCantidadInput(itemId, valor) {
+    let nuevaCant = parseInt(valor);
+    if (isNaN(nuevaCant) || nuevaCant < 1) nuevaCant = 1;
+    document.getElementById('cant-' + itemId).value = nuevaCant;
+    ejecutarActualizacion(itemId, nuevaCant);
+}
+
+async function cambiarCantidadDirecta(itemId, delta) {
+    const input = document.getElementById('cant-' + itemId);
+    let nuevaCant = parseInt(input.value) + delta;
+    if (nuevaCant < 1) nuevaCant = 1;
+    input.value = nuevaCant;
+    ejecutarActualizacion(itemId, nuevaCant);
+}
+
+// QUITAR ITEM
+async function quitarItem(itemId) {
+    const resp = await fetch("{{ url_for('carrito_bp.quitar_del_carrito', item_id=0) }}".replace('0', itemId), {
+        method: 'POST', headers: { 'X-CSRFToken': CSRF_TOKEN }
+    });
+    const data = await resp.json();
+    if (data.exito) {
+        document.getElementById('item-' + itemId)?.remove();
+        actualizarBadges(data.total_items);
+        document.getElementById('subtotal-carrito').textContent = data.subtotal;
+        // Si no quedan items, mostrar mensaje de vacío
+        const itemsLeft = document.querySelectorAll('#lista-items-carrito > div[id^="item-"]').length;
+        if (itemsLeft === 0) {
+            document.getElementById('lista-items-carrito').innerHTML = `
+                <div id="carrito-vacio" class="flex flex-col items-center justify-center h-full text-center py-16">
+                    <svg class="w-16 h-16 text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <p class="text-gray-400 font-medium">Tu carrito está vacío</p>
+                </div>
+            `;
+        }
+    }
+}
+
+// AGREGAR AL CARRITO (VERSIÓN CORREGIDA, SIN cargarContenidoCarrito)
+window.agregar_tienda = async function (productoId) {
+    const inputCant = document.getElementById(`cant-prod-${productoId}`);
+    let cantidad = 1;
+    if (inputCant) cantidad = parseInt(inputCant.value) || 1;
+
+    try {
+        const response = await fetch('/tienda/carrito/agregar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
+            body: JSON.stringify({ producto_id: productoId, cantidad: cantidad })
+        });
+        const data = await response.json();
+        if (data.exito) {
+            actualizarBadges(data.total_items);
+            document.getElementById('subtotal-carrito').textContent = data.subtotal;
+
+            const listaItems = document.getElementById('lista-items-carrito');
+            const itemExistente = document.getElementById(`item-${data.item_id}`);
+
+            if (itemExistente) {
+                // ACTUALIZAR ITEM EXISTENTE
+                const inputCantItem = document.getElementById(`cant-${data.item_id}`);
+                if (inputCantItem) inputCantItem.value = data.nueva_cantidad || cantidad;
+                const subtotalSpan = document.getElementById(`sub-${data.item_id}`);
+                if (subtotalSpan) subtotalSpan.textContent = data.subtotal_item;
+            } else {
+                // AGREGAR NUEVO ITEM (eliminar mensaje de vacío si existe)
+                const carritoVacio = document.getElementById('carrito-vacio');
+                if (carritoVacio) carritoVacio.remove();
+                listaItems.insertAdjacentHTML('beforeend', data.item_html);
             }
-            document.getElementById('drawer-carrito').classList.remove('translate-x-full');
-            document.getElementById('overlay-carrito').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
 
-        function cerrarCarrito() {
-            document.getElementById('drawer-carrito').classList.add('translate-x-full');
-            document.getElementById('overlay-carrito').classList.add('hidden');
-            document.body.style.overflow = '';
-        }
-
-        function mostrarToast(id, mensaje, duracion = 4000) {
-            const t = document.getElementById(id);
-            const msgEl = document.getElementById(id + '-msg');
-            if (msgEl) msgEl.textContent = mensaje;
-            t.classList.remove('hidden');
-            setTimeout(() => t.classList.add('hidden'), duracion);
-        }
-
-        function actualizarBadges(totalItems) {
-            document.querySelectorAll('.badge-carrito').forEach(b => {
-                b.textContent = totalItems;
-                if (totalItems > 0) b.classList.remove('hidden'); else b.classList.add('hidden');
-            });
-            const headerBadge = document.getElementById('badge-header');
-            if (headerBadge) {
-                headerBadge.textContent = totalItems;
-                if (totalItems > 0) headerBadge.classList.remove('hidden'); else headerBadge.classList.add('hidden');
+            mostrarToast('toast-ok', data.mensaje);
+            if (data.mensaje_stock) {
+                mostrarToast('toast-stock', data.mensaje_stock, 5000);
             }
+        } else {
+            mostrarToast('toast-stock', data.mensaje || 'Error al agregar');
         }
-
-        // VALIDACIÓN PARA NO IR AL CHECKOUT CON CARRITO VACÍO
-        function verificarCheckout(event) {
-            const itemsList = document.querySelectorAll('#lista-items-carrito > div[id^="item-"]');
-            if (itemsList.length === 0) {
-                event.preventDefault();
-                mostrarToast('toast-stock', 'Debes agregar al menos un producto para solicitar un pedido.');
-            }
-        }
-
-        // Funciones de Lógica de carrito
-        async function quitarItem(itemId) {
-            const resp = await fetch("{{ url_for('carrito_bp.quitar_del_carrito', item_id=0) }}".replace('0', itemId), {
-                method: 'POST', headers: { 'X-CSRFToken': CSRF_TOKEN }
-            });
-            const data = await resp.json();
-            if (data.exito) {
-                document.getElementById('item-' + itemId)?.remove();
-                actualizarBadges(data.total_items);
-                document.getElementById('subtotal-carrito').textContent = data.subtotal;
-            }
-        }
-
-        async function actualizarCantidadInput(itemId, valor) {
-            let nuevaCant = parseInt(valor);
-            if (isNaN(nuevaCant) || nuevaCant < 1) {
-                nuevaCant = 1;
-                document.getElementById('cant-' + itemId).value = 1;
-            }
-            ejecutarActualizacion(itemId, nuevaCant);
-        }
-
-        async function cambiarCantidadDirecta(itemId, delta) {
-            const input = document.getElementById('cant-' + itemId);
-            const nuevaCant = Math.max(1, parseInt(input.value) + delta);
-            input.value = nuevaCant;
-            ejecutarActualizacion(itemId, nuevaCant);
-        }
-
-        async function ejecutarActualizacion(itemId, cantidad) {
-            const resp = await fetch("{{ url_for('carrito_bp.actualizar_cantidad', item_id=0) }}".replace('0', itemId), {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF_TOKEN },
-                body: JSON.stringify({ cantidad: cantidad })
-            });
-            const data = await resp.json();
-            if (data.exito) {
-                document.getElementById('sub-' + itemId).textContent = data.subtotal_item;
-                document.getElementById('subtotal-carrito').textContent = data.subtotal;
-                actualizarBadges(data.total_items);
-                if (data.advertencia) mostrarToast('toast-stock', data.advertencia, 5000);
-            }
-        }
-        window.agregar_tienda = async function (productoId) {
-            const inputCant = document.getElementById(`cant-prod-${productoId}`);
-            let cantidad = 1;
-            if (inputCant) cantidad = parseInt(inputCant.value) || 1;
-
-            try {
-                const response = await fetch('/tienda/carrito/agregar', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': CSRF_TOKEN
-                    },
-                    body: JSON.stringify({ producto_id: productoId, cantidad: cantidad })
-                });
-                const data = await response.json();
-                if (data.exito) {
-                    actualizarBadges(data.total_items);
-                    document.getElementById('subtotal-carrito').textContent = data.subtotal;
-
-                    const listaItems = document.getElementById('lista-items-carrito');
-                    const carritoVacio = document.getElementById('carrito-vacio');
-
-                    let itemExistente = document.getElementById(`item-${data.item_id}`);
-                    if (itemExistente) {
-
-                        await cargarContenidoCarrito();
-                    } else {
-                        // Eliminar mensaje de vacío si existe
-                        if (carritoVacio) carritoVacio.remove();
-                        listaItems.insertAdjacentHTML('beforeend', data.item_html);
-                    }
-
-                    mostrarToast('toast-ok', data.mensaje);
-                    if (data.advertencia) {
-                        mostrarToast('toast-stock', data.advertencia, 5000);
-                    }
-                } else {
-                    mostrarToast('toast-stock', data.mensaje || 'Error al agregar');
-                }
-            } catch (err) {
-                console.error(err);
-                mostrarToast('toast-stock', 'Error de conexión');
-            }
-        };
-
-        async function cargarContenidoCarrito() {
-            try {
-                const resp = await fetch('/tienda/carrito/contenido');
-                const html = await resp.text();
-                const listaItems = document.getElementById('lista-items-carrito');
-                if (listaItems) {
-                    listaItems.innerHTML = html;
-                }
-            } catch (e) { console.error(e); }
-        }
-        async function refrescarCarritoLateral() {
-            try {
-                const response = await fetch('/tienda/carrito/contenido'); // nueva ruta
-                const html = await response.text();
-                document.getElementById('lista-items-carrito').innerHTML = html;
-                // Actualizar badges y subtotal
-                const totalItems = document.querySelectorAll('#lista-items-carrito > div[id^="item-"]').length;
-                actualizarBadges(totalItems);
-                const subtotalSpan = document.getElementById('subtotal-carrito');
-                if (subtotalSpan) {
-                    const subtotalResp = await fetch('/tienda/carrito/subtotal');
-                    const data = await subtotalResp.json();
-                    subtotalSpan.textContent = data.subtotal;
-                }
-            } catch (e) { console.error(e); }
-        }
+    } catch (err) {
+        console.error(err);
+        mostrarToast('toast-stock', 'Error de conexión');
+    }
+};
     </script>
 </body>
 

@@ -597,7 +597,19 @@ def pedidos_pendientes():
 @login_required
 @roles_accepted('ADMINISTRADOR', 'VENTAS')
 def ver_pedido(pedido_id):
-    pedido = PedidoCliente.query.get_or_404(pedido_id)
+    from sqlalchemy.orm import joinedload
+    pedido = PedidoCliente.query.options(
+        joinedload(PedidoCliente.detalles)
+        .joinedload(PedidoClienteDetalle.producto)
+        .joinedload(Productos.existencia)
+    ).get_or_404(pedido_id)
+    
+    # Depuración: imprimir stock de cada producto
+    for detalle in pedido.detalles:
+        existencia = detalle.producto.existencia
+        stock = existencia.stock_actual if existencia else 0
+        print(f"DEBUG: Producto {detalle.producto.nombre} - Cantidad pedida: {detalle.cantidad}, Stock actual: {stock}")
+    
     return render_template('comercial/pedido_detalle.html', pedido=pedido)
 
 @comercial_bp.route('/pedidos/<int:pedido_id>/autorizar', methods=['POST'])
@@ -626,23 +638,27 @@ def autorizar_pedido(pedido_id):
 
         detalles = pedido.detalles
         productos_sin_stock = []
-
+        total_entregado = Decimal('0.00')
         total_venta = Decimal('0.00')
+        venta = None
+
+        # Primera pasada: calcular entregables y totales
         for detalle in detalles:
             producto = detalle.producto
             cantidad_pedida = Decimal(str(detalle.cantidad))
             existencia = Existencias.query.filter_by(producto_id=producto.id).first()
             stock_actual = Decimal(str(existencia.stock_actual)) if existencia else Decimal('0')
             entregable = min(cantidad_pedida, stock_actual)
+            faltante = cantidad_pedida - entregable
+
             if entregable > 0:
                 total_venta += entregable * Decimal(str(detalle.precio_unitario))
 
-        venta = None
+        # Crear venta si hay algo que cobrar
         if total_venta > 0:
             folio_venta = f'VTA-{pedido.folio}'
             subtotal_venta = total_venta / Decimal('1.16')
             iva_venta = total_venta - subtotal_venta
-
             venta = Venta(
                 folio=folio_venta,
                 cliente_id=cliente_id,
@@ -657,18 +673,17 @@ def autorizar_pedido(pedido_id):
             db.session.add(venta)
             db.session.flush()
 
+        # Segunda pasada: descontar stock, registrar movimientos y crear solicitudes
         for detalle in detalles:
             producto = detalle.producto
             cantidad_pedida = Decimal(str(detalle.cantidad))
             existencia = Existencias.query.filter_by(producto_id=producto.id).first()
             stock_actual = Decimal(str(existencia.stock_actual)) if existencia else Decimal('0')
-
             entregable = min(cantidad_pedida, stock_actual)
             faltante = cantidad_pedida - entregable
 
             if entregable > 0:
                 existencia.stock_actual = stock_actual - entregable
-
                 movimiento = MovimientosInventario(
                     existencia_id=existencia.id_existencias,
                     usuario_id=current_user.id,
@@ -677,24 +692,22 @@ def autorizar_pedido(pedido_id):
                     motivo=f'Venta por pedido {pedido.folio}'
                 )
                 db.session.add(movimiento)
-
                 if venta:
                     costo_unit = calcular_costo_unitario_producto(producto.id)
                     detalle_venta = VentaDetalle(
                         venta_id=venta.id_venta,
                         producto_id=producto.id,
                         cantidad=entregable,
-                        costo_unitario=costo_unit, 
+                        costo_unitario=costo_unit,
                         precio_unitario=detalle.precio_unitario,
                         total_linea=entregable * Decimal(str(detalle.precio_unitario))
                     )
                     db.session.add(detalle_venta)
-
-                detalle.cantidad_entregada = entregable
-                detalle.cantidad_pendiente = faltante
+                detalle.cantidad_entregada = int(entregable)
+                detalle.cantidad_pendiente = int(faltante)
             else:
-                detalle.cantidad_entregada = Decimal('0')
-                detalle.cantidad_pendiente = cantidad_pedida
+                detalle.cantidad_entregada = 0
+                detalle.cantidad_pendiente = int(cantidad_pedida)
 
             if faltante > 0:
                 solicitud = SolicitudProduccion(
@@ -704,8 +717,9 @@ def autorizar_pedido(pedido_id):
                     estado='PENDIENTE'
                 )
                 db.session.add(solicitud)
-                productos_sin_stock.append((producto.nombre, faltante))
+                productos_sin_stock.append((producto.nombre, int(faltante)))
 
+        # Actualizar estado del pedido
         if all(d.cantidad_pendiente == 0 for d in detalles):
             pedido.estado = 'ENTREGADO'
         elif any(d.cantidad_pendiente > 0 for d in detalles) and any(d.cantidad_entregada > 0 for d in detalles):
@@ -716,12 +730,13 @@ def autorizar_pedido(pedido_id):
         pedido.fecha_autorizacion = datetime.now()
         db.session.commit()
 
+        # Construir mensaje de notificación
         mensaje = f"Tu pedido {pedido.folio} ha sido autorizado. "
         if total_venta > 0:
             mensaje += f"Se entregarán {int(total_venta)} unidades de inmediato. "
         if productos_sin_stock:
             mensaje += "Los siguientes productos están pendientes de producción: " + \
-                       ", ".join([f"{p[0]} ({int(p[1])} u)" for p in productos_sin_stock])
+                       ", ".join([f"{p[0]} ({p[1]} u)" for p in productos_sin_stock])
         else:
             mensaje += "Todo el pedido está listo para entrega."
 
@@ -778,3 +793,92 @@ def proponer_fecha_pedido(pedido_id):
 
     flash(f'Propuesta enviada al cliente para el pedido {pedido.folio}.', 'info')
     return redirect(url_for('comercial_bp.pedidos_pendientes'))
+
+# ============================================================
+# HISTORIAL DE PEDIDOS (PARA EMPLEADOS)
+# ============================================================
+
+@comercial_bp.route('/pedidos/historial')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'VENTAS', 'PRODUCCION')
+def historial_pedidos():
+    """Vista de todos los pedidos para empleados (con filtros y paginación)."""
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    estado = request.args.get('estado', '')
+    search = request.args.get('search', '')
+
+    query = PedidoCliente.query
+    if estado:
+        query = query.filter(PedidoCliente.estado == estado)
+    if search:
+        query = query.filter(
+            db.or_(
+                PedidoCliente.folio.ilike(f'%{search}%'),
+                PedidoCliente.usuario.has(User.username.ilike(f'%{search}%'))
+            )
+        )
+    paginated = query.order_by(PedidoCliente.fecha_pedido.desc()).paginate(page=page, per_page=per_page, error_out=False)
+
+    # Calcular KPIs sobre el total (sin paginación)
+    total_pedidos = query.count()
+    total_pendientes = query.filter(PedidoCliente.estado.in_(['COTIZACION', 'NEGOCIANDO_FECHA'])).count()
+    total_entregados = query.filter(PedidoCliente.estado == 'ENTREGADO').count()
+    valor_total = db.session.query(db.func.sum(PedidoCliente.total)).filter(
+        PedidoCliente.estado.in_(['ENTREGADO', 'PARCIALMENTE_ENTREGADO', 'AUTORIZADO', 'EN_PRODUCCION'])
+    ).scalar() or 0
+
+    kpis = {
+        'total': total_pedidos,
+        'pendientes': total_pendientes,
+        'entregados': total_entregados,
+        'valor': float(valor_total)
+    }
+
+    return render_template('comercial/pedidos_historial.html',
+                           pedidos=paginated.items,
+                           pagination=paginated,
+                           kpis=kpis,
+                           estado_actual=estado,
+                           search_actual=search)
+
+@comercial_bp.route('/pedidos/historial/api')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'VENTAS', 'PRODUCCION')
+def api_historial_pedidos():
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 10, type=int)
+    estado = request.args.get('estado', '')
+    search = request.args.get('search', '')
+
+    query = PedidoCliente.query
+    if estado:
+        query = query.filter(PedidoCliente.estado == estado)
+    if search:
+        query = query.filter(
+            db.or_(
+                PedidoCliente.folio.ilike(f'%{search}%'),
+                PedidoCliente.usuario.has(User.username.ilike(f'%{search}%'))
+            )
+        )
+    query = query.order_by(PedidoCliente.fecha_pedido.desc())
+    paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+
+    items = []
+    for p in paginated.items:
+        items.append({
+            'id': p.id_pedido_cliente,
+            'folio': p.folio,
+            'cliente': p.usuario.username,
+            'fecha': p.fecha_pedido.strftime('%d/%m/%Y %H:%M'),
+            'total': float(p.total),
+            'estado': p.estado,
+            'estado_label': p.etiqueta_estado
+        })
+    return jsonify({
+        'items': items,
+        'total': paginated.total,
+        'page': paginated.page,
+        'pages': paginated.pages,
+        'per_page': paginated.per_page
+    })

@@ -209,55 +209,47 @@ def agregar_al_carrito():
 
     carrito = _obtener_o_crear_carrito()
 
-    # Verificar si el producto ya está en el carrito
     item = CarritoItem.query.filter_by(
         carrito_id=carrito.id_carrito, producto_id=producto_id
     ).first()
 
     if item:
-        item.cantidad = float(item.cantidad) + cantidad
+        nueva_cantidad = float(item.cantidad) + float(cantidad)
+        item.cantidad = nueva_cantidad
     else:
+        nueva_cantidad = float(cantidad)
         item = CarritoItem(
             carrito_id=carrito.id_carrito,
             producto_id=producto_id,
-            cantidad=cantidad,
+            cantidad=nueva_cantidad,
             precio_unitario=producto.precio_base,
         )
         db.session.add(item)
 
     db.session.commit()
 
-    # Validación de stock (solo informativa)
-    advertencia = None
-    if stock_actual < float(item.cantidad):
-        advertencia = (
-            f"El stock disponible de «{producto.nombre}» se ha agotado. "
-            "Hemos enviado una solicitud para iniciar producción. "
-            "Te notificaremos cuando esté listo."
-        )
-        _crear_notificacion(
-            usuario_id=current_user.id,
-            tipo='STOCK',
-            titulo=f'Stock insuficiente: {producto.nombre}',
-            mensaje=(
-                f"Solicitaste {int(item.cantidad)} unidades de «{producto.nombre}», "
-                f"pero solo hay {int(stock_actual)} en almacén. "
-                "Se enviará una solicitud de producción para cubrir tu pedido."
-            ),
-        )
-        db.session.commit()
+    disponible = stock_actual
+    solicitado = float(item.cantidad)
+    faltante = max(0, solicitado - disponible)
+    if faltante > 0:
+        if disponible > 0:
+            mensaje_stock = f"⚠️ Stock disponible: {disponible} unidades. Las {faltante} restantes se enviarán a producción tras autorizar el pedido."
+        else:
+            mensaje_stock = f"⚠️ Sin stock disponible. Las {solicitado} unidades se enviarán a producción tras autorizar el pedido."
+    else:
+        mensaje_stock = f"✅ Stock suficiente. Las {int(solicitado)} unidades están disponibles para entrega inmediata."
 
     total_items = carrito.total_items
     subtotal = carrito.subtotal
-
-    # Renderizar el HTML del item (para actualizar el carrito sin recargar)
     item_html = render_template('tienda/_carrito_item.html', item=item)
 
     return jsonify({
         'exito': True,
-        'advertencia': advertencia,
+        'mensaje_stock': mensaje_stock,
         'total_items': total_items,
         'subtotal': f"${subtotal:,.2f}",
+        'subtotal_item': f"${item.subtotal:,.2f}",
+        'nueva_cantidad': nueva_cantidad,
         'mensaje': f'«{producto.nombre}» agregado al carrito.',
         'item_html': item_html,
         'item_id': item.id_item

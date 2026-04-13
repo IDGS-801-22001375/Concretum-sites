@@ -453,4 +453,4 @@ def inject_config():
     return dict(config_empresa=config)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(port=5000)

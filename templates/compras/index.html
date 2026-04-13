@@ -60,6 +60,7 @@ columns=[
 {'field': 'folio', 'label': 'Folio', 'sortable': true},
 {'field': 'proveedor_nombre', 'label': 'Proveedor', 'sortable': true},
 {'field': 'fecha_compra', 'label': 'Fecha', 'sortable': true},
+{'field': 'productos_resumen', 'label': 'Productos', 'sortable': false},
 {'field': 'total', 'label': 'Total', 'sortable': true},
 {'field': 'estado', 'label': 'Estado', 'sortable': true}
 ],
@@ -101,48 +102,54 @@ modal_size='xl') %}
         </button>
     </div>
 
-    <div class="bg-[#0B2239] rounded-xl border border-[#1E3A5F] p-4">
-        <div class="grid grid-cols-12 gap-3 mb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">
-            <div class="col-span-5">Material</div>
-            <div class="col-span-3">Cantidad</div>
-            <div class="col-span-3">Precio Unit.</div>
-            <div class="col-span-1"></div>
-        </div>
+    <div class="bg-[#0B2239] rounded-xl border border-[#1E3A5F] overflow-x-auto">
+        <div class="min-w-[600px]">
+            <div
+                class="grid grid-cols-12 gap-3 p-4 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-[#1E3A5F]">
+                <div class="col-span-5">Material</div>
+                <div class="col-span-3">Cantidad</div>
+                <div class="col-span-2">Unidad</div>
+                <div class="col-span-1">Precio Unit.</div>
+                <div class="col-span-1"></div>
+            </div>
 
-        <div id="materiales-container" class="space-y-3">
-            <div class="material-row grid grid-cols-12 gap-3 items-center">
-                <div class="col-span-5">
-                    <select name="materia_prima_id[]"
-                        class="w-full px-3 py-2.5 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
-                        required>
-                        <option value="">Seleccione un proveedor primero...</option>
-                    </select>
-                </div>
-                <div class="col-span-3 relative">
-                    <input type="number" name="cantidad[]" step="0.001" placeholder="0.000"
-                        class="w-full px-3 py-2.5 pr-12 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
-                        required>
-                    <span
-                        class="unidad-badge absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-[#008DC0]"></span>
-                </div>
-                <div class="col-span-3">
-                    <input type="number" name="precio_unitario[]" step="0.01" placeholder="0.00"
-                        class="w-full px-3 py-2.5 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
-                        required>
-                </div>
-                <div class="col-span-1 flex justify-center">
-                    <button type="button"
-                        class="remove-material-btn p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/20 rounded-lg transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                    </button>
+            <div id="materiales-container" class="divide-y divide-[#1E3A5F]">
+                <div class="material-row grid grid-cols-12 gap-3 p-4 items-center">
+                    <div class="col-span-5">
+                        <select name="materia_prima_id[]"
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
+                            required>
+                            <option value="">Seleccione un proveedor primero...</option>
+                        </select>
+                    </div>
+                    <div class="col-span-3">
+                        <input type="number" name="cantidad[]" step="0.001" placeholder="0.000"
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
+                            required>
+                    </div>
+                    <div class="col-span-2">
+                        <span
+                            class="unidad-texto inline-block w-full px-3 py-2 text-sm text-[#008DC0] font-semibold">---</span>
+                    </div>
+                    <div class="col-span-1">
+                        <input type="number" name="precio_unitario[]" step="0.01" placeholder="0.00"
+                            class="w-full px-3 py-2 text-sm rounded-lg border border-[#1E3A5F] bg-[#0F2A44] text-white focus:border-[#008DC0] focus:ring-1 focus:ring-[#008DC0] outline-none"
+                            required>
+                    </div>
+                    <div class="col-span-1 flex justify-center">
+                        <button type="button"
+                            class="remove-material-btn p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/20 rounded-lg transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="mt-4 pt-4 border-t border-[#1E3A5F] flex justify-end">
+        <div class="mt-4 pt-4 border-t border-[#1E3A5F] flex justify-end p-4">
             <div class="flex items-center gap-3">
                 <span class="text-sm font-medium text-gray-400">Total:</span>
                 <span class="text-xl font-bold text-white"><span id="total-preview">0.00</span></span>
@@ -299,8 +306,34 @@ modal_size='xl') %}
             }
 
             if (valActual) select.value = valActual;
+            // Actualizar el texto de unidad para cada fila
+            const row = select.closest('.material-row');
+            if (row) {
+                const unidadSpan = row.querySelector('.unidad-texto');
+                const selectedOpt = select.options[select.selectedIndex];
+                if (selectedOpt && selectedOpt.dataset.unidad) {
+                    unidadSpan.textContent = selectedOpt.dataset.unidad;
+                } else {
+                    unidadSpan.textContent = '---';
+                }
+            }
         });
     }
+
+    document.getElementById('materiales-container').addEventListener('change', function (e) {
+        if (e.target && e.target.matches('select[name="materia_prima_id[]"]')) {
+            const select = e.target;
+            const row = select.closest('.material-row');
+            const unidadSpan = row.querySelector('.unidad-texto');
+            const selectedOpt = select.options[select.selectedIndex];
+            if (selectedOpt && selectedOpt.dataset.unidad) {
+                unidadSpan.textContent = selectedOpt.dataset.unidad;
+            } else {
+                unidadSpan.textContent = '---';
+            }
+            actualizarTotalYJson();
+        }
+    });
 
     document.getElementById('proveedor_id').addEventListener('change', async function (e) {
         const container = document.getElementById('materiales-container');
@@ -387,6 +420,7 @@ modal_size='xl') %}
             id: 'compras',
             apiEndpoint: '/compras',
             sortBy: 'fecha_compra',
+            sortOrder: 'desc',
             columns: [
                 {
                     field: 'folio',
@@ -404,7 +438,18 @@ modal_size='xl') %}
                     field: 'fecha_compra',
                     label: 'Fecha',
                     sortable: true,
-                    render: (val) => `<span class="text-gray-400">${formatearFecha(val, 'date')}</span>`
+                    render: (val) => `<span class="text-gray-400">${formatearFecha(val, 'datetime')}</span>`
+                },
+                {
+                    field: 'productos_resumen',
+                    label: 'Productos',
+                    sortable: false,
+                    render: (val) => {
+                        if (!val || val === 'Sin materiales') return '<span class="text-gray-500 text-xs">Sin materiales</span>';
+                        const items = val.split(', ');
+                        const listItems = items.map(item => `<li class="text-gray-300 text-xs">${item}</li>`).join('');
+                        return `<ul class="list-disc list-inside space-y-0.5">${listItems}</ul>`;
+                    }
                 },
                 {
                     field: 'total',
@@ -442,6 +487,7 @@ modal_size='xl') %}
             }
         });
 
+        // Sobrescribir renderTabla para agregar botones personalizados
         const originalRender = mgr.renderTabla.bind(mgr);
         mgr.renderTabla = function (items) {
             originalRender(items);
@@ -461,31 +507,32 @@ modal_size='xl') %}
             filas.forEach((fila, idx) => {
                 const item = items[idx];
                 if (!item) return;
-                const estado = item.estado;
                 const compraId = item.id;
+                const estado = item.estado;
                 const divAcciones = fila.querySelector('td:last-child div');
                 if (!divAcciones) return;
 
-                const btns = divAcciones.querySelectorAll('button');
-                if (btns.length >= 2) btns[1].remove();
-                const btnEditar = btns[0];
-                if (btnEditar && estado !== 'CREADA') btnEditar.remove();
+                // Limpiar cualquier botón existente
+                divAcciones.innerHTML = '';
 
+                // Botón "Ver detalle"
+                const btnDetalle = document.createElement('a');
+                btnDetalle.href = `/compras/detalle/${compraId}`;
+                btnDetalle.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#008DC0] hover:text-white border border-transparent hover:border-[#008DC0] hover:bg-[#008DC0]/20 rounded-lg transition-all';
+                btnDetalle.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg> Ver detalle`;
+                divAcciones.appendChild(btnDetalle);
+
+                // Botón de cambio de estado (si no está cancelada)
                 if (estado !== 'CANCELADA') {
-                    if (!divAcciones.querySelector('.btn-cambiar-estado')) {
-                        const btnCambio = document.createElement('button');
-                        btnCambio.textContent = estado === 'RECIBIDA' ? 'Anular' : 'Recibir';
-                        btnCambio.className = `btn-cambiar-estado text-xs font-medium transition-colors ml-2 ${estado === 'RECIBIDA'
-                            ? 'text-amber-400 hover:text-amber-300'
-                            : 'text-emerald-400 hover:text-emerald-300'
-                            }`;
-                        btnCambio.addEventListener('click', (e) => {
-                            e.preventDefault();
-                            const nuevoEstado = estado === 'RECIBIDA' ? 'CANCELADA' : 'RECIBIDA';
-                            abrirModalEstado(compraId, nuevoEstado);
-                        });
-                        divAcciones.appendChild(btnCambio);
-                    }
+                    const btnCambio = document.createElement('button');
+                    btnCambio.textContent = estado === 'RECIBIDA' ? 'Anular' : 'Recibir';
+                    btnCambio.className = `btn-cambiar-estado text-xs font-medium transition-colors ml-2 ${estado === 'RECIBIDA' ? 'text-amber-400 hover:text-amber-300' : 'text-emerald-400 hover:text-emerald-300'}`;
+                    btnCambio.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const nuevoEstado = estado === 'RECIBIDA' ? 'CANCELADA' : 'RECIBIDA';
+                        abrirModalEstado(compraId, nuevoEstado);
+                    });
+                    divAcciones.appendChild(btnCambio);
                 }
             });
         };

@@ -95,15 +95,23 @@ def api_compras():
 
     items = []
     for c in paginated.items:
+        # Construir resumen de productos (máximo 3 para no saturar)
+        productos_resumen = []
+        for det in c.detalles[:3]:
+            mp = det.materia_prima
+            productos_resumen.append(f"{mp.nombre} x {float(det.cantidad)} {mp.unidad_medida}")
+        if len(c.detalles) > 3:
+            productos_resumen.append(f"+{len(c.detalles)-3} más")
+        resumen_str = ", ".join(productos_resumen) if productos_resumen else "Sin materiales"
+        
         items.append({
             'id': c.id,
             'folio': c.folio,
-            'proveedor_id': c.proveedor_id,
             'proveedor_nombre': c.proveedor.razon_social,
-            'fecha_compra': c.fecha_compra.strftime('%Y-%m-%d %H:%M'),
+            'fecha_compra': c.fecha_compra.strftime('%Y-%m-%d %H:%M'),  # ya tiene hora
             'total': float(c.total),
             'estado': c.estado,
-            'es_activo': True
+            'productos_resumen': resumen_str
         })
 
     return jsonify({
@@ -373,3 +381,27 @@ def generar_compra_automatica():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error al generar la compra: {str(e)}'}), 500
+    
+# ----------------------------------------------------------------------
+# DETALLE DE COMPRA (página completa)
+# ----------------------------------------------------------------------
+@compras_bp.route('/compras/detalle/<int:id>')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'COMPRAS')
+def detalle_compra(id):
+    from sqlalchemy.orm import joinedload
+    # Cargar la compra con detalles, materia prima e historial (pero no pagos, porque es dynamic)
+    compra = Compra.query.options(
+        joinedload(Compra.detalles).joinedload(CompraDetalle.materia_prima),
+        joinedload(Compra.historial).joinedload(HistorialCompra.usuario)
+    ).get_or_404(id)
+    
+    # Los pagos se cargarán de forma perezosa (lazy='dynamic') cuando se acceda a compra.pagos
+    # Calcular total de pagos (si los hay)
+    total_pagado = sum(p.monto for p in compra.pagos if p.estatus == 'PAGADO')
+    saldo_pendiente = compra.total - total_pagado
+    
+    return render_template('compras/detalle.html',
+                           compra=compra,
+                           total_pagado=total_pagado,
+                           saldo_pendiente=saldo_pendiente)

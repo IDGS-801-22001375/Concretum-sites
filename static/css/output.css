@@ -6384,3 +6384,25 @@ input:checked + .toggle-bg {
     }
   }
 }
+
+/* Clases manuales para badges de estado (Historial de Pedidos) */
+.bg-amber-500\/20 { background-color: rgba(245, 158, 11, 0.2); }
+.text-amber-400 { color: #fbbf24; }
+
+.bg-emerald-500\/20 { background-color: rgba(16, 185, 129, 0.2); }
+.text-emerald-400 { color: #34d399; }
+
+.bg-indigo-500\/20 { background-color: rgba(99, 102, 241, 0.2); }
+.text-indigo-400 { color: #818cf8; }
+
+.bg-red-500\/20 { background-color: rgba(239, 68, 68, 0.2); }
+.text-red-400 { color: #f87171; }
+
+.bg-purple-500\/20 { background-color: rgba(168, 85, 247, 0.2); }
+.text-purple-400 { color: #c084fc; }
+
+.bg-blue-500\/20 { background-color: rgba(59, 130, 246, 0.2); }
+.text-blue-400 { color: #60a5fa; }
+
+.bg-gray-500\/20 { background-color: rgba(107, 114, 128, 0.2); }
+.text-gray-400 { color: #9ca3af; }
