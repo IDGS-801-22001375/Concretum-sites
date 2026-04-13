@@ -101,8 +101,13 @@
                 field: 'nombre', 
                 label: 'Nombre', 
                 sortable: true,
-                render: function(val) {
-                    return `<span class="font-medium text-white">${val}</span>`;
+                render: function(val, item) {
+                    // Mostrar el nombre y debajo el proveedor
+                    return `<div>
+                                <span class="font-medium text-white">${val}</span>
+                                <br>
+                                <span class="text-xs text-gray-400">${item.proveedor_nombre || 'Proveedor no asignado'}</span>
+                            </div>`;
                 }
             },
             {

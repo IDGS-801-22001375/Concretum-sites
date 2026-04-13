@@ -5,20 +5,31 @@ from . import mermas_bp
 from sqlalchemy import or_, asc, desc, func
 import datetime
 from decimal import Decimal
+import threading
+from copy import copy
+
+def _guardar_en_mongo(datos_auditoria):
+    from app import mongo_db
+    try:
+        mongo_db.auditoria_eventos.insert_one(datos_auditoria)
+    except Exception as e:
+        print(f"Error Mongo (Async): {e}")
 
 def registrar_auditoria(usuario_accion, accion, detalles):
-    try:
-        from app import mongo_db
-        mongo_db.auditoria_eventos.insert_one({
-            "usuario_id": usuario_accion,
-            "evento": accion,
-            "detalles": detalles,
-            "modulo": "Mermas",
-            "user_agent": request.headers.get('User-Agent'),
-            "fecha_creacion": datetime.datetime.utcnow()
-        })
-    except Exception as e:
-        print(f"Error Mongo: {e}")
+    user_agent = request.headers.get('User-Agent') if request else 'Desconocido'
+    ip_addr = request.remote_addr if request else '0.0.0.0'
+    
+    datos_auditoria = {
+        "usuario_id": usuario_accion,
+        "evento": accion,
+        "detalles": detalles,
+        "modulo": "Nombre del Modulo",
+        "user_agent": user_agent,
+        "ip": ip_addr,
+        "fecha_creacion": datetime.datetime.utcnow()
+    }
+    
+    threading.Thread(target=_guardar_en_mongo, args=(datos_auditoria,)).start()
 
 @mermas_bp.route('/mermas')
 @login_required
@@ -149,17 +160,27 @@ def guardar_merma():
     
     tipo = data.get('tipo_material')
     material_id = data.get('material_id')
-    cantidad = float(data.get('cantidad', 0))
+    cantidad = Decimal(str(data.get('cantidad', '0')))
     causa = data.get('causa')
     responsable = data.get('responsable', '')
     observaciones = data.get('observaciones', '')
     produccion_id = data.get('produccion_id')
 
-    if produccion_id and produccion_id.strip() == '':
+    produccion_id = data.get('produccion_id')
+
+    if not produccion_id or str(produccion_id).strip() == '':
         produccion_id = None
-    
+    else:
+        produccion_id = int(produccion_id)
+
     if not tipo or not material_id or cantidad <= 0 or not causa:
         return jsonify({'success': False, 'message': 'Faltan datos obligatorios'}), 400
+    
+    if produccion_id:
+        from models import Produccion
+        prod_existe = Produccion.query.get(produccion_id)
+        if not prod_existe:
+            return jsonify({'success': False, 'message': f'La orden de producción #{produccion_id} no existe en el sistema.'}), 400
     
     # Obtener costo unitario y actualizar stock
     movimiento_id = None
@@ -167,7 +188,7 @@ def guardar_merma():
         material = MateriaPrima.query.get(material_id)
         if not material:
             return jsonify({'success': False, 'message': 'Material no encontrado'}), 404
-        costo = float(material.costo_unitario) if material.costo_unitario else 0
+        costo = Decimal(str(material.costo_unitario)) if material.costo_unitario else Decimal('0')
         valor_monetario = cantidad * costo
         existencia = ExistenciaMateriaPrima.query.filter_by(materia_prima_id=material.id_materia_prima).first()
         if not existencia:
@@ -182,7 +203,7 @@ def guardar_merma():
         material = Productos.query.get(material_id)
         if not material:
             return jsonify({'success': False, 'message': 'Producto no encontrado'}), 404
-        costo = float(material.precio_base) if material.precio_base else 0
+        costo = Decimal(str(material.precio_base)) if material.precio_base else Decimal('0')
         existencia = Existencias.query.filter_by(producto_id=material.id_producto).first()
         if not existencia:
             return jsonify({'success': False, 'message': 'No hay registro de existencia para este producto'}), 400

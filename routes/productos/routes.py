@@ -6,6 +6,7 @@ from flask import render_template, request, jsonify, url_for
 from flask_security import login_required, roles_accepted, current_user
 from routes.productos import productos_bp
 from models import db, Productos, CategoriasProducto, UnidadMedida, Color, Existencias
+from forms import ProductoForm
 
 def get_colores():
     return [{'value': c.id_color, 'label': c.nombre} for c in Color.query.filter_by(es_active=True).all()]
@@ -86,23 +87,32 @@ def api_productos():
             'enlace_fotografia': url_for('static', filename=p.enlace_fotografia),
             'sku': p.sku,
             'nombre': p.nombre,
+            'tiene_receta': any(r.es_active == 1 for r in p.recetas),
             'descripcion': p.descripcion,
             'categoria': p.categoria.nombre if p.categoria else '',
             'unidad_medida': p.unidad_medida.nombre if p.unidad_medida else '',
             'stock': stock_actual,  
+            'estado_stock': p.existencia.estado_stock if p.existencia else 'BAJO', 
             'resistencia_mpa': float(p.resistencia_mpa) if p.resistencia_mpa else None,
             'color_nombre': p.color.nombre if p.color else '',
             'color_hex': p.color.codigo_hex if p.color else '',
             'precio_base': float(p.precio_base),
             'es_activo': p.es_active == 1
         })
+    
+    total_activos = Productos.query.filter_by(es_active=1).count()
+    total_inactivos = Productos.query.filter_by(es_active=0).count()
+    bajo_stock = Existencias.query.join(Productos).filter(Productos.es_active == 1, Existencias.estado_stock == 'BAJO').count()
 
     return jsonify({
         'items': items,
         'total': paginated.total,
         'page': paginated.page,
         'pages': paginated.pages,
-        'per_page': paginated.per_page
+        'per_page': paginated.per_page,
+        'activos': total_activos,     
+        'inactivos': total_inactivos,  
+        'bajo_stock': bajo_stock      
     })
 
 @productos_bp.route('/productos/obtener/<int:id>', methods=['GET'])
@@ -125,11 +135,22 @@ def obtener_producto(id):
 @login_required
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
 def guardar_producto():
+    form = ProductoForm() 
+    
+    if request.form.get('id_producto') and not request.files.get('enlace_fotografia'):
+        form.enlace_fotografia.validators = []
+
+    if not form.validate_on_submit():
+        errores = {field: errors[0] for field, errors in form.errors.items()}
+        return jsonify({'success': False, 'message': 'Errores de validación.', 'errors': errores}), 400
+
     data = request.form
     id_prod = data.get('id_producto')
-
-    # Manejo de la subida de imagen
+    
     enlace_fotografia = request.files.get('enlace_fotografia')
+    filename = None
+    if enlace_fotografia and enlace_fotografia.filename:
+        filename = convertir_ruta_imagen(enlace_fotografia)
     filename = None
     if enlace_fotografia and enlace_fotografia.filename:
         filename = convertir_ruta_imagen(enlace_fotografia)
@@ -200,3 +221,10 @@ def alternar_estado(id):
     estado_txt = "Activado" if p.es_active == 1 else "Desactivado"
     db.session.commit()
     return jsonify({'success': True, 'message': f'Producto {estado_txt.lower()} correctamente.'})
+
+@productos_bp.route('/productos/<int:id>/ver')
+@login_required
+@roles_accepted('ADMINISTRADOR', 'PRODUCCION')
+def ver_detalle_producto(id):
+    producto = Productos.query.get_or_404(id)
+    return render_template('produccion/productos/detalle_producto.html', producto=producto)

@@ -7,29 +7,40 @@ from flask_security import login_required, roles_accepted, current_user
 from models import (
     db, Venta, VentaDetalle, CorteCaja, CorteDesglose, Cliente,
     Productos, Existencias, MovimientosInventario, User, CategoriasProducto,
-    PedidoCliente, PedidoClienteDetalle, SolicitudProduccion, NotificacionCliente
+    PedidoCliente, PedidoClienteDetalle, SolicitudProduccion, NotificacionCliente, Recetas
 )
 from forms import VentaForm, CorteForm
 from routes.comercial import comercial_bp
 from routes.carrito.routes import _crear_notificacion
+import threading
+from copy import copy
 
 # ============================================================
 # FUNCIONES AUXILIARES
 # ============================================================
 
-def registrar_auditoria(usuario_accion, accion, detalles):
+def _guardar_en_mongo(datos_auditoria):
     from app import mongo_db
     try:
-        mongo_db.auditoria_eventos.insert_one({
-            "usuario_id": usuario_accion,
-            "evento": accion,
-            "detalles": detalles,
-            "modulo": "Comercial",
-            "user_agent": request.headers.get('User-Agent'),
-            "fecha_creacion": datetime.utcnow()
-        })
+        mongo_db.auditoria_eventos.insert_one(datos_auditoria)
     except Exception as e:
-        print(f"Error Mongo: {e}")
+        print(f"Error Mongo (Async): {e}")
+
+def registrar_auditoria(usuario_accion, accion, detalles):
+    user_agent = request.headers.get('User-Agent') if request else 'Desconocido'
+    ip_addr = request.remote_addr if request else '0.0.0.0'
+    
+    datos_auditoria = {
+        "usuario_id": usuario_accion,
+        "evento": accion,
+        "detalles": detalles,
+        "modulo": "Nombre del Modulo",
+        "user_agent": user_agent,
+        "ip": ip_addr,
+        "fecha_creacion": datetime.datetime.utcnow()
+    }
+    
+    threading.Thread(target=_guardar_en_mongo, args=(datos_auditoria,)).start()
 
 def calcular_costo_unitario_producto(producto_id):
     producto = Productos.query.get(producto_id)
@@ -174,7 +185,10 @@ def dashboard():
 def ventas():
     form     = VentaForm()
     clientes = Cliente.query.filter_by(es_activo=1).order_by(Cliente.razon_social).all()
-    prods    = Productos.query.filter_by(es_active=1).order_by(Productos.nombre).all()
+    prods = Productos.query.filter(
+        Productos.es_active == 1,
+        Productos.recetas.any(Recetas.es_active == 1)
+    ).order_by(Productos.nombre).all()
 
     form.cliente_id.choices = [(c.id_cliente, c.razon_social) for c in clientes]
 
@@ -571,7 +585,10 @@ def cerrar_corte():
 @login_required
 @roles_accepted('ADMINISTRADOR', 'VENTAS')
 def pedidos_pendientes():
-    pedidos = PedidoCliente.query.filter_by(estado='COTIZACION').order_by(PedidoCliente.fecha_pedido.desc()).all()
+    pedidos = PedidoCliente.query.filter(
+        PedidoCliente.estado.in_(['COTIZACION', 'NEGOCIANDO_FECHA'])
+    ).order_by(PedidoCliente.fecha_pedido.desc()).all()
+    
     return render_template('comercial/pedidos_pendientes.html', pedidos=pedidos)
 
 @comercial_bp.route('/pedidos/<int:pedido_id>')
@@ -724,29 +741,38 @@ def autorizar_pedido(pedido_id):
 
     return redirect(url_for('comercial_bp.pedidos_pendientes'))
 
-@comercial_bp.route('/pedidos/<int:pedido_id>/rechazar', methods=['POST'])
+
+@comercial_bp.route('/pedidos/<int:pedido_id>/proponer_fecha', methods=['POST'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'VENTAS')
-def rechazar_pedido(pedido_id):
+def proponer_fecha_pedido(pedido_id):
     pedido = PedidoCliente.query.get_or_404(pedido_id)
     if pedido.estado != 'COTIZACION':
-        flash('Este pedido ya no está pendiente de autorización.', 'warning')
+        flash('Este pedido ya no está en fase de cotización.', 'warning')
         return redirect(url_for('comercial_bp.pedidos_pendientes'))
 
-    motivo = request.form.get('motivo', 'No especificado')
-    pedido.estado = 'RECHAZADO'
-    pedido.motivo_rechazo = motivo
-    pedido.fecha_autorizacion = datetime.now()  # o fecha_rechazo
-    db.session.commit()
+    fecha_propuesta = request.form.get('fecha_propuesta')
+    motivo = request.form.get('motivo', 'Ajuste por tiempos de producción')
+
+    if not fecha_propuesta:
+        flash('Debes seleccionar una fecha.', 'danger')
+        return redirect(url_for('comercial_bp.ver_pedido', pedido_id=pedido.id_pedido_cliente))
+
+    # Actualizar estado y fecha
+    pedido.estado = 'NEGOCIANDO_FECHA'
+    pedido.fecha_propuesta_entrega = datetime.strptime(fecha_propuesta, '%Y-%m-%d').date()
+    pedido.motivo_rechazo = motivo 
 
     _crear_notificacion(
         usuario_id=pedido.usuario_id,
         tipo='INFO',
-        titulo=f'Pedido rechazado - {pedido.folio}',
-        mensaje=f'Tu pedido {pedido.folio} ha sido rechazado. Motivo: {motivo}',
+        titulo=f'Propuesta de fecha - Pedido {pedido.folio}',
+        mensaje=f'Tenemos una propuesta de fecha de entrega para tu pedido ({fecha_propuesta}). Por favor, revisa tu panel para aceptarla.',
         referencia_id=pedido.id_pedido_cliente,
         referencia_tipo='pedido_cliente',
     )
 
-    flash(f'Pedido {pedido.folio} rechazado.', 'warning')
+    db.session.commit()
+
+    flash(f'Propuesta enviada al cliente para el pedido {pedido.folio}.', 'info')
     return redirect(url_for('comercial_bp.pedidos_pendientes'))

@@ -5,20 +5,20 @@
 
 class CrudManager {
   constructor(config) {
-    this.id          = config.id;
+    this.id = config.id;
     this.apiEndpoint = config.apiEndpoint;
-    this.columns     = config.columns;
-    this.formFields  = config.formFields;
+    this.columns = config.columns;
+    this.formFields = config.formFields;
     this.currentPage = 1;
-    this.perPage     = config.perPage || 10;
-    this.sortBy      = config.sortBy  || 'id';
-    this.sortOrder   = 'asc';
-    this.searchTerm  = '';
-    this.filters     = config.filters || {};
-    this.onEdit      = config.onEdit  || null;
-    this.onSubmit    = config.onSubmit|| null;
+    this.perPage = config.perPage || 10;
+    this.sortBy = config.sortBy || 'id';
+    this.sortOrder = 'asc';
+    this.searchTerm = '';
+    this.filters = config.filters || {};
+    this.onEdit = config.onEdit || null;
+    this.onSubmit = config.onSubmit || null;
 
-    this._openModal  = () => {
+    this._openModal = () => {
       const fn = window[`openModal_${this.id}`];
       if (fn) fn();
       else console.warn('[CrudManager] openModal no encontrado para', this.id);
@@ -44,11 +44,11 @@ class CrudManager {
   /* ── cargar datos ────────────────────────────────────────── */
   async cargarDatos() {
     const params = new URLSearchParams({
-      page:       this.currentPage,
-      per_page:   this.perPage,
-      sort_by:    this.sortBy,
+      page: this.currentPage,
+      per_page: this.perPage,
+      sort_by: this.sortBy,
       sort_order: this.sortOrder,
-      search:     this.searchTerm,
+      search: this.searchTerm,
       ...this.filters
     });
 
@@ -73,6 +73,9 @@ class CrudManager {
       const response = await fetch(`${this.apiEndpoint}/api?${params}`);
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
+      this.total = data.total;
+      this.pages = data.pages;
+      this.rawData = data;
       this.renderTabla(data.items);
       this._renderPaginacion(data);
     } catch (err) {
@@ -143,12 +146,12 @@ class CrudManager {
             <button onclick="window.crudManagers['${this.id}'].alternarEstado(${recordId})"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all rounded-lg
                            ${isActive
-                             ? 'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20'
-                             : 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'}">
-              ${isActive 
-                ? `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`
-                : `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
-              }
+          ? 'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20'
+          : 'text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'}">
+              ${isActive
+          ? `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>`
+          : `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`
+        }
               ${isActive ? 'Desactivar' : 'Activar'}
             </button>
           </div>
@@ -162,12 +165,12 @@ class CrudManager {
 
   /* ── paginación ──────────────────────────────────────────── */
   _renderPaginacion(data) {
-    const info     = document.getElementById(`pagination-info-${this.id}`);
+    const info = document.getElementById(`pagination-info-${this.id}`);
     const controls = document.getElementById(`pagination-controls-${this.id}`);
 
     if (info) {
       const from = data.total === 0 ? 0 : (data.page - 1) * data.per_page + 1;
-      const to   = Math.min(data.page * data.per_page, data.total);
+      const to = Math.min(data.page * data.per_page, data.total);
       info.textContent = `Mostrando ${from}–${to} de ${data.total} registros`;
     }
 
@@ -185,9 +188,9 @@ class CrudManager {
       </button>`;
 
     const maxBtns = 5;
-    const half    = Math.floor(maxBtns / 2);
-    let start     = Math.max(1, data.page - half);
-    let end       = Math.min(data.pages, start + maxBtns - 1);
+    const half = Math.floor(maxBtns / 2);
+    let start = Math.max(1, data.page - half);
+    let end = Math.min(data.pages, start + maxBtns - 1);
     if (end - start < maxBtns - 1) start = Math.max(1, end - maxBtns + 1);
 
     for (let i = start; i <= end; i++)
@@ -326,14 +329,14 @@ class CrudManager {
 
     const colors = {
       success: 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/50 dark:border-emerald-800 dark:text-emerald-200',
-      error:   'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-800 dark:text-red-200',
-      info:    'bg-sky-50 border-sky-200 text-sky-800 dark:bg-sky-950/50 dark:border-sky-800 dark:text-sky-200',
+      error: 'bg-red-50 border-red-200 text-red-800 dark:bg-red-950/50 dark:border-red-800 dark:text-red-200',
+      info: 'bg-sky-50 border-sky-200 text-sky-800 dark:bg-sky-950/50 dark:border-sky-800 dark:text-sky-200',
       warning: 'bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/50 dark:border-amber-800 dark:text-amber-200'
     };
     const icons = {
       success: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
-      error:   `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>`,
-      info:    `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
+      error: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>`,
+      info: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`,
       warning: `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>`
     };
 
@@ -390,7 +393,7 @@ class CrudManager {
       search.addEventListener('input', () => {
         clearTimeout(debounce);
         debounce = setTimeout(() => {
-          this.searchTerm  = search.value.trim();
+          this.searchTerm = search.value.trim();
           this.currentPage = 1;
           this.cargarDatos();
         }, 350);
@@ -404,7 +407,7 @@ class CrudManager {
         th.addEventListener('click', () => {
           const sort = th.dataset.sort;
           this.sortOrder = (this.sortBy === sort && this.sortOrder === 'asc') ? 'desc' : 'asc';
-          this.sortBy    = sort;
+          this.sortBy = sort;
           this.cargarDatos();
         });
       });
@@ -414,7 +417,7 @@ class CrudManager {
     const perPage = document.getElementById(`per-page-${this.id}`);
     if (perPage) {
       perPage.addEventListener('change', () => {
-        this.perPage     = parseInt(perPage.value);
+        this.perPage = parseInt(perPage.value);
         this.currentPage = 1;
         this.cargarDatos();
       });

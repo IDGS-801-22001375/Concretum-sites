@@ -1,6 +1,11 @@
 {% extends "layout.html" %}
 
 {% block content %}
+<style>
+  .hide-scroll::-webkit-scrollbar { display: none; }
+  .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+
 <section class="bg-white border-b border-gray-200 py-4 px-6 sticky top-[64px] z-30 shadow-sm">
   <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-4 justify-between">
     <form method="GET" action="{{ url_for('carrito_bp.catalogo') }}" class="flex gap-2 flex-1 min-w-[300px]">
@@ -25,7 +30,7 @@
         class="bg-[#008DC0] text-white px-5 py-2 rounded-lg text-sm font-bold hover:bg-[#0074A0] transition shadow-md">Buscar</button>
     </form>
 
-    <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0">
+    <div class="flex gap-2 overflow-x-auto pb-2 sm:pb-0 hide-scroll">
       <a href="{{ url_for('carrito_bp.catalogo') }}"
         class="px-4 py-1.5 rounded-full text-xs font-bold border transition whitespace-nowrap {{ 'bg-[#002F5C] text-white border-[#002F5C]' if not categoria_activa else 'bg-white text-gray-600 border-gray-200 hover:border-[#008DC0]' }}">
         Todos
@@ -47,27 +52,20 @@
       {% for producto, stock in productos_lista %}
       {% set estado_stk = producto.existencia.estado_stock if producto.existencia else 'BAJO' %}
 
-      <div
-        class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-300 group">
+      <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden flex flex-col hover:shadow-xl transition-all duration-300 group">
 
-        <div
-          class="bg-[#A5CDE3] h-52 flex items-center justify-center p-6 relative group-hover:bg-[#96C0D8] transition-colors">
+        <div class="bg-[#A5CDE3] h-52 flex items-center justify-center p-6 relative group-hover:bg-[#96C0D8] transition-colors">
           <img src="{{ url_for('static', filename=producto.enlace_fotografia) }}" alt="{{ producto.nombre }}"
             class="max-h-full max-w-full object-contain drop-shadow-2xl group-hover:scale-110 transition-transform duration-500">
 
           <div class="absolute top-4 right-4">
-            {% if stock <= 0 %} <span
-              class="bg-red-500 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase shadow-lg">Sin
-              Stock</span>
-              {% elif estado_stk == 'BAJO' %}
-              <span
-                class="bg-amber-400 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase shadow-lg">Stock
-                Bajo</span>
-              {% else %}
-              <span
-                class="bg-emerald-500 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase shadow-lg">Stock
-                Ideal</span>
-              {% endif %}
+            {% if stock <= 0 %} 
+              <span class="bg-red-500 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase shadow-lg">Sin Stock</span>
+            {% elif estado_stk == 'BAJO' %}
+              <span class="bg-amber-400 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase shadow-lg">Stock Bajo</span>
+            {% else %}
+              <span class="bg-emerald-500 text-white text-[10px] font-black px-2.5 py-1 rounded-lg uppercase shadow-lg">Stock Ideal</span>
+            {% endif %}
           </div>
         </div>
 
@@ -83,12 +81,12 @@
             </div>
             <div class="text-right">
               <span class="text-[#002F5C] font-black text-xl">${{ "%.2f"|format(producto.precio_base) }}</span>
-              <span class="text-gray-400 text-[10px] block">/ {{ producto.unidad_medida.nombre if producto.unidad_medida
-                else 'Pza' }}</span>
+              <span class="text-gray-400 text-[10px] block">/ {{ producto.unidad_medida.nombre if producto.unidad_medida else 'Pza' }}</span>
             </div>
           </div>
 
-          <div class="flex gap-2">
+          {% if current_user.is_authenticated %}
+          <div class="flex gap-2 mt-auto">
             <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
               <button type="button"
                 onclick="const i = this.nextElementSibling; i.value = Math.max(1, parseInt(i.value)-1)"
@@ -110,6 +108,8 @@
               Agregar
             </button>
           </div>
+          {% endif %}
+          
         </div>
       </div>
       {% endfor %}

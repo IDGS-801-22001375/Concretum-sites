@@ -7,10 +7,12 @@ import uuid
 
 from flask import render_template, redirect, url_for, flash, request, jsonify, session
 from flask_login import login_required, current_user
+from decimal import Decimal
+from models import Existencias, MovimientosInventario, Venta, VentaDetalle
 
 from . import carrito_bp
 from models import (
-    db, Productos, CategoriasProducto, Existencias, Color,
+    db, Productos, CategoriasProducto, Existencias, Color, Recetas
 )
 # Importar los modelos del módulo carrito
 from models import (
@@ -150,6 +152,7 @@ def catalogo():
         .join(CategoriasProducto, Productos.categoria_id == CategoriasProducto.id_categoria)
         .outerjoin(Existencias, Productos.id_producto == Existencias.producto_id)
         .filter(Productos.es_active == 1)
+        .filter(Productos.recetas.any(Recetas.es_active == 1)) 
         .group_by(Productos.id_producto)
     )
 
@@ -195,7 +198,7 @@ def catalogo():
 def agregar_al_carrito():
     datos = request.get_json(silent=True) or request.form
     producto_id = int(datos.get('producto_id', 0))
-    cantidad = float(datos.get('cantidad', 1))
+    cantidad = Decimal(str(datos.get('cantidad', '1')))
 
     producto = Productos.query.filter_by(id_producto=producto_id, es_active=1).first()
     if not producto:
@@ -533,3 +536,142 @@ def enviar_contacto():
     else:
         flash('Por favor completa todos los campos requeridos.', 'danger')
     return redirect(url_for('carrito_bp.dashboard_cliente') + '#contacto')
+
+
+@carrito_bp.route('/pedido/<int:pedido_id>')
+@login_required
+def ver_pedido_cliente(pedido_id):
+    pedido = PedidoCliente.query.filter_by(id_pedido_cliente=pedido_id, usuario_id=current_user.id).first_or_404()
+    return render_template('tienda/pedido_detalle_cliente.html', pedido=pedido)
+
+@carrito_bp.route('/notificaciones/no-leidas')
+@login_required
+def notificaciones_no_leidas():
+    count = NotificacionCliente.query.filter_by(usuario_id=current_user.id, leida=0).count()
+    return jsonify({'count': count})
+
+
+@carrito_bp.route('/pedido/<int:pedido_id>/responder_fecha', methods=['POST'])
+@login_required
+def responder_fecha_pedido(pedido_id):
+    from routes.comercial.routes import calcular_costo_unitario_producto
+    pedido = PedidoCliente.query.filter_by(id_pedido_cliente=pedido_id, usuario_id=current_user.id).first_or_404()
+    
+    if pedido.estado != 'NEGOCIANDO_FECHA':
+        flash('Este pedido no está pendiente de tu respuesta.', 'warning')
+        return redirect(url_for('carrito_bp.ver_pedido_cliente', pedido_id=pedido_id))
+
+    accion = request.form.get('accion')
+
+    if accion == 'rechazar':
+        pedido.estado = 'RECHAZADO'
+        db.session.commit()
+        flash('Has rechazado la fecha propuesta. El pedido ha sido cancelado.', 'info')
+        return redirect(url_for('carrito_bp.ver_pedido_cliente', pedido_id=pedido_id))
+    
+    elif accion == 'aceptar':
+        try:
+            from models import Cliente
+            cliente = Cliente.query.filter_by(usuario_id=pedido.usuario_id).first()
+            if not cliente:
+                cliente = Cliente(
+                    usuario_id=pedido.usuario_id,
+                    razon_social=pedido.usuario.username,
+                    email=pedido.usuario.email,
+                    es_activo=1
+                )
+                db.session.add(cliente)
+                db.session.flush()         
+            cliente_id = cliente.id_cliente
+
+            productos_sin_stock = []
+            total_venta = Decimal('0.00')
+
+            for detalle in pedido.detalles:
+                existencia = Existencias.query.filter_by(producto_id=detalle.producto.id).first()
+                stock_actual = Decimal(str(existencia.stock_actual)) if existencia else Decimal('0')
+                entregable = min(Decimal(str(detalle.cantidad)), stock_actual)
+                if entregable > 0:
+                    total_venta += entregable * Decimal(str(detalle.precio_unitario))
+
+            venta = None
+            if total_venta > 0:
+                folio_venta = f'VTA-{pedido.folio}'
+                subtotal_venta = total_venta / Decimal('1.16')
+                iva_venta = total_venta - subtotal_venta
+
+                venta = Venta(
+                    folio=folio_venta,
+                    cliente_id=cliente_id,
+                    usuario_id=None, # Venta automatizada
+                    metodo_pago=pedido.metodo_pago,
+                    estado='COBRADO' if pedido.metodo_pago != 'CREDITO' else 'CREDITO',
+                    subtotal=subtotal_venta,
+                    iva=iva_venta,
+                    total=total_venta,
+                    fecha_venta=datetime.datetime.now()
+                )
+                db.session.add(venta)
+                db.session.flush()
+
+            for detalle in pedido.detalles:
+                producto = detalle.producto
+                cantidad_pedida = Decimal(str(detalle.cantidad))
+                existencia = Existencias.query.filter_by(producto_id=producto.id).first()
+                stock_actual = Decimal(str(existencia.stock_actual)) if existencia else Decimal('0')
+
+                entregable = min(cantidad_pedida, stock_actual)
+                faltante = cantidad_pedida - entregable
+
+                if entregable > 0:
+                    existencia.stock_actual = float(stock_actual - entregable)
+                    movimiento = MovimientosInventario(
+                        existencia_id=existencia.id_existencias,
+                        usuario_id=None,
+                        tipo='SALIDA',
+                        cantidad=entregable,
+                        motivo=f'Venta auto-aceptada pedido {pedido.folio}'
+                    )
+                    db.session.add(movimiento)
+
+                    if venta:
+                        costo_unit = calcular_costo_unitario_producto(producto.id)
+                        detalle_venta = VentaDetalle(
+                            venta_id=venta.id_venta,
+                            producto_id=producto.id,
+                            cantidad=entregable,
+                            costo_unitario=costo_unit, 
+                            precio_unitario=detalle.precio_unitario,
+                            total_linea=entregable * Decimal(str(detalle.precio_unitario))
+                        )
+                        db.session.add(detalle_venta)
+
+                detalle.cantidad_entregada = int(entregable)
+                detalle.cantidad_pendiente = int(faltante)
+
+                if faltante > 0:
+                    solicitud = SolicitudProduccion(
+                        pedido_id=pedido.id_pedido_cliente,
+                        producto_id=producto.id,
+                        cantidad_faltante=faltante,
+                        estado='PENDIENTE'
+                    )
+                    db.session.add(solicitud)
+
+            if all(d.cantidad_pendiente == 0 for d in pedido.detalles):
+                pedido.estado = 'ENTREGADO'
+            elif any(d.cantidad_pendiente > 0 for d in pedido.detalles) and any(d.cantidad_entregada > 0 for d in pedido.detalles):
+                pedido.estado = 'PARCIALMENTE_ENTREGADO'
+            else:
+                pedido.estado = 'EN_PRODUCCION'
+
+            pedido.fecha_autorizacion = datetime.datetime.now()
+            db.session.commit()
+
+            flash('¡Excelente! Has aceptado la fecha y tu pedido se ha autorizado automáticamente.', 'success')
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Ocurrió un error al procesar tu autorización: {str(e)}', 'danger')
+
+    return redirect(url_for('carrito_bp.ver_pedido_cliente', pedido_id=pedido_id))

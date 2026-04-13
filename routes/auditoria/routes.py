@@ -33,6 +33,10 @@ def api_auditoria():
     page_match = re.search(r'page=(\d+)', full_query)
     if page_match:
         page = int(page_match.group(1))
+
+    per_page_match = re.search(r'per_page=(\d+)', full_query)
+    if per_page_match:
+        per_page = int(per_page_match.group(1))
         
     start_match = re.search(r'start_date=(\d{4}-\d{2}-\d{2})', full_query)
     if start_match:

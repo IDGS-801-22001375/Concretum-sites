@@ -15,6 +15,7 @@
     "tailwindcss": "^3.4.19"
   },
   "dependencies": {
+    "chart.js": "^4.5.1",
     "flowbite": "^4.0.1"
   }
 }

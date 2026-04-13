@@ -5,20 +5,31 @@ from . import configuracion_bp
 from werkzeug.utils import secure_filename
 import os
 import datetime
+import threading
+from copy import copy
 
-def registrar_auditoria(usuario_accion, accion, detalles):
+def _guardar_en_mongo(datos_auditoria):
     from app import mongo_db
     try:
-        mongo_db.auditoria_eventos.insert_one({
-            "usuario_id": usuario_accion,
-            "evento": accion,
-            "detalles": detalles,
-            "modulo": "Configuración",
-            "user_agent": request.headers.get('User-Agent'),
-            "fecha_creacion": datetime.datetime.utcnow()
-        })
+        mongo_db.auditoria_eventos.insert_one(datos_auditoria)
     except Exception as e:
-        print(f"Error Mongo: {e}")
+        print(f"Error Mongo (Async): {e}")
+
+def registrar_auditoria(usuario_accion, accion, detalles):
+    user_agent = request.headers.get('User-Agent') if request else 'Desconocido'
+    ip_addr = request.remote_addr if request else '0.0.0.0'
+    
+    datos_auditoria = {
+        "usuario_id": usuario_accion,
+        "evento": accion,
+        "detalles": detalles,
+        "modulo": "Nombre del Modulo",
+        "user_agent": user_agent,
+        "ip": ip_addr,
+        "fecha_creacion": datetime.datetime.utcnow()
+    }
+    
+    threading.Thread(target=_guardar_en_mongo, args=(datos_auditoria,)).start()
 
 @configuracion_bp.route('/configuracion', methods=['GET', 'POST'])
 @login_required

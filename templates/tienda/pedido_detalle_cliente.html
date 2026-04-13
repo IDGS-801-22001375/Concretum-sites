@@ -1,0 +1,155 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="max-w-4xl mx-auto py-12 px-6">
+    <div class="mb-6">
+        <a href="{{ url_for('carrito_bp.dashboard_cliente') }}#pedidos"
+            class="text-[#008DC0] hover:underline flex items-center gap-2">
+            ← Volver a mis pedidos
+        </a>
+    </div>
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="bg-[#F9FBFD] px-8 py-5 border-b border-gray-100">
+            <h1 class="text-2xl font-bold text-[#002F5C]">Detalle del pedido</h1>
+            <p class="text-gray-500">{{ pedido.folio }}</p>
+        </div>
+        <div class="p-8 space-y-6">
+            {% if pedido.estado == 'NEGOCIANDO_FECHA' %}
+            <div class="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-r-2xl mb-6 shadow-sm">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-amber-800 font-bold text-lg flex items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Propuesta de Fecha de Entrega
+                        </h3>
+                        <p class="text-amber-700 mt-2 font-medium">La fábrica propone entregar tu pedido el: <span
+                                class="font-black text-lg bg-white px-2 py-1 rounded">{{
+                                pedido.fecha_propuesta_entrega.strftime('%d/%m/%Y') }}</span></p>
+                        {% if pedido.motivo_rechazo %}
+                        <p class="text-amber-600 text-sm mt-2 italic">"{{ pedido.motivo_rechazo }}"</p>
+                        {% endif %}
+                    </div>
+                    <div class="flex gap-3 shrink-0">
+                        <form method="POST"
+                            action="{{ url_for('carrito_bp.responder_fecha_pedido', pedido_id=pedido.id_pedido_cliente) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="accion" value="rechazar">
+                            <button type="submit"
+                                class="px-4 py-2 bg-white text-red-600 border border-red-200 hover:bg-red-50 font-bold rounded-lg transition">Rechazar</button>
+                        </form>
+                        <form method="POST"
+                            action="{{ url_for('carrito_bp.responder_fecha_pedido', pedido_id=pedido.id_pedido_cliente) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="accion" value="aceptar">
+                            <button type="submit"
+                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition shadow-md">Aceptar
+                                Fecha</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="font-bold text-[#002F5C] mb-2">Información general</h3>
+                    <p><span class="text-gray-500">Fecha:</span> {{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}
+                    </p>
+                    <p><span class="text-gray-500">Método de pago:</span> {{ pedido.metodo_pago }}</p>
+                    <p><span class="text-gray-500">Estado:</span>
+                        <span class="px-2 py-1 rounded-full text-xs font-semibold
+                            {% if pedido.estado == 'COTIZACION' %}bg-amber-100 text-amber-700
+                            {% elif pedido.estado == 'AUTORIZADO' %}bg-blue-100 text-blue-700
+                            {% elif pedido.estado == 'ENTREGADO' %}bg-emerald-100 text-emerald-700
+                            {% elif pedido.estado == 'RECHAZADO' %}bg-red-100 text-red-700
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {{ pedido.estado }}
+                        </span>
+                    </p>
+                    {% if pedido.motivo_rechazo %}
+                    <p><span class="text-gray-500">Motivo de rechazo:</span> {{ pedido.motivo_rechazo }}</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <h3 class="font-bold text-[#002F5C] mb-2">Dirección de entrega</h3>
+                    <p>{{ pedido.direccion_entrega or 'No especificada' }}</p>
+                    {% if pedido.notas %}
+                    <p class="mt-2"><span class="text-gray-500">Notas:</span> {{ pedido.notas }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div>
+                <h3 class="font-bold text-[#002F5C] mb-4">Productos solicitados</h3>
+                <div class="border rounded-xl overflow-hidden">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase">Producto</th>
+                                <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase">Cant. Total
+                                </th>
+                                <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase">Entregado
+                                </th>
+                                <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase">Pendiente
+                                </th>
+                                <th class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase">Estatus</th>
+                                <th class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {% for detalle in pedido.detalles %}
+                            {% set sol = pedido.solicitudes_produccion | selectattr('producto_id', 'equalto',
+                            detalle.producto_id) | first %}
+                            <tr>
+                                <td class="px-6 py-4 font-medium text-[#002F5C]">{{ detalle.producto.nombre }}</td>
+                                <td class="px-6 py-4 text-center">{{ detalle.cantidad|int }}</td>
+                                <td class="px-6 py-4 text-center text-emerald-600 font-bold">{{
+                                    detalle.cantidad_entregada|int }}</td>
+                                <td class="px-6 py-4 text-center text-amber-600 font-bold">{{
+                                    detalle.cantidad_pendiente|int }}</td>
+                                <td class="px-6 py-4 text-center">
+                                    {% if detalle.cantidad_pendiente == 0 %}
+                                    <span
+                                        class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold">Completado</span>
+                                    {% elif sol %}
+                                    <span class="px-2 py-1 rounded text-xs font-bold 
+                                            {% if sol.estado == 'PENDIENTE' %}bg-amber-100 text-amber-700
+                                            {% elif sol.estado == 'EN_PROCESO' %}bg-purple-100 text-purple-700
+                                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                        {{ 'En Producción' if sol.estado == 'EN_PROCESO' else 'En Espera' }}
+                                    </span>
+                                    {% else %}
+                                    <span
+                                        class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-bold">Procesando</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-right font-semibold">${{
+                                    "{:,.2f}".format(detalle.total_linea|float) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="bg-gray-50">
+                            <tr>
+                                <td colspan="5" class="px-6 py-3 text-right font-bold text-gray-600">Subtotal:</td>
+                                <td class="px-6 py-3 text-right font-semibold">${{
+                                    "{:,.2f}".format(pedido.subtotal|float) }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="5" class="px-6 py-3 text-right font-bold text-gray-600">IVA (16%):</td>
+                                <td class="px-6 py-3 text-right font-semibold">${{ "{:,.2f}".format(pedido.iva|float) }}
+                                </td>
+                            </tr>
+                            <tr class="border-t">
+                                <td colspan="5" class="px-6 py-4 text-right font-black text-lg text-[#002F5C]">Total:
+                                </td>
+                                <td class="px-6 py-4 text-right font-black text-lg text-[#008DC0]">${{
+                                    "{:,.2f}".format(pedido.total|float) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

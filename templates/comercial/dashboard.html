@@ -28,14 +28,12 @@
     background: transparent !important;
   }
 
-  /* 2. Personalización completa del calendario al tema Concretum */
   .flatpickr-calendar {
     background: #0F2A44 !important;
     border: 1px solid #1E3A5F !important;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
   }
 
-  /* Flechitas del popup */
   .flatpickr-calendar.arrowTop:before {
     border-bottom-color: #1E3A5F !important;
   }
@@ -52,7 +50,6 @@
     border-top-color: #0F2A44 !important;
   }
 
-  /* Meses y controles de arriba */
   .flatpickr-months .flatpickr-month {
     background: #0B2239 !important;
     color: white !important;
@@ -73,17 +70,14 @@
     fill: white !important;
   }
 
-  /* Días de la semana */
   span.flatpickr-weekday {
     background: #0B2239 !important;
     color: #008DC0 !important;
     font-weight: bold !important;
   }
 
-  /* Días normales y hovers */
   .flatpickr-day {
     color: #d1d5db !important;
-    /* text-gray-300 */
   }
 
   .flatpickr-day:hover,
@@ -92,7 +86,6 @@
     border-color: #1E3A5F !important;
   }
 
-  /* Rango intermedio seleccionado */
   .flatpickr-day.inRange,
   .flatpickr-day.inRange:hover {
     background: #1E3A5F !important;
@@ -100,7 +93,6 @@
     box-shadow: -5px 0 0 #1E3A5F, 5px 0 0 #1E3A5F !important;
   }
 
-  /* Días de inicio, fin o seleccionados */
   .flatpickr-day.selected,
   .flatpickr-day.startRange,
   .flatpickr-day.endRange,
@@ -126,7 +118,7 @@
   }
 </style>
 
-{{ components.page_header('Dashboard', 'Resumen de operaciones comerciales') }}
+{{ components.page_header('Dashboard', 'Resumen de operaciones comerciales visual') }}
 
 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
 
@@ -153,10 +145,9 @@
   {% endif %}
 </div>
 
-<!-- KPIs -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
   {{ components.kpi_card(
-  'Ventas del Día',
+  'Ventas',
   'kpi-ventas-dia',
   ventas_dia|default('0.00'),
   'blue',
@@ -187,99 +178,42 @@
   </svg>',
   moneda='$'
   ) }}
-  {{ components.kpi_card(
-  'Utilidad del Día',
-  'kpi-utilidad',
-  utilidad_dia|default('0.00'),
-  'red',
-  '<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-  </svg>',
-  moneda='$'
-  ) }}
 </div>
 
-<!-- Grid de contenido -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
-  <!-- Productos más vendidos -->
   <div class="lg:col-span-2 bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden">
     <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
-      <h2 class="text-lg font-bold text-white">Productos más vendidos hoy</h2>
+      <h2 class="text-lg font-bold text-white">Volumen de Productos Más Vendidos</h2>
     </div>
-    <div class="overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead>
-          <tr class="bg-[#0B2239] border-b border-[#1E3A5F]">
-            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">#</th>
-            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Producto</th>
-            <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Categoría</th>
-            <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Cantidad</th>
-            <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Total</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[#1E3A5F]">
-          {% if productos_top %}
-          {% for p in productos_top %}
-          <tr class="hover:bg-[#123555]/50 transition-colors">
-            <td class="px-6 py-4">
-              <span
-                class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[#008DC0]/20 text-[#008DC0] font-bold text-sm">
-                {{ loop.index }}
-              </span>
-            </td>
-            <td class="px-6 py-4 font-semibold text-white">{{ p.nombre }}</td>
-            <td class="px-6 py-4">
-              <span
-                class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-[#1E3A5F] text-gray-300">
-                {{ p.categoria }}
-              </span>
-            </td>
-            <td class="px-6 py-4 text-right font-mono text-white">{{ p.cantidad }}</td>
-            <td class="px-6 py-4 text-right font-mono font-semibold text-emerald-400">${{ p.total }}</td>
-          </tr>
-          {% endfor %}
-          {% else %}
-          <tr>
-            <td colspan="5" class="px-6 py-12 text-center">
-              <div class="flex flex-col items-center gap-3 text-gray-400">
-                <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-                <p class="text-sm font-medium">Sin ventas registradas hoy</p>
-              </div>
-            </td>
-          </tr>
-          {% endif %}
-        </tbody>
-      </table>
+    <div class="p-6">
+      {% if productos_top %}
+      <div class="relative h-64 w-full"> <!-- o h-60 si quieres un poco más baja -->
+        <canvas id="chartProductos" class="w-full h-full"></canvas>
+      </div>
+      {% else %}
+      <div class="flex flex-col items-center justify-center py-12 text-gray-400">
+        <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+        <p class="text-sm font-medium">Sin ventas registradas hoy</p>
+      </div>
+      {% endif %}
     </div>
   </div>
 
-  <!-- Presentaciones más vendidas -->
   <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden">
     <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
-      <h2 class="text-lg font-bold text-white">Presentaciones más vendidas</h2>
+      <h2 class="text-lg font-bold text-white">Categorías Preferidas</h2>
     </div>
     <div class="p-6">
       {% if presentaciones_top %}
-      <div class="space-y-5">
-        {% for p in presentaciones_top %}
-        <div>
-          <div class="flex justify-between items-center mb-2">
-            <span class="text-sm font-medium text-gray-300">{{ p.nombre }}</span>
-            <span class="text-sm font-bold text-[#008DC0]">{{ p.cantidad }} uds.</span>
-          </div>
-          <div class="w-full bg-[#0B2239] rounded-full h-2 overflow-hidden">
-            <div class="bg-gradient-to-r from-[#008DC0] to-[#00A8E8] h-2 rounded-full transition-all duration-500"
-              style="width: {{ p.porcentaje }}%"></div>
-          </div>
-        </div>
-        {% endfor %}
+      <div class="relative aspect-square w-full max-w-[200px] mx-auto">
+        <canvas id="chartCategorias" class="w-full h-full"></canvas>
       </div>
       {% else %}
-      <div class="flex flex-col items-center justify-center py-8 text-gray-400">
+      <div class="flex flex-col items-center justify-center py-12 text-gray-400">
         <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
             d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -291,91 +225,39 @@
   </div>
 </div>
 
-<!-- Ventas recientes -->
-<div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden">
+<div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden mb-8">
   <div
     class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
-    <h2 class="text-lg font-bold text-white">Ventas recientes</h2>
+    <h2 class="text-lg font-bold text-white">Tendencia de Ingresos (Últimas transacciones)</h2>
     <a href="{{ url_for('comercial_bp.ventas') }}"
       class="inline-flex items-center gap-1.5 text-sm font-medium text-[#008DC0] hover:text-[#00A8E8] transition-colors group">
-      Ver todas
+      Ver desglose en tabla
       <svg class="w-4 h-4 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor"
         viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
       </svg>
     </a>
   </div>
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <thead>
-        <tr class="bg-[#0B2239] border-b border-[#1E3A5F]">
-          <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Folio</th>
-          <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Cliente</th>
-          <th class="px-6 py-4 text-right text-xs font-bold text-gray-400 uppercase tracking-wider">Total</th>
-          <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Método</th>
-          <th class="px-6 py-4 text-left text-xs font-bold text-gray-400 uppercase tracking-wider">Hora</th>
-          <th class="px-6 py-4 text-center text-xs font-bold text-gray-400 uppercase tracking-wider">Estado</th>
-        </tr>
-      </thead>
-      <tbody class="divide-y divide-[#1E3A5F]">
-        {% if ventas_recientes %}
-        {% for v in ventas_recientes %}
-        <tr class="hover:bg-[#123555]/50 transition-colors">
-          <td class="px-6 py-4">
-            <span class="font-mono font-semibold text-white">{{ v.folio }}</span>
-          </td>
-          <td class="px-6 py-4 text-gray-300">{{ v.cliente }}</td>
-          <td class="px-6 py-4 text-right font-mono font-semibold text-emerald-400">${{ v.total }}</td>
-          <td class="px-6 py-4">
-            <span
-              class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-[#1E3A5F] text-gray-300">
-              {{ v.metodo_pago }}
-            </span>
-          </td>
-          <td class="px-6 py-4 text-gray-400">{{ v.hora }}</td>
-          <td class="px-6 py-4 text-center">
-            {% if v.estado == 'Cobrado' %}
-            <span
-              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              Cobrado
-            </span>
-            {% elif v.estado == 'Pendiente' %}
-            <span
-              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-400">
-              <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-              Pendiente
-            </span>
-            {% else %}
-            <span
-              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">
-              <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-              {{ v.estado }}
-            </span>
-            {% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-        {% else %}
-        <tr>
-          <td colspan="6" class="px-6 py-12 text-center">
-            <div class="flex flex-col items-center gap-3 text-gray-400">
-              <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              <p class="text-sm font-medium">Sin ventas registradas hoy</p>
-            </div>
-          </td>
-        </tr>
-        {% endif %}
-      </tbody>
-    </table>
+  <div class="p-6">
+    {% if ventas_recientes %}
+    <div class="relative h-80 w-full">
+      <canvas id="chartVentas"></canvas>
+    </div>
+    {% else %}
+    <div class="flex flex-col items-center justify-center py-16 text-gray-400">
+      <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+      <p class="text-sm font-medium">Sin ventas recientes para generar tendencia</p>
+    </div>
+    {% endif %}
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
@@ -383,7 +265,6 @@
     const urlParams = new URLSearchParams(window.location.search);
     const startDate = urlParams.get('start_date');
     const endDate = urlParams.get('end_date');
-
     const inputFechas = document.getElementById('rango-fechas');
 
     let defaultDates = [new Date()];
@@ -392,9 +273,7 @@
     if (startDate && endDate) {
       const d1 = new Date(startDate + "T00:00:00");
       const d2 = new Date(endDate + "T00:00:00");
-
       defaultDates = [d1, d2];
-
       if (d1.toDateString() === d2.toDateString()) {
         initialValue = d1.toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
       } else {
@@ -423,6 +302,235 @@
         }
       }
     });
+
+    Chart.defaults.color = '#9ca3af'; // Texto gris claro
+    Chart.defaults.font.family = "'Inter', 'Barlow', sans-serif";
+    Chart.defaults.scale.grid.color = 'rgba(30, 58, 95, 0.3)'; // Líneas de fondo sutiles
+    Chart.defaults.scale.grid.borderColor = 'transparent'; // Ocultar borde del eje
+
+    // Plugin para dibujar un fondo si no hay datos suficientes (Opcional, pero ayuda)
+    const emptyStatePlugin = {
+      id: 'emptyState',
+      afterDraw(chart) {
+        if (chart.data.datasets[0].data.length === 0) {
+          const { ctx, width, height } = chart;
+          chart.clear();
+          ctx.save();
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#6b7280';
+          ctx.font = '14px "Inter"';
+          ctx.fillText('No hay datos suficientes para graficar', width / 2, height / 2);
+          ctx.restore();
+        }
+      }
+    };
+
+    {% if productos_top %}
+    try {
+      const prodNombres = [];
+      const prodCantidades = [];
+      {% for p in productos_top %}
+      prodNombres.push("{{ p.nombre }}");
+      prodCantidades.push({{ p.cantidad }});
+  {% endfor %}
+
+  new Chart(document.getElementById('chartProductos'), {
+    type: 'bar',
+    data: {
+      labels: prodNombres,
+      datasets: [{
+        label: 'Volumen (Uds)',
+        data: prodCantidades,
+        backgroundColor: function (context) {
+          const chart = context.chart;
+          const { ctx, chartArea } = chart;
+          if (!chartArea) return null;
+          const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+          gradient.addColorStop(0, 'rgba(0, 141, 192, 0.4)');
+          gradient.addColorStop(1, 'rgba(0, 168, 232, 0.9)');
+          return gradient;
+        },
+        hoverBackgroundColor: '#00A8E8',
+        borderRadius: {
+          topLeft: 8,
+          topRight: 8,
+          bottomLeft: 0,
+          bottomRight: 0
+        },
+        borderSkipped: 'bottom', // Fuerza a que la base sea plana
+        maxBarThickness: 60
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: { top: 20 } },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(11, 34, 57, 0.9)',
+          titleColor: '#fff',
+          bodyColor: '#00A8E8',
+          borderColor: '#1E3A5F',
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8,
+          displayColors: false
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          min: 0,
+          // Añadimos un pequeño extra arriba para que la barra no toque el techo
+          suggestedMax: Math.max(...prodCantidades) * 1.1,
+          ticks: { stepSize: 1, precision: 0 }
+        },
+        x: {
+          grid: { display: false },
+          ticks: {
+            padding: 5
+          }
+        }
+      }
+    },
+    plugins: [emptyStatePlugin]
+  });
+    } catch (e) { console.error(e); }
+  {% endif %}
+
+  {% if presentaciones_top %}
+  try {
+    const catNombres = [];
+    const catCantidades = [];
+    {% for c in presentaciones_top %}
+    catNombres.push("{{ c.nombre }}");
+    catCantidades.push({{ c.cantidad }});
+  {% endfor %}
+
+  new Chart(document.getElementById('chartCategorias'), {
+    type: 'doughnut',
+    data: {
+      labels: catNombres,
+      datasets: [{
+        data: catCantidades,
+        backgroundColor: ['#008DC0', '#10B981', '#F59E0B', '#6366F1', '#EC4899', '#8B5CF6'],
+        borderWidth: 3,
+        borderColor: '#0F2A44',
+        hoverOffset: 10
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '75%',
+      layout: { padding: 20 },
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#d1d5db', usePointStyle: true, padding: 20, font: { size: 12, family: "'Inter', sans-serif" } }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(11, 34, 57, 0.9)',
+          borderColor: '#1E3A5F',
+          borderWidth: 1,
+          padding: 10,
+          cornerRadius: 8
+        }
+      }
+    },
+    plugins: [emptyStatePlugin]
+  });
+    } catch (e) { console.error(e); }
+  {% endif %}
+
+  // --- 5. GRÁFICA DE LÍNEAS (Tendencia de Ventas) ---
+  {% if ventas_recientes %}
+  try {
+    let ventasHoras = [];
+    let ventasTotales = [];
+
+    {% for v in ventas_recientes | reverse %}
+    ventasHoras.push("{{ v.hora }}h");
+    ventasTotales.push(parseFloat("{{ v.total | replace(',', '') }}"));
+    {% endfor %}
+
+    if (ventasHoras.length === 1) {
+      ventasHoras.unshift("00:00h");
+      ventasTotales.unshift(0);
+    }
+
+    const ctxVentas = document.getElementById('chartVentas').getContext('2d');
+
+    let gradient = ctxVentas.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(16, 185, 129, 0.4)');
+    gradient.addColorStop(1, 'rgba(16, 185, 129, 0.0)');
+
+    new Chart(ctxVentas, {
+      type: 'line',
+      data: {
+        labels: ventasHoras,
+        datasets: [{
+          label: 'Ingreso ($)',
+          data: ventasTotales,
+          borderColor: '#10B981',
+          backgroundColor: gradient,
+          borderWidth: 3,
+          pointBackgroundColor: '#0F2A44',
+          pointBorderColor: '#10B981',
+          pointBorderWidth: 2,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointHoverBackgroundColor: '#10B981',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 20, right: 20 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: 'rgba(11, 34, 57, 0.9)',
+            titleColor: '#fff',
+            bodyColor: '#10B981',
+            borderColor: '#1E3A5F',
+            borderWidth: 1,
+            padding: 12,
+            cornerRadius: 8,
+            displayColors: false,
+            callbacks: {
+              label: function (context) {
+                return '$' + context.parsed.y.toLocaleString('es-MX', { minimumFractionDigits: 2 });
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            min: 0, // Asegura que el eje empiece en 0
+            suggestedMax: Math.max(...ventasTotales) * 1.2,
+            ticks: {
+              callback: function (value) {
+                return '$' + value.toLocaleString('es-MX');
+              },
+              maxTicksLimit: 6
+            }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      },
+      plugins: [emptyStatePlugin]
+    });
+  } catch (e) { console.error(e); }
+  {% endif %}
+
   });
 </script>
 

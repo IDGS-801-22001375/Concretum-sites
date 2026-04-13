@@ -36,7 +36,7 @@ class CarritoItem(db.Model):
     id_item         = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     carrito_id      = db.Column(db.BigInteger, db.ForeignKey('carritos.id_carrito', ondelete='CASCADE'), nullable=False)
     producto_id     = db.Column(db.BigInteger, db.ForeignKey('productos.id_producto', ondelete='RESTRICT'), nullable=False)
-    cantidad = db.Column(db.Integer, nullable=False, default=1) 
+    cantidad        = db.Column(db.Numeric(14, 3), nullable=False, default=1.000) 
     precio_unitario = db.Column(db.Numeric(12, 2), nullable=False)
     fecha_agregado  = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
@@ -62,11 +62,15 @@ class PedidoCliente(db.Model):
     folio               = db.Column(db.String(40), nullable=False, unique=True)
     usuario_id          = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario', ondelete='RESTRICT'), nullable=False)
     metodo_pago         = db.Column(db.Enum('EFECTIVO','TRANSFERENCIA','CHEQUE','CREDITO','TARJETA','OXXO'), nullable=False, default='TARJETA')
+    
     estado = db.Column(
-        db.Enum('COTIZACION', 'AUTORIZADO', 'RECHAZADO', 'EN_PRODUCCION', 'PARCIALMENTE_ENTREGADO', 'ENTREGADO', 'CANCELADO'),
+        db.Enum('COTIZACION', 'NEGOCIANDO_FECHA', 'AUTORIZADO', 'RECHAZADO', 'EN_PRODUCCION', 'PARCIALMENTE_ENTREGADO', 'ENTREGADO', 'CANCELADO'),
         nullable=False, default='COTIZACION'
     )
     fecha_autorizacion = db.Column(db.DateTime, nullable=True)
+    
+    fecha_propuesta_entrega = db.Column(db.Date, nullable=True)
+    
     motivo_rechazo = db.Column(db.String(500), nullable=True)
     subtotal            = db.Column(db.Numeric(12, 2), nullable=False, default=0)
     iva                 = db.Column(db.Numeric(12, 2), nullable=False, default=0)
@@ -84,12 +88,16 @@ class PedidoCliente(db.Model):
         return self.id_pedido_cliente
 
     ETIQUETAS_ESTADO = {
+        'COTIZACION':    'Por Autorizar',
+        'NEGOCIANDO_FECHA': 'Esperando al Cliente',
+        'AUTORIZADO':    'Autorizado',
         'PENDIENTE':     'Pendiente de pago',
         'PAGADO':        'Pago confirmado',
         'EN_PRODUCCION': 'En producción',
         'ENVIADO':       'Enviado',
         'ENTREGADO':     'Entregado',
         'CANCELADO':     'Cancelado',
+        'RECHAZADO':     'Rechazado',
     }
 
     @property

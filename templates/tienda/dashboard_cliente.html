@@ -152,6 +152,8 @@
               class="md:text-right border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6 flex flex-col justify-center">
               <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total de la Orden</p>
               <p class="text-3xl font-black text-[#008DC0]">${{ "{:,.2f}".format(ped.total|float) }}</p>
+              <a href="{{ url_for('carrito_bp.ver_pedido_cliente', pedido_id=ped.id_pedido_cliente) }}"
+                class="text-xs font-semibold text-[#008DC0] hover:underline">Ver detalle</a>
             </div>
           </div>
         </div>
@@ -262,7 +264,7 @@
           {% for notif in notificaciones %}
           <div id="notif-{{ notif.id_notificacion }}"
             class="notif-card flex gap-4 p-6 transition cursor-pointer hover:bg-gray-50 {% if not notif.leida %}bg-[#F4F8FC] border-l-4 border-l-[#008DC0]{% else %}border-l-4 border-l-transparent{% endif %}"
-            onclick="leerNotificacionDOM({{ notif.id_notificacion }})">
+            onclick="leerNotificacionDOM({{ notif.id_notificacion }}, '{{ notif.referencia_tipo }}', {{ notif.referencia_id or 'null' }})">
 
             <div class="flex-shrink-0 mt-1">
               {% if notif.tipo == 'INFO' %}
@@ -414,6 +416,27 @@
 </div>
 
 <script>
+  function actualizarBadgeNavbar() {
+    const badgeNav = document.getElementById('navbar-notif-badge');
+    const badgeTab = document.getElementById('badge-notif-contador');
+
+    // Contamos cuántos puntos de "no leído" quedan realmente en el HTML
+    const count = document.querySelectorAll('.punto-no-leida').length;
+
+    // Actualizamos la campana de arriba
+    if (badgeNav) {
+      badgeNav.textContent = count;
+      if (count > 0) badgeNav.classList.remove('hidden');
+      else badgeNav.classList.add('hidden');
+    }
+
+    // Actualizamos el globito de la pestaña
+    if (badgeTab) {
+      badgeTab.textContent = count;
+      if (count > 0) badgeTab.classList.remove('hidden');
+      else badgeTab.classList.add('hidden');
+    }
+  }
   function cambiarTab(tabId) {
     document.querySelectorAll('.tab-content').forEach(el => {
       el.classList.remove('block');
@@ -447,7 +470,6 @@
       cambiarTab('pedidos');
     }
 
-    // Auto-eliminar los mensajes flash a los 5 segundos
     setTimeout(() => {
       document.querySelectorAll('.flash-message').forEach(alert => {
         alert.style.opacity = '0';
@@ -456,14 +478,24 @@
         setTimeout(() => alert.remove(), 300);
       });
     }, 5000);
+
+    actualizarBadgeNavbar();
   });
 
-  async function leerNotificacionDOM(id) {
+  window.addEventListener('hashchange', () => {
+    const hash = window.location.hash.replace('#', '');
+    if (['pedidos', 'datos', 'notificaciones', 'produccion', 'contacto'].includes(hash)) {
+      cambiarTab(hash);
+    }
+  });
+
+  async function leerNotificacionDOM(id, tipoRef, idRef) {
     try {
       await fetch(`/tienda/notificaciones/leer/${id}`, {
         method: 'POST',
         headers: { 'X-CSRFToken': "{{ csrf_token() }}" }
       });
+
       const notifEl = document.getElementById('notif-' + id);
       if (notifEl) {
         notifEl.classList.remove('bg-[#F4F8FC]', 'border-l-[#008DC0]');
@@ -480,7 +512,13 @@
             document.getElementById('btn-marcar-todas').classList.add('hidden');
           }
         }
+        actualizarBadgeNavbar();
       }
+
+      if (tipoRef === 'pedido_cliente' && idRef) {
+        window.location.href = `/tienda/pedido/${idRef}`;
+      }
+
     } catch (e) { console.error(e); }
   }
 
@@ -498,6 +536,7 @@
       });
       document.getElementById('badge-notif-contador').classList.add('hidden');
       document.getElementById('btn-marcar-todas').classList.add('hidden');
+      actualizarBadgeNavbar();
     } catch (e) { console.error(e); }
   }
 </script>

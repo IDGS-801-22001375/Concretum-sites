@@ -60,7 +60,7 @@ unidades_options},
 {'name': 'color_id', 'label': 'Color', 'type': 'select', 'required': true, 'options': colores_options},
 {'name': 'resistencia_mpa', 'label': 'Resistencia (MPA)', 'type': 'number', 'step': '0.01'},
 {'name': 'precio_base', 'label': 'Precio Base', 'type': 'number', 'step': '0.01', 'required': true},
-{'name': 'enlace_fotografia', 'label': 'Fotografía (Imagen)', 'type': 'file', 'required': false, 'full_width': true}
+{'name': 'enlace_fotografia', 'label': 'Fotografía', 'type': 'file', 'required': false}
 ] %}
 
 {% call components.crud_modal('productos', form_fields, id_field='id_producto', modal_title='Producto', modal_size='lg')
@@ -70,7 +70,6 @@ unidades_options},
 <script src="{{ url_for('static', filename='js/crud.js') }}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Truco vital: Asegurarnos de que el formulario soporta subida de archivos
         document.getElementById('form-productos').setAttribute('enctype', 'multipart/form-data');
 
         window.crudManagers['productos'] = new CrudManager({
@@ -83,11 +82,35 @@ unidades_options},
                     render: val => `<div class="w-12 h-12 rounded-lg bg-[#0B2239] border border-[#1E3A5F] overflow-hidden flex items-center justify-center"><img src="${val}" class="w-full h-full object-cover"></div>`
                 },
                 { field: 'sku', label: 'SKU', sortable: true, render: val => `<span class="bg-[#1E3A5F] px-2.5 py-1 rounded-lg text-xs font-mono font-medium text-white">${val}</span>` },
-                { field: 'nombre', label: 'Nombre', sortable: true, render: val => `<span class="font-bold text-white">${val}</span>` },
+                {
+                    field: 'nombre',
+                    label: 'Nombre',
+                    sortable: true,
+                    render: (val, item) => {
+                        let badge = item.tiene_receta ? '' : '<span class="ml-2 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/20" title="Requiere receta para venderse">Sin Receta</span>';
+                        return `<div class="flex items-center"><span class="font-bold text-white">${val}</span>${badge}</div>`;
+                    }
+                },
                 { field: 'categoria', label: 'Categoría', sortable: true, render: val => `<span class="text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-full text-xs font-semibold">${val}</span>` },
-
-                { field: 'stock', label: 'Stock', sortable: false, render: val => `<span class="font-mono font-bold ${val <= 0 ? 'text-red-400' : 'text-emerald-400'}">${val} uds</span>` },
-
+                {
+                    field: 'stock',
+                    label: 'Stock',
+                    sortable: false,
+                    render: function (val, item) {
+                        if (item.estado_stock === 'BAJO') {
+                            return `<div class="flex items-center gap-2">
+                            <span class="font-mono font-bold text-red-400">${val} uds</span>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
+                                <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                </svg>
+                                Bajo
+                            </span>
+                        </div>`;
+                        }
+                        return `<span class="font-mono font-bold text-emerald-400">${val} uds</span>`;
+                    }
+                },
                 { field: 'precio_base', label: 'Precio', sortable: true, render: val => `<span class="text-emerald-400 font-bold">$${parseFloat(val).toFixed(2)}</span>` },
                 {
                     field: 'es_activo', label: 'Estado', sortable: true,
@@ -95,7 +118,6 @@ unidades_options},
                 }
             ],
             formFields: [
-                // Aquí listamos los campos normales para que JS los poble al editar
                 { name: 'categoria_id', label: 'Categoría', type: 'select', required: true },
                 { name: 'sku', label: 'SKU', type: 'text', required: true },
                 { name: 'nombre', label: 'Nombre', type: 'text', required: true },
@@ -106,36 +128,68 @@ unidades_options},
                 { name: 'precio_base', label: 'Precio', type: 'number', required: true }
             ],
             onEdit: function (item) {
-                // Al editar, la imagen es opcional
-                document.getElementById('enlace_fotografia').required = false;
-                document.getElementById('id_producto').value = item.id_producto;
+                const idField = document.getElementById('id_productos');
+                if (idField) idField.value = item.id;
+            },
+            onSubmit: function (formData) {
+                this.save(formData);
+                return false;
             }
         });
 
-        // Sobrescribimos el submit por defecto para enviar las imágenes mediante FormData (Fetch API)
+        const originalRenderProd = window.crudManagers['productos'].renderTabla.bind(window.crudManagers['productos']);
+        window.crudManagers['productos'].renderTabla = function (items) {
+            originalRenderProd(items);
+            if (!items) return;
+
+            const totalGlobal = this.total || 0;
+            const activos = this.rawData?.activos || 0;
+            const inactivos = this.rawData?.inactivos || 0;
+            const bajoStock = this.rawData?.bajo_stock || 0;
+
+            const kpiTotal = document.getElementById('kpi-total');
+            const kpiActivos = document.getElementById('kpi-activos');
+            const kpiBajo = document.getElementById('kpi-bajo-stock');
+            const kpiInactivos = document.getElementById('kpi-inactivos');
+
+            if (kpiTotal) kpiTotal.textContent = totalGlobal;
+            if (kpiActivos) kpiActivos.textContent = activos;
+            if (kpiBajo) kpiBajo.textContent = bajoStock;
+            if (kpiInactivos) kpiInactivos.textContent = inactivos;
+            const rows = document.querySelectorAll('#tabla-productos tbody tr');
+            rows.forEach((row, idx) => {
+                if (!items[idx]) return;
+                const id = items[idx].id;
+                const divAcciones = row.querySelector('td:last-child div');
+                if (divAcciones && !divAcciones.querySelector('.btn-ver-detalle')) {
+                    const btnDetalle = `<a href="/produccion/productos/${id}/ver" class="btn-ver-detalle inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#008DC0] hover:text-white border border-transparent hover:border-[#008DC0] hover:bg-[#008DC0]/20 rounded-lg transition-all" title="Ver detalles del producto">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                        Detalle
+                    </a>`;
+                    divAcciones.insertAdjacentHTML('afterbegin', btnDetalle);
+                }
+            });
+        };
+
         const form = document.getElementById('form-productos');
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
-            e.stopPropagation();
-
             const formData = new FormData(form);
             try {
                 const response = await fetch('/produccion/productos/guardar', {
                     method: 'POST',
                     body: formData
-                    // Importante: No seteamos headers porque el navegador generará el 'boundary' automático del form-data
                 });
-
                 const result = await response.json();
                 if (result.success) {
-                    window.closeModal_productos(); // Esta función la inyecta el macro crud_modal
+                    window.closeModal_productos();
                     window.crudManagers['productos'].cargarDatos();
                 } else {
-                    alert(result.message || 'Error al guardar el producto');
+                    mostrarAlerta(result.message || 'Error al guardar el producto', 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error en la comunicación con el servidor');
+                console.error(error);
+                mostrarAlerta('Error en la comunicación con el servidor', 'error');
             }
         });
     });

@@ -208,7 +208,7 @@ modal_size='md') %}
                 const cantidad = parseFloat(formData.get('cantidad'));
 
                 if (cantidad > stock) {
-                    alert('La cantidad de merma no puede superar el stock disponible.');
+                    mostrarAlerta('La cantidad de merma no puede superar el stock disponible.', 'error');
                     return false; // Evita que se envíe el formulario
                 }
 
@@ -217,6 +217,17 @@ modal_size='md') %}
                 return formData;
             }
         });
+        const originalRenderMermas = window.crudManagers['mermas'].renderTabla.bind(window.crudManagers['mermas']);
+        window.crudManagers['mermas'].renderTabla = function (items) {
+            originalRenderMermas(items);
+
+            const rows = document.querySelectorAll('#tabla-mermas tbody tr');
+            rows.forEach(row => {
+                if (row.children.length > 7) {
+                    row.lastElementChild.remove();
+                }
+            });
+        };
     });
 </script>
 {% endblock %}

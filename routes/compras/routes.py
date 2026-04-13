@@ -5,20 +5,31 @@ from . import compras_bp
 from sqlalchemy import or_, asc, desc, func
 import datetime
 import uuid
+import threading
+from copy import copy
 
-def registrar_auditoria(usuario_accion, accion, detalles):
+def _guardar_en_mongo(datos_auditoria):
     from app import mongo_db
     try:
-        mongo_db.auditoria_eventos.insert_one({
-            "usuario_id": usuario_accion,
-            "evento": accion,
-            "detalles": detalles,
-            "modulo": "Compras",
-            "user_agent": request.headers.get('User-Agent'),
-            "fecha_creacion": datetime.datetime.utcnow()
-        })
+        mongo_db.auditoria_eventos.insert_one(datos_auditoria)
     except Exception as e:
-        print(f"Error Mongo: {e}")
+        print(f"Error Mongo (Async): {e}")
+
+def registrar_auditoria(usuario_accion, accion, detalles):
+    user_agent = request.headers.get('User-Agent') if request else 'Desconocido'
+    ip_addr = request.remote_addr if request else '0.0.0.0'
+    
+    datos_auditoria = {
+        "usuario_id": usuario_accion,
+        "evento": accion,
+        "detalles": detalles,
+        "modulo": "Nombre del Modulo",
+        "user_agent": user_agent,
+        "ip": ip_addr,
+        "fecha_creacion": datetime.datetime.utcnow()
+    }
+    
+    threading.Thread(target=_guardar_en_mongo, args=(datos_auditoria,)).start()
 
 # ----------------------------------------------------------------------
 # VISTA PRINCIPAL
@@ -296,3 +307,69 @@ def eliminar_compra(id):
     db.session.commit()
     registrar_auditoria(current_user.id, "Eliminar Compra", f"Compra {compra.folio} eliminada.")
     return jsonify({'success': True, 'message': 'Compra eliminada correctamente.'})
+
+
+@compras_bp.route('/compras/api/materiales/<int:proveedor_id>', methods=['GET'])
+@login_required
+@roles_accepted('ADMINISTRADOR', 'COMPRAS')
+def materiales_proveedor(proveedor_id):
+    materias = MateriaPrima.query.filter_by(proveedor_id=proveedor_id, es_activo=True).all()
+    
+    data = [{'id': m.id_materia_prima, 'nombre': f"{m.sku} - {m.nombre}", 'unidad': m.unidad_medida} for m in materias]
+    return jsonify(data)
+
+
+@compras_bp.route('/compras/generar_automatica', methods=['POST'])
+@login_required
+@roles_accepted('ADMINISTRADOR', 'COMPRAS', 'PRODUCCION') 
+def generar_compra_automatica():
+    data = request.get_json()
+    mp_id = data.get('materia_prima_id')
+    cantidad = float(data.get('cantidad', 0))
+
+    mp = MateriaPrima.query.get_or_404(mp_id)
+
+    if not mp.proveedor_id:
+        return jsonify({'success': False, 'message': f'El material {mp.nombre} no tiene un proveedor asignado.'}), 400
+
+    costo_unitario = float(mp.costo_unitario) if mp.costo_unitario else 0
+    total = cantidad * costo_unitario
+
+    folio = f"OC-{datetime.datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
+
+    try:
+        compra = Compra(
+            proveedor_id=mp.proveedor_id,
+            folio=folio,
+            fecha_compra=datetime.datetime.now(),
+            total=total,
+            estado='CREADA'
+        )
+        db.session.add(compra)
+        db.session.flush()
+
+        detalle = CompraDetalle(
+            compra_id=compra.id,
+            materia_prima_id=mp.id,
+            cantidad=cantidad,
+            precio_unitario=costo_unitario,
+            total_linea=total
+        )
+        db.session.add(detalle)
+
+        historial = HistorialCompra(
+            compra_id=compra.id,
+            accion='CREADA',
+            modificado_por=current_user.id,
+            comentario='Generada automáticamente desde solicitud de producción.'
+        )
+        db.session.add(historial)
+        db.session.commit()
+
+        registrar_auditoria(current_user.id, "Compra Automática", f"OC {folio} generada por falta de stock.")
+
+        return jsonify({'success': True, 'message': f'Orden {folio} generada con éxito.'})
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error al generar la compra: {str(e)}'}), 500

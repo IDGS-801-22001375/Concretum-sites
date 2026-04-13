@@ -106,10 +106,22 @@
 
                     {# Folio #}
                     <td class="px-6 py-4">
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs
-                                     font-mono font-semibold bg-[#1E3A5F] text-white">
+                        <span
+                            class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-[#1E3A5F] text-white">
                             {{ pedido.folio }}
                         </span>
+                        {% if pedido.estado == 'NEGOCIANDO_FECHA' %}
+                        <div class="mt-1.5">
+                            <span
+                                class="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/20 whitespace-nowrap">
+                                <svg class="w-3 h-3 mr-1 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Esperando al cliente
+                            </span>
+                        </div>
+                        {% endif %}
                     </td>
 
                     {# Cliente #}

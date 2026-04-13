@@ -127,13 +127,42 @@ modal_size='xl') %}
 
 <script src="{{ url_for('static', filename='js/crud.js') }}"></script>
 <script>
+    const productosEstado = {{ productos_json | tojson | safe }};
+
+    function actualizarSelectProductos(idProductoEditando = null) {
+        const selectProd = document.getElementById('producto_id');
+        if (!selectProd) return;
+
+        Array.from(selectProd.options).forEach(opt => {
+            if (!opt.value) return;
+
+            const prodInfo = productosEstado.find(p => p.id == parseInt(opt.value));
+
+            if (prodInfo && prodInfo.tiene_receta && parseInt(opt.value) !== idProductoEditando) {
+                opt.style.display = 'none';
+                opt.disabled = true;
+            } else {
+                opt.style.display = '';
+                opt.disabled = false;
+            }
+        });
+
+        if (selectProd.options[selectProd.selectedIndex]?.disabled) {
+            selectProd.value = "";
+        }
+    }
+
+    document.addEventListener('click', function (e) {
+        if (e.target && e.target.id === 'btn-nuevo-recetas') {
+            actualizarSelectProductos(null); // Null porque es nuevo
+        }
+    });
     function actualizarJsonIngredientes() {
         const detalles = [];
         document.querySelectorAll('#ingredientes-container .ingrediente-row').forEach(row => {
             const mpId = row.querySelector('.mp-select').value;
             const cant = row.querySelector('.cant-input').value;
             const unidadId = row.querySelector('.unidad-select').value;
-
             if (mpId && cant && unidadId) {
                 detalles.push({
                     materia_prima_id: mpId,
@@ -146,15 +175,12 @@ modal_size='xl') %}
     }
 
     document.addEventListener('DOMContentLoaded', function () {
-
-        // --- LOGICA DEL GRID DINAMICO DE INGREDIENTES ---
         const container = document.getElementById('ingredientes-container');
         const btnAdd = document.getElementById('btn-add-ingrediente');
 
         btnAdd.addEventListener('click', function () {
             const firstRow = container.querySelector('.ingrediente-row');
             const newRow = firstRow.cloneNode(true);
-            // Limpiar valores clonados
             newRow.querySelectorAll('input, select').forEach(el => el.value = '');
             container.appendChild(newRow);
             actualizarJsonIngredientes();
@@ -167,7 +193,7 @@ modal_size='xl') %}
                     btnRemove.closest('.ingrediente-row').remove();
                     actualizarJsonIngredientes();
                 } else {
-                    alert("La receta debe tener al menos un ingrediente.");
+                    mostrarAlerta("La receta debe tener al menos un ingrediente.", "error");
                 }
             }
         });
@@ -175,7 +201,6 @@ modal_size='xl') %}
         container.addEventListener('input', actualizarJsonIngredientes);
         container.addEventListener('change', actualizarJsonIngredientes);
 
-        // --- CRUD MANAGER ---
         window.crudManagers['recetas'] = new CrudManager({
             id: 'recetas',
             apiEndpoint: '/produccion/recetas',
@@ -198,10 +223,12 @@ modal_size='xl') %}
                 { name: 'resistencia', label: 'Resistencia', type: 'number', required: true }
             ],
             onEdit: function (item) {
-                // Llenar datos principales
-                document.getElementById('id_receta').value = item.id_receta;
+                const idField = document.getElementById('id_recetas');
+                if (idField) idField.value = item.id;
 
-                // Llenar el grid de ingredientes
+                actualizarSelectProductos(item.producto_id);
+
+                const container = document.getElementById('ingredientes-container');
                 while (container.querySelectorAll('.ingrediente-row').length > 1) {
                     container.querySelector('.ingrediente-row:last-child').remove();
                 }
@@ -212,7 +239,6 @@ modal_size='xl') %}
                     item.detalles.forEach((det, idx) => {
                         let row = idx === 0 ? firstRow : firstRow.cloneNode(true);
                         if (idx > 0) container.appendChild(row);
-
                         row.querySelector('.mp-select').value = det.materia_prima_id;
                         row.querySelector('.cant-input').value = det.cantidad;
                         row.querySelector('.unidad-select').value = det.unidad_id;
@@ -222,9 +248,64 @@ modal_size='xl') %}
             },
             onSubmit: function (formData) {
                 actualizarJsonIngredientes();
+
+                const prodId = parseInt(formData.get('producto_id'));
+
+                const prodIndex = productosEstado.findIndex(p => p.id === prodId);
+                if (prodIndex !== -1) {
+                    productosEstado[prodIndex].tiene_receta = true;
+                }
+
                 return formData;
             }
         });
+
+        // Interceptamos renderTabla para actualizar KPIs y poner el botón de "Detalle"
+        const originalRenderRecetas = window.crudManagers['recetas'].renderTabla.bind(window.crudManagers['recetas']);
+        window.crudManagers['recetas'].renderTabla = function (items) {
+            originalRenderRecetas(items);
+            if (!items) return;
+
+            // Leemos los datos globales del servidor
+            const totalGlobal = this.total || 0;
+            const activas = this.rawData?.activas || 0;
+            const inactivas = this.rawData?.inactivas || 0;
+
+            const kpiTotal = document.getElementById('kpi-total-recetas');
+            const kpiActivas = document.getElementById('kpi-recetas-activas');
+            const kpiInactivas = document.getElementById('kpi-inactivas');
+
+            if (kpiTotal) kpiTotal.textContent = totalGlobal;
+            if (kpiActivas) kpiActivas.textContent = activas;
+            if (kpiInactivas) kpiInactivas.textContent = inactivas;
+
+            // Insertar el botón de "Ver Detalle"
+            const rows = document.querySelectorAll('#tabla-recetas tbody tr');
+            rows.forEach((row, idx) => {
+                if (!items[idx]) return;
+                const id = items[idx].id;
+                const divAcciones = row.querySelector('td:last-child div');
+
+                if (divAcciones && !divAcciones.querySelector('.btn-ver-detalle')) {
+                    const btnDetalle = document.createElement('a');
+                    btnDetalle.href = `/produccion/recetas/${id}`;
+                    btnDetalle.innerHTML = `
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        Detalle
+                    `;
+                    btnDetalle.className = 'btn-ver-detalle inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#008DC0] hover:text-white border border-transparent hover:border-[#008DC0] hover:bg-[#008DC0]/20 rounded-lg transition-all';
+                    btnDetalle.title = 'Ver detalles de la receta';
+                    divAcciones.insertBefore(btnDetalle, divAcciones.firstChild);
+                }
+            });
+        };
     });
+
+    function verDetalleReceta(id) {
+        window.location.href = `/produccion/recetas/${id}`;
+    }
 </script>
 {% endblock %}

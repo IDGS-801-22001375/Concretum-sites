@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Detalle de Solicitud de Producción{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+        <a href="{{ url_for('produccion_recetas_bp.solicitudes_pendientes') }}"
+            class="text-[#008DC0] hover:underline flex items-center gap-2">
+            ← Volver a solicitudes
+        </a>
+    </div>
+
+    <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden shadow-sm">
+        <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
+            <h1 class="text-2xl font-bold text-white">Solicitud #{{ solicitud.id_solicitud }}</h1>
+            <p class="text-sm text-gray-400 mt-1">Producto: {{ solicitud.producto.nombre }}</p>
+        </div>
+
+        <div class="p-6 space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Cantidad faltante</p>
+                    <p class="text-white font-semibold text-lg">{{ solicitud.cantidad_faltante|int }} unidades</p>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Fecha de solicitud</p>
+                    <p class="text-white font-semibold text-lg">{{ solicitud.fecha_solicitud.strftime('%d/%m/%Y %H:%M')
+                        }}</p>
+                </div>
+                <div class="bg-[#0B2239] rounded-xl p-4 border border-[#1E3A5F]">
+                    <p class="text-gray-400 text-sm">Estado actual</p>
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold
+                        {% if solicitud.estado == 'PENDIENTE' %}bg-amber-500/20 text-amber-400
+                        {% elif solicitud.estado == 'ACEPTADA' %}bg-[#008DC0]/20 text-[#008DC0]
+                        {% elif solicitud.estado == 'EN_PROCESO' %}bg-purple-500/20 text-purple-400
+                        {% elif solicitud.estado == 'COMPLETADA' %}bg-emerald-500/20 text-emerald-400
+                        {% else %}bg-gray-500/20 text-gray-400{% endif %}">
+                        {{ solicitud.estado }}
+                    </span>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-white font-bold text-lg mb-4">Materiales requeridos vs stock actual</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-[#0B2239] border-b border-[#1E3A5F]">
+                                <th class="px-4 py-3 text-left text-gray-400">Material</th>
+                                <th class="px-4 py-3 text-right text-gray-400">Necesario</th>
+                                <th class="px-4 py-3 text-right text-gray-400">Stock actual</th>
+                                <th class="px-4 py-3 text-center text-gray-400">¿Suficiente?</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#1E3A5F]">
+                            {% for mp in materiales %}
+                            <tr class="hover:bg-[#123555]/50">
+                                <td class="px-4 py-3 text-white">{{ mp.nombre }}</td>
+                                <td class="px-4 py-3 text-right font-mono text-white">{{ mp.necesario }} {{ mp.unidad }}
+                                </td>
+                                <td class="px-4 py-3 text-right font-mono text-white">{{ mp.stock_actual }} {{ mp.unidad
+                                    }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    {% if mp.stock_actual >= mp.necesario %}
+                                    <span class="text-emerald-400 font-semibold">Sí</span>
+                                    {% else %}
+                                    <div
+                                        class="flex items-center justify-between gap-3 bg-red-500/10 px-3 py-2 rounded-xl border border-red-500/20">
+                                        <span class="text-red-400 font-bold text-xs whitespace-nowrap">Faltan {{
+                                            mp.faltante }}</span>
+                                        <button type="button"
+                                            onclick="comprarFaltante(this, {{ mp.id }}, {{ mp.faltante }})"
+                                            class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-white text-[10px] font-bold uppercase tracking-wider rounded-lg shadow-lg shadow-amber-500/20 transition-all active:scale-95 whitespace-nowrap">
+                                            Comprar
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                {% if solicitud.estado == 'PENDIENTE' %}
+                <form method="POST"
+                    action="{{ url_for('produccion_recetas_bp.aceptar_solicitud', solicitud_id=solicitud.id_solicitud) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit"
+                        class="inline-flex items-center gap-2 px-6 py-2.5 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition-all shadow-lg shadow-emerald-600/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M5 13l4 4L19 7" />
+                        </svg>
+                        Aceptar y producir
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    async function comprarFaltante(btn, mpId, cantidadFaltante) {
+        const btnOriginalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = `<svg class="w-3 h-3 animate-spin mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`;
+
+        try {
+            const res = await fetch('{{ url_for("compras.generar_compra_automatica") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({ materia_prima_id: mpId, cantidad: cantidadFaltante })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                if (window.mostrarAlerta) window.mostrarAlerta(data.message, 'success');
+                const contenedor = btn.parentElement;
+                contenedor.className = "flex items-center justify-center gap-2 bg-emerald-500/10 px-3 py-2 rounded-xl border border-emerald-500/20";
+                contenedor.innerHTML = `<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg><span class="text-emerald-400 font-bold text-xs uppercase tracking-wider">Orden Creada</span>`;
+            } else {
+                if (window.mostrarAlerta) window.mostrarAlerta(data.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = btnOriginalText;
+            }
+        } catch (e) {
+            if (window.mostrarAlerta) window.mostrarAlerta('Error de conexión al servidor.', 'error');
+            btn.disabled = false;
+            btn.innerHTML = btnOriginalText;
+        }
+    }
+</script>
+{% endblock %}

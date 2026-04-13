@@ -331,7 +331,7 @@ btn_new_label='Nueva Venta'
           btnEliminar.closest('.fila-producto').remove();
           calcularTotales();
         } else {
-          alert("La venta debe tener al menos un producto.");
+          mostrarAlerta("La venta debe tener al menos un producto.", "error");
         }
       }
     });
@@ -386,10 +386,10 @@ btn_new_label='Nueva Venta'
           // Recargar tabla de ventas silenciosamente
           window.crudManagers['ventas'].cargarDatos();
         } else {
-          alert(data.message || 'Error al registrar la venta');
+          mostrarAlerta(data.message || 'Error al registrar la venta', "error");
         }
       } catch (err) {
-        alert('Error de conexión con el servidor.');
+        mostrarAlerta('Error de conexión con el servidor.', "error");
       } finally {
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg> Registrar Venta`;

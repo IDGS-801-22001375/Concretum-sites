@@ -107,5 +107,39 @@
         }
         .animate-slide-in { animation: slideIn 0.3s ease-out; }
     </style>
+
+    <div id="js-toast-container" class="fixed bottom-5 right-5 z-[110] flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+        // Función global para reemplazar el alert chafa
+        window.mostrarAlerta = function(mensaje, tipo = 'error') {
+            const container = document.getElementById('js-toast-container');
+            const toast = document.createElement('div');
+            
+            const colorClass = tipo === 'success' 
+                ? 'bg-emerald-900/90 border-emerald-700 text-emerald-200' 
+                : 'bg-red-900/90 border-red-700 text-red-200';
+            
+            const icon = tipo === 'success'
+                ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>'
+                : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>';
+
+            toast.className = `flex items-start gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-sm pointer-events-auto animate-slide-in ${colorClass}`;
+            toast.innerHTML = `
+                <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">${icon}</svg>
+                <span class="text-sm font-medium flex-1">${mensaje}</span>
+                <button type="button" onclick="this.parentElement.remove()" class="opacity-60 hover:opacity-100 flex-shrink-0 -mr-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        };
+    </script>
 </body>
 </html>

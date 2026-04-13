@@ -294,7 +294,8 @@ def custom_register():
             app.logger.error(f"ERROR en registro: {str(e)}", exc_info=True)
             flash(f'Error inesperado: {str(e)}', 'danger')
             return render_template('auth/register.html', register_user_form=form)
-    else:
+        
+    elif request.method == 'POST':
         for field, field_errors in form.errors.items():
             for error in field_errors:
                 flash(f'Error en {getattr(form, field).label.text}: {error}', 'danger')
