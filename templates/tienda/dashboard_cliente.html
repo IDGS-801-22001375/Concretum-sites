@@ -419,18 +419,14 @@
   function actualizarBadgeNavbar() {
     const badgeNav = document.getElementById('navbar-notif-badge');
     const badgeTab = document.getElementById('badge-notif-contador');
-
-    // Contamos cuántos puntos de "no leído" quedan realmente en el HTML
     const count = document.querySelectorAll('.punto-no-leida').length;
 
-    // Actualizamos la campana de arriba
     if (badgeNav) {
       badgeNav.textContent = count;
       if (count > 0) badgeNav.classList.remove('hidden');
       else badgeNav.classList.add('hidden');
     }
 
-    // Actualizamos el globito de la pestaña
     if (badgeTab) {
       badgeTab.textContent = count;
       if (count > 0) badgeTab.classList.remove('hidden');

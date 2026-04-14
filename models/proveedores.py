@@ -2,13 +2,11 @@ import enum
 from datetime import datetime, timedelta
 from .extensions import db
 
-# ====================== ENUM CATEGORÍA DE PROVEEDOR ======================
 class CategoriaProveedor(enum.Enum):
     MATERIA_PRIMA = "MATERIA_PRIMA"
     SERVICIOS     = "SERVICIOS"
     INSUMOS       = "INSUMOS"
 
-# ====================== PROVEEDOR ======================
 class Proveedor(db.Model):
     __tablename__ = 'proveedores'
 
@@ -28,7 +26,6 @@ class Proveedor(db.Model):
 
     compras = db.relationship('Compra', backref='proveedor', lazy='dynamic')
 
-    # ---------- Propiedades calculadas ----------
     @property
     def total_compras(self):
         """Suma total de todas las compras del proveedor."""
@@ -41,7 +38,6 @@ class Proveedor(db.Model):
 
     @property
     def compras_ultimo_mes(self):
-        """Suma de compras en los últimos 30 días."""
         from sqlalchemy import func
         from .compras import Compra
         ultimo_mes = datetime.utcnow() - timedelta(days=30)
@@ -53,7 +49,6 @@ class Proveedor(db.Model):
 
     @property
     def cuentas_vencidas(self):
-        """Pagos vencidos (fecha_vencimiento < hoy y sin fecha_pago)."""
         from .pagos import PagoProveedor
         hoy = datetime.utcnow().date()
         return PagoProveedor.query.filter(

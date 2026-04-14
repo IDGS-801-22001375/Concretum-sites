@@ -43,7 +43,6 @@ class Color(db.Model):
     nombre = db.Column(db.String(50), nullable=False)
     clave = db.Column(db.String(50), unique=True, nullable=False)
     codigo_hex = db.Column(db.String(7))
-    # Mapeamos 'es_activo'
     es_active = db.Column('es_activo', db.Boolean, default=True)
 
 class UnidadMedida(db.Model):
@@ -52,5 +51,4 @@ class UnidadMedida(db.Model):
     id_unidad = db.Column(db.Integer, primary_key=True)
     clave = db.Column(db.String(10), unique=True, nullable=False)
     nombre = db.Column(db.String(50), nullable=False)
-    # Mapeamos 'es_activo'
     es_active = db.Column('es_activo', db.Boolean, default=True)

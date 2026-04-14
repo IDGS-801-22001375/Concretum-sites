@@ -1,7 +1,6 @@
 from datetime import datetime
 from .extensions import db
 
-# ====================== COMPRA (cabecera) ======================
 class Compra(db.Model):
     __tablename__ = 'compras'
 
@@ -19,7 +18,6 @@ class Compra(db.Model):
         return self.id_compra
 
 
-# ====================== COMPRA DETALLE (líneas de la compra) ======================
 class CompraDetalle(db.Model):
     __tablename__ = 'compra_detalle'
 
@@ -38,7 +36,6 @@ class CompraDetalle(db.Model):
         return self.id_detalle
 
 
-# ====================== HISTORIAL DE COMPRAS (auditoría de estados) ======================
 class HistorialCompra(db.Model):
     __tablename__ = 'historial_compras'
 

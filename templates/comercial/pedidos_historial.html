@@ -7,7 +7,6 @@
 
 {{ components.page_header('Historial de Pedidos', 'Consulta y gestiona todos los pedidos de clientes') }}
 
-{# KPIs #}
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     {{ components.kpi_card('Total Pedidos', 'kpi-total', kpis.total|string, 'slate', '<svg class="w-6 h-6 text-gray-400"
         fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,37 +30,42 @@
     </svg>', moneda='$') }}
 </div>
 
-{# Filtros #}
 <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden shadow-sm mb-6">
     <div class="flex flex-col sm:flex-row items-center gap-4 p-4 border-b border-[#1E3A5F] bg-[#0B2239]">
         <div class="relative w-full sm:w-64">
             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
             </div>
-            <input type="text" id="buscar-pedidos" value="{{ search_actual }}" placeholder="Buscar por folio o cliente..."
-                   class="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white focus:ring-2 focus:ring-[#008DC0]">
+            <input type="text" id="buscar-pedidos" value="{{ search_actual }}"
+                placeholder="Buscar por folio o cliente..."
+                class="w-full pl-9 pr-4 py-2.5 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white focus:ring-2 focus:ring-[#008DC0]">
         </div>
 
-        <select id="filtro-estado" class="px-3 py-2.5 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white focus:ring-2 focus:ring-[#008DC0]">
+        <select id="filtro-estado"
+            class="px-3 py-2.5 text-sm rounded-xl border border-[#1E3A5F] bg-[#0B2239] text-white focus:ring-2 focus:ring-[#008DC0]">
             <option value="">Todos los estados</option>
-            <option value="COTIZACION" {% if estado_actual == 'COTIZACION' %}selected{% endif %}>Cotización</option>
-            <option value="NEGOCIANDO_FECHA" {% if estado_actual == 'NEGOCIANDO_FECHA' %}selected{% endif %}>Negociando fecha</option>
-            <option value="AUTORIZADO" {% if estado_actual == 'AUTORIZADO' %}selected{% endif %}>Autorizado</option>
-            <option value="RECHAZADO" {% if estado_actual == 'RECHAZADO' %}selected{% endif %}>Rechazado</option>
-            <option value="EN_PRODUCCION" {% if estado_actual == 'EN_PRODUCCION' %}selected{% endif %}>En producción</option>
-            <option value="PARCIALMENTE_ENTREGADO" {% if estado_actual == 'PARCIALMENTE_ENTREGADO' %}selected{% endif %}>Parcialmente entregado</option>
-            <option value="ENTREGADO" {% if estado_actual == 'ENTREGADO' %}selected{% endif %}>Entregado</option>
-            <option value="CANCELADO" {% if estado_actual == 'CANCELADO' %}selected{% endif %}>Cancelado</option>
+            <option value="COTIZACION" {% if estado_actual=='COTIZACION' %}selected{% endif %}>Cotización</option>
+            <option value="NEGOCIANDO_FECHA" {% if estado_actual=='NEGOCIANDO_FECHA' %}selected{% endif %}>Negociando
+                fecha</option>
+            <option value="AUTORIZADO" {% if estado_actual=='AUTORIZADO' %}selected{% endif %}>Autorizado</option>
+            <option value="RECHAZADO" {% if estado_actual=='RECHAZADO' %}selected{% endif %}>Rechazado</option>
+            <option value="EN_PRODUCCION" {% if estado_actual=='EN_PRODUCCION' %}selected{% endif %}>En producción
+            </option>
+            <option value="PARCIALMENTE_ENTREGADO" {% if estado_actual=='PARCIALMENTE_ENTREGADO' %}selected{% endif %}>
+                Parcialmente entregado</option>
+            <option value="ENTREGADO" {% if estado_actual=='ENTREGADO' %}selected{% endif %}>Entregado</option>
+            <option value="CANCELADO" {% if estado_actual=='CANCELADO' %}selected{% endif %}>Cancelado</option>
         </select>
 
         {% if estado_actual or search_actual %}
-        <a href="{{ url_for('comercial_bp.historial_pedidos') }}" class="text-sm text-gray-400 hover:text-white">Limpiar filtros</a>
+        <a href="{{ url_for('comercial_bp.historial_pedidos') }}" class="text-sm text-gray-400 hover:text-white">Limpiar
+            filtros</a>
         {% endif %}
     </div>
 </div>
-{# Tabla #}
 <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden shadow-sm">
     <div class="overflow-x-auto">
         <table class="w-full">
@@ -166,7 +170,6 @@
         </table>
     </div>
 
-    {# Paginación #}
     {% if pagination and pagination.pages > 1 %}
     <div class="px-6 py-4 border-t border-[#1E3A5F] bg-[#0B2239] flex justify-between items-center">
         <p class="text-sm text-gray-400">
@@ -201,11 +204,9 @@
         window.location.href = url;
     }
 
-    // Al cambiar el select, aplicar inmediatamente
     estadoSelect.addEventListener('change', aplicarFiltros);
 
-    // Al escribir en el buscador, esperar 500ms para no saturar
-    buscarInput.addEventListener('input', function() {
+    buscarInput.addEventListener('input', function () {
         clearTimeout(timeoutId);
         timeoutId = setTimeout(aplicarFiltros, 500);
     });

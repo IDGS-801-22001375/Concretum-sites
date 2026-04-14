@@ -25,7 +25,6 @@ class Config:
     SECURITY_AUTO_LOGIN_AFTER_REGISTER = False
     SECURITY_POST_REGISTER_VIEW = '/login'
     
-    # Desactivamos el 2FA nativo porque usaremos nuestra propia implementación
     SECURITY_TWO_FACTOR = False
     
     SECURITY_TOTP_SECRETS = {'1': 'W55DB2NXATQAZ4AKEAS5YTIY44GEA35R'}

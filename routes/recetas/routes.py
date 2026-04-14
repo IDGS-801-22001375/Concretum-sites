@@ -8,9 +8,6 @@ import json
 import threading
 from copy import copy
 
-# ------------------------------------------------------------
-# FUNCIONES AUXILIARES
-# ------------------------------------------------------------
 def _guardar_en_mongo(datos_auditoria):
     from app import mongo_db
     try:
@@ -34,19 +31,14 @@ def registrar_auditoria(usuario_accion, accion, detalles):
     
     threading.Thread(target=_guardar_en_mongo, args=(datos_auditoria,)).start()
 
-# ------------------------------------------------------------
-# VISTA PRINCIPAL (CRUD)
-# ------------------------------------------------------------
 @recetas_bp.route('/recetas')
 @login_required
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
 def get_recetas():
-    # KPIs
     total = Recetas.query.count()
     activas = Recetas.query.filter_by(es_active=1).count()
     kpis = {'total': total, 'activas': activas}
 
-    # Opciones para selects
     productos = Productos.query.filter_by(es_active=1).all()
     productos_options = [{'value': p.id_producto, 'label': f"{p.sku} - {p.nombre}"} for p in productos]
 
@@ -65,9 +57,6 @@ def get_recetas():
                            mp_options=mp_options,
                            unidades_options=unidades_options)
 
-# ------------------------------------------------------------
-# API: LISTAR RECETAS (paginado, búsqueda)
-# ------------------------------------------------------------
 @recetas_bp.route('/recetas/api', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
@@ -126,9 +115,6 @@ def api_recetas():
         'inactivas': total_inactivas  
     })
 
-# ------------------------------------------------------------
-# GUARDAR RECETA (CREAR O EDITAR)
-# ------------------------------------------------------------
 @recetas_bp.route('/recetas/guardar', methods=['POST'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
@@ -136,11 +122,9 @@ def guardar_receta():
     data = request.form
     id_receta = data.get('id_receta')
 
-    # Validar campos principales
     if not data.get('producto_id') or not data.get('descripcion') or not data.get('cuanto_produce') or not data.get('tiempo_produccion') or not data.get('resistencia'):
         return jsonify({'success': False, 'message': 'Faltan campos obligatorios'}), 400
 
-    # Obtener detalles del JSON
     detalles_json = data.get('detalles_json')
     if not detalles_json:
         return jsonify({'success': False, 'message': 'Debe agregar al menos un ingrediente'}), 400
@@ -153,7 +137,6 @@ def guardar_receta():
         return jsonify({'success': False, 'message': 'Debe agregar al menos un ingrediente'}), 400
 
     if id_receta:
-        # Edición
         receta = Recetas.query.get_or_404(int(id_receta))
         receta.producto_id = int(data['producto_id'])
         receta.descripcion = data['descripcion']
@@ -161,10 +144,8 @@ def guardar_receta():
         receta.tiempo_produccion = float(data['tiempo_produccion'])
         receta.resistencia = float(data['resistencia'])
 
-        # Eliminar detalles antiguos
         RecetaDetalle.query.filter_by(receta_id=receta.id_receta).delete()
 
-        # Crear nuevos detalles
         for d in detalles:
             detalle = RecetaDetalle(
                 receta_id=receta.id_receta,
@@ -178,7 +159,6 @@ def guardar_receta():
         registrar_auditoria(current_user.id, "Editar Receta", f"Receta editada: {receta.descripcion}")
         return jsonify({'success': True, 'message': 'Receta actualizada correctamente.'})
     else:
-        # Creación
         receta = Recetas(
             producto_id=int(data['producto_id']),
             descripcion=data['descripcion'],
@@ -189,7 +169,7 @@ def guardar_receta():
             fecha_creacion=datetime.datetime.now()
         )
         db.session.add(receta)
-        db.session.flush()  # Para obtener el ID
+        db.session.flush()  
 
         for d in detalles:
             detalle = RecetaDetalle(
@@ -204,9 +184,6 @@ def guardar_receta():
         registrar_auditoria(current_user.id, "Crear Receta", f"Receta creada: {receta.descripcion}")
         return jsonify({'success': True, 'message': 'Receta creada correctamente.'})
 
-# ------------------------------------------------------------
-# OBTENER RECETA (para editar)
-# ------------------------------------------------------------
 @recetas_bp.route('/recetas/obtener/<int:id>', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
@@ -227,9 +204,6 @@ def obtener_receta(id):
         'detalles': detalles
     })
 
-# ------------------------------------------------------------
-# ALTERNAR ESTADO (ACTIVAR/DESACTIVAR)
-# ------------------------------------------------------------
 @recetas_bp.route('/recetas/alternar_estado/<int:id>', methods=['POST'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
@@ -241,9 +215,6 @@ def alternar_estado(id):
     db.session.commit()
     return jsonify({'success': True, 'message': f'Receta {estado_txt.lower()} correctamente.'})
 
-# ------------------------------------------------------------
-# DETALLE DE RECETA (página completa, no modal)
-# ------------------------------------------------------------
 @recetas_bp.route('/recetas/<int:id>')
 @login_required
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')

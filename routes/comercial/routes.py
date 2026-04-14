@@ -15,10 +15,6 @@ from routes.carrito.routes import _crear_notificacion
 import threading
 from copy import copy
 
-# ============================================================
-# FUNCIONES AUXILIARES
-# ============================================================
-
 def _guardar_en_mongo(datos_auditoria):
     from app import mongo_db
     try:
@@ -37,7 +33,7 @@ def registrar_auditoria(usuario_accion, accion, detalles):
         "modulo": "Comercial", 
         "user_agent": user_agent,
         "ip": ip_addr,
-        "fecha_creacion": datetime.utcnow() # <--- CORRECCIÓN AQUÍ
+        "fecha_creacion": datetime.utcnow() 
     }
     
     threading.Thread(target=_guardar_en_mongo, args=(datos_auditoria,)).start()
@@ -53,10 +49,6 @@ def calcular_costo_unitario_producto(producto_id):
                 costo_receta += Decimal(str(ing.cantidad)) * Decimal(str(mp.costo_unitario))
         return costo_receta / Decimal(str(receta.cuanto_produce))
     return Decimal(str(producto.precio_base)) * Decimal('0.60') 
-
-# ============================================================
-# DASHBOARD
-# ============================================================
 
 @comercial_bp.route('/dashboard')
 @login_required
@@ -176,10 +168,6 @@ def dashboard():
         ventas_recientes = ventas_recientes,
     )
 
-# ============================================================
-# VENTAS (STANDARIZADO)
-# ============================================================
-
 @comercial_bp.route('/ventas')
 @login_required
 def ventas():
@@ -192,7 +180,6 @@ def ventas():
 
     form.cliente_id.choices = [(c.id_cliente, c.razon_social) for c in clientes]
 
-    # Calcular KPIs del mes
     hoy_ventas  = datetime.now()
     inicio_mes = datetime(hoy_ventas.year, hoy_ventas.month, 1)
     if hoy_ventas.month == 12:
@@ -343,10 +330,8 @@ def nueva_venta():
         db.session.add(venta)
         db.session.flush()
 
-        # Actualizar el folio real
         venta.folio = f'V-{datetime.now().year}-{str(venta.id_venta).zfill(5)}'
         
-        # Actualizar motivo de movimiento con el folio real
         for mov in db.session.new:
             if isinstance(mov, MovimientosInventario) and mov.motivo == 'Venta Comercial Folio: TEMP':
                 mov.motivo = f'Venta Comercial Folio: {venta.folio}'
@@ -367,16 +352,11 @@ def nueva_venta():
         db.session.commit()
         registrar_auditoria(current_user.id, "Crear Venta", f"Venta registrada: {venta.folio} por ${total:,.2f}")
         
-        # Retornamos JSON indicando éxito
         return jsonify({'success': True, 'message': f'Venta {venta.folio} registrada correctamente.'})
 
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error al registrar la venta: {str(e)}'}), 500
-
-# ============================================================
-# TICKET
-# ============================================================
 
 @comercial_bp.route('/ticket', methods=['GET'])
 @login_required
@@ -406,10 +386,6 @@ def ticket():
         ventas = lista_ventas,
         venta  = venta,
     )
-
-# ============================================================
-# CORTE DE CAJA
-# ============================================================
 
 @comercial_bp.route('/corte')
 @login_required
@@ -488,7 +464,6 @@ def realizar_corte():
         if corte_existente.estado == 'ABIERTO':
             flash('Ya tienes un corte abierto para hoy. Ciérralo antes de iniciar uno nuevo.', 'warning')
         else:
-            # Si ya está CERRADO, bloqueamos que hagan otro corte hoy
             flash('Ya realizaste y cerraste el corte de caja de hoy.', 'error')
         return redirect(url_for('comercial_bp.corte'))
 
@@ -510,7 +485,6 @@ def realizar_corte():
             else:
                 costo_total_corte += calcular_costo_unitario_producto(det.producto_id) * Decimal(str(det.cantidad))
 
-    # La utilidad real es el total de la venta menos el costo de producción
     utilidad = float(Decimal(str(total_ventas)) - costo_total_corte)
 
     try:
@@ -549,7 +523,6 @@ def realizar_corte():
 
     return redirect(url_for('comercial_bp.corte'))
 
-
 @comercial_bp.route('/corte/cerrar', methods=['POST'])
 @login_required
 def cerrar_corte():
@@ -579,10 +552,6 @@ def cerrar_corte():
 
     return redirect(url_for('comercial_bp.corte'))
 
-# ============================================================
-# PEDIDOS PENDIENTES
-# ============================================================
-
 @comercial_bp.route('/pedidos/pendientes')
 @login_required
 @roles_accepted('ADMINISTRADOR', 'VENTAS')
@@ -604,7 +573,6 @@ def ver_pedido(pedido_id):
         .joinedload(Productos.existencia)
     ).get_or_404(pedido_id)
     
-    # Depuración: imprimir stock de cada producto
     for detalle in pedido.detalles:
         existencia = detalle.producto.existencia
         stock = existencia.stock_actual if existencia else 0
@@ -642,7 +610,6 @@ def autorizar_pedido(pedido_id):
         total_venta = Decimal('0.00')
         venta = None
 
-        # Primera pasada: calcular entregables y totales
         for detalle in detalles:
             producto = detalle.producto
             cantidad_pedida = Decimal(str(detalle.cantidad))
@@ -654,7 +621,6 @@ def autorizar_pedido(pedido_id):
             if entregable > 0:
                 total_venta += entregable * Decimal(str(detalle.precio_unitario))
 
-        # Crear venta si hay algo que cobrar
         if total_venta > 0:
             folio_venta = f'VTA-{pedido.folio}'
             subtotal_venta = total_venta / Decimal('1.16')
@@ -673,7 +639,6 @@ def autorizar_pedido(pedido_id):
             db.session.add(venta)
             db.session.flush()
 
-        # Segunda pasada: descontar stock, registrar movimientos y crear solicitudes
         for detalle in detalles:
             producto = detalle.producto
             cantidad_pedida = Decimal(str(detalle.cantidad))
@@ -719,7 +684,6 @@ def autorizar_pedido(pedido_id):
                 db.session.add(solicitud)
                 productos_sin_stock.append((producto.nombre, int(faltante)))
 
-        # Actualizar estado del pedido
         if all(d.cantidad_pendiente == 0 for d in detalles):
             pedido.estado = 'ENTREGADO'
         elif any(d.cantidad_pendiente > 0 for d in detalles) and any(d.cantidad_entregada > 0 for d in detalles):
@@ -730,7 +694,6 @@ def autorizar_pedido(pedido_id):
         pedido.fecha_autorizacion = datetime.now()
         db.session.commit()
 
-        # Construir mensaje de notificación
         mensaje = f"Tu pedido {pedido.folio} ha sido autorizado. "
         if total_venta > 0:
             mensaje += f"Se entregarán {int(total_venta)} unidades de inmediato. "
@@ -775,7 +738,6 @@ def proponer_fecha_pedido(pedido_id):
         flash('Debes seleccionar una fecha.', 'danger')
         return redirect(url_for('comercial_bp.ver_pedido', pedido_id=pedido.id_pedido_cliente))
 
-    # Actualizar estado y fecha
     pedido.estado = 'NEGOCIANDO_FECHA'
     pedido.fecha_propuesta_entrega = datetime.strptime(fecha_propuesta, '%Y-%m-%d').date()
     pedido.motivo_rechazo = motivo 
@@ -793,10 +755,6 @@ def proponer_fecha_pedido(pedido_id):
 
     flash(f'Propuesta enviada al cliente para el pedido {pedido.folio}.', 'info')
     return redirect(url_for('comercial_bp.pedidos_pendientes'))
-
-# ============================================================
-# HISTORIAL DE PEDIDOS (PARA EMPLEADOS)
-# ============================================================
 
 @comercial_bp.route('/pedidos/historial')
 @login_required
@@ -820,7 +778,6 @@ def historial_pedidos():
         )
     paginated = query.order_by(PedidoCliente.fecha_pedido.desc()).paginate(page=page, per_page=per_page, error_out=False)
 
-    # Calcular KPIs sobre el total (sin paginación)
     total_pedidos = query.count()
     total_pendientes = query.filter(PedidoCliente.estado.in_(['COTIZACION', 'NEGOCIANDO_FECHA'])).count()
     total_entregados = query.filter(PedidoCliente.estado == 'ENTREGADO').count()

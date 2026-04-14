@@ -62,7 +62,6 @@ def api_materia_prima():
         elif active_filter == 'false':
             query = query.filter(MateriaPrima.es_activo == False)
 
-    # Ordenamiento
     if sort_order == 'asc':
         query = query.order_by(asc(getattr(MateriaPrima, sort_by, MateriaPrima.nombre)))
     else:
@@ -101,7 +100,6 @@ def guardar_materia_prima():
     data = request.form
     id_mp = data.get('id_materia_prima')
     if id_mp:
-        # Editar
         mp = MateriaPrima.query.get_or_404(int(id_mp))
         mp.sku = data['sku']
         mp.nombre = data['nombre']
@@ -113,7 +111,6 @@ def guardar_materia_prima():
         registrar_auditoria(current_user.id, "Editar Materia Prima", f"Materia prima editada: {mp.nombre}")
         return jsonify({'success': True, 'message': 'Materia prima actualizada.'})
     else:
-        # Crear
         if MateriaPrima.query.filter_by(sku=data['sku']).first():
             return jsonify({'success': False, 'errors': {'sku': 'El SKU ya existe.'}}), 400
         mp = MateriaPrima(
@@ -126,8 +123,7 @@ def guardar_materia_prima():
             es_activo=True
         )
         db.session.add(mp)
-        db.session.flush()  # para obtener el id
-        # Crear registro de existencia asociado
+        db.session.flush()  
         existencia = ExistenciaMateriaPrima(materia_prima_id=mp.id, stock_actual=0)
         db.session.add(existencia)
         db.session.commit()

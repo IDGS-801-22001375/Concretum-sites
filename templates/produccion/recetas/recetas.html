@@ -154,7 +154,7 @@ modal_size='xl') %}
 
     document.addEventListener('click', function (e) {
         if (e.target && e.target.id === 'btn-nuevo-recetas') {
-            actualizarSelectProductos(null); // Null porque es nuevo
+            actualizarSelectProductos(null);
         }
     });
     function actualizarJsonIngredientes() {
@@ -260,13 +260,11 @@ modal_size='xl') %}
             }
         });
 
-        // Interceptamos renderTabla para actualizar KPIs y poner el botón de "Detalle"
         const originalRenderRecetas = window.crudManagers['recetas'].renderTabla.bind(window.crudManagers['recetas']);
         window.crudManagers['recetas'].renderTabla = function (items) {
             originalRenderRecetas(items);
             if (!items) return;
 
-            // Leemos los datos globales del servidor
             const totalGlobal = this.total || 0;
             const activas = this.rawData?.activas || 0;
             const inactivas = this.rawData?.inactivas || 0;
@@ -279,7 +277,6 @@ modal_size='xl') %}
             if (kpiActivas) kpiActivas.textContent = activas;
             if (kpiInactivas) kpiInactivas.textContent = inactivas;
 
-            // Insertar el botón de "Ver Detalle"
             const rows = document.querySelectorAll('#tabla-recetas tbody tr');
             rows.forEach((row, idx) => {
                 if (!items[idx]) return;

@@ -78,9 +78,7 @@ class UsuarioForm(FlaskForm):
             raise ValidationError('Este correo electrónico ya está registrado.')
 
     def validate(self, extra_validators=None):
-        # Si es edición y no se marca cambiar_password, la contraseña es opcional
         if self.id_usuario.data and not self.cambiar_password.data:
-            # Eliminar validadores de longitud y required temporalmente
             self.password.validators = [Optional()]
             self.confirm_password.validators = [Optional()]
         return super().validate(extra_validators)

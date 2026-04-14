@@ -1,8 +1,3 @@
-/* ============================================================
-   crud.js — CRM CONCRETUM v3
-   Rediseño con mejor UI/UX
-   ============================================================ */
-
 class CrudManager {
   constructor(config) {
     this.id = config.id;
@@ -41,7 +36,6 @@ class CrudManager {
     this.cargarDatos();
   }
 
-  /* ── cargar datos ────────────────────────────────────────── */
   async cargarDatos() {
     const params = new URLSearchParams({
       page: this.currentPage,
@@ -96,7 +90,6 @@ class CrudManager {
     }
   }
 
-  /* ── render tabla ────────────────────────────────────────── */
   renderTabla(items) {
     const tbody = document.getElementById(`tbody-${this.id}`);
     if (!tbody) return;
@@ -163,7 +156,6 @@ class CrudManager {
     tbody.innerHTML = html;
   }
 
-  /* ── paginación ──────────────────────────────────────────── */
   _renderPaginacion(data) {
     const info = document.getElementById(`pagination-info-${this.id}`);
     const controls = document.getElementById(`pagination-controls-${this.id}`);
@@ -210,7 +202,6 @@ class CrudManager {
     });
   }
 
-  /* ── editar ──────────────────────────────────────────────── */
   async editar(id) {
     try {
       const response = await fetch(`${this.apiEndpoint}/obtener/${id}`);
@@ -239,7 +230,6 @@ class CrudManager {
     }
   }
 
-  /* ── alternar estado ─────────────────────────────────────── */
   async alternarEstado(id) {
     const csrfToken = document.querySelector('input[name="csrf_token"]')?.value ?? '';
     try {
@@ -260,7 +250,6 @@ class CrudManager {
     }
   }
 
-  /* ── guardar ─────────────────────────────────────────────── */
   async guardar(event) {
     event.preventDefault();
     const form = event.target;
@@ -307,7 +296,6 @@ class CrudManager {
     }
   }
 
-  /* ── errores ─────────────────────────────────────────────── */
   _showErrors(errors) {
     this._clearErrors();
     for (const [field, msg] of Object.entries(errors)) {
@@ -322,7 +310,6 @@ class CrudManager {
     });
   }
 
-  /* ── flash ───────────────────────────────────────────────── */
   _showFlash(message, category = 'info') {
     const container = document.getElementById('flash-container') || document.querySelector('.fixed.top-5.right-5');
     if (!container) return;
@@ -363,9 +350,7 @@ class CrudManager {
     }, 4500);
   }
 
-  /* ── event listeners ─────────────────────────────────────── */
   _setupEventListeners() {
-    /* Botón "+ Nuevo" */
     const btnNuevo = document.getElementById(`btn-nuevo-${this.id}`);
     if (btnNuevo) {
       btnNuevo.addEventListener('click', () => {
@@ -382,11 +367,9 @@ class CrudManager {
       console.warn(`[CrudManager] btn-nuevo-${this.id} no encontrado`);
     }
 
-    /* Submit */
     const form = document.getElementById(`form-${this.id}`);
     if (form) form.addEventListener('submit', (e) => this.guardar(e));
 
-    /* Búsqueda con debounce */
     const search = document.getElementById(`search-input-${this.id}`);
     if (search) {
       let debounce;
@@ -400,7 +383,6 @@ class CrudManager {
       });
     }
 
-    /* Ordenamiento */
     const table = document.getElementById(`tabla-${this.id}`);
     if (table) {
       table.querySelectorAll('th[data-sort]').forEach(th => {
@@ -413,7 +395,6 @@ class CrudManager {
       });
     }
 
-    /* Registros por página */
     const perPage = document.getElementById(`per-page-${this.id}`);
     if (perPage) {
       perPage.addEventListener('change', () => {
@@ -423,7 +404,6 @@ class CrudManager {
       });
     }
 
-    /* Filtros: id="filter-{id_table}-{nombre_filtro}" */
     document.querySelectorAll(`[id^="filter-${this.id}-"]`).forEach(el => {
       const filterName = el.id.replace(`filter-${this.id}-`, '');
       const update = () => {
@@ -437,7 +417,6 @@ class CrudManager {
   }
 }
 
-/* helper global */
 function _escHtml(text) {
   if (!text) return '';
   const d = document.createElement('div');

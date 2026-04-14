@@ -14,7 +14,7 @@ def fecha_hoy(form, field):
 
 class RecetaDetalleForm(FlaskForm):
     class Meta:
-        csrf = False  # obligatorio en subformularios con FormField
+        csrf = False 
 
     materia_prima_id = SelectField(
         'Materia prima',
@@ -31,7 +31,6 @@ class RecetaDetalleForm(FlaskForm):
         ]
     )
 
-    # Nombre alineado al modelo: unidad_id
     unidad_id = SelectField(
         'Unidad de medida',
         coerce=int,

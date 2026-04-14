@@ -1,11 +1,6 @@
 from .extensions import db
 from datetime import datetime
 
-
-# ============================================================
-# VENTAS
-# ============================================================
-
 class Venta(db.Model):
     __tablename__ = 'ventas'
 
@@ -38,11 +33,6 @@ class VentaDetalle(db.Model):
 
     producto        = db.relationship('Productos', backref='ventas_detalle')
 
-
-# ============================================================
-# CORTE DE CAJA
-# ============================================================
-
 class CorteCaja(db.Model):
     __tablename__ = 'cortes_caja'
 
@@ -72,11 +62,6 @@ class CorteDesglose(db.Model):
     operaciones     = db.Column(db.Integer, nullable=False, default=0)
     monto           = db.Column(db.Numeric(12, 2), nullable=False, default=0.00)
     es_credito      = db.Column(db.Boolean, nullable=False, default=False)
-
-
-# ============================================================
-# CLIENTES
-# ============================================================
 
 class Cliente(db.Model):
     __tablename__ = 'clientes'

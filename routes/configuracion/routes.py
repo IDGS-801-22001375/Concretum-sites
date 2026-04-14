@@ -54,18 +54,15 @@ def index():
         config.zona_horaria = request.form.get('zona_horaria')
         config.actualizado_por = current_user.id
         
-        # Manejo de logo
         logo_file = request.files.get('logo')
         if logo_file and logo_file.filename:
             filename = secure_filename(logo_file.filename)
             upload_folder = os.path.join(current_app.root_path, 'static', 'uploads')
             os.makedirs(upload_folder, exist_ok=True)
-            # Generar nombre único para evitar colisiones
             name, ext = os.path.splitext(filename)
             unique_filename = f"{name}_{datetime.datetime.utcnow().timestamp()}{ext}"
             filepath = os.path.join(upload_folder, unique_filename)
             logo_file.save(filepath)
-            # Guardar ruta relativa para la URL (desde static)
             config.logo = f'uploads/{unique_filename}'
         
         db.session.commit()

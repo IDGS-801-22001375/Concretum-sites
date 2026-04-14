@@ -1,7 +1,6 @@
 from datetime import datetime
 from .extensions import db
 
-# ====================== CONFIGURACIÓN DE EMPRESA ======================
 class ConfiguracionEmpresa(db.Model):
     __tablename__ = 'configuracion_empresa'
 
@@ -13,12 +12,10 @@ class ConfiguracionEmpresa(db.Model):
     email_facturacion        = db.Column(db.String(254), default='')
     logo                     = db.Column(db.String(255), nullable=True)   # ruta del archivo
 
-    # Alertas
     alerta_stock_minimo      = db.Column(db.Boolean, default=True)
     alerta_vencimiento_credito = db.Column(db.Boolean, default=True)
     alerta_merma_diaria      = db.Column(db.Boolean, default=False)
 
-    # Preferencias
     moneda                   = db.Column(db.String(3),  default='MXN')
     zona_horaria             = db.Column(db.String(50), default='America/Mexico_City')
     actualizado_por          = db.Column(db.BigInteger, db.ForeignKey('usuarios.id_usuario'))
@@ -26,7 +23,6 @@ class ConfiguracionEmpresa(db.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Garantiza un único registro en la tabla
         if not self.id and ConfiguracionEmpresa.query.count() == 0:
             db.session.add(self)
             db.session.commit()

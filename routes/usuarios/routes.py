@@ -46,20 +46,16 @@ def index():
 @roles_accepted('ADMINISTRADOR')
 def api_usuarios():
     """API para obtener usuarios paginados, filtrados y ordenados"""
-    # Parámetros de paginación
     page = request.args.get('page', 1, type=int)
     per_page = request.args.get('per_page', 10, type=int)
-    # Parámetros de ordenamiento
     sort_by = request.args.get('sort_by', 'username')
     sort_order = request.args.get('sort_order', 'asc')
-    # Parámetros de filtro
     search = request.args.get('search', '')
     role_filter = request.args.get('role', '')
     active_filter = request.args.get('active', '')
 
     query = User.query
 
-    # Filtros
     if search:
         query = query.filter(or_(
             User.username.ilike(f'%{search}%'),
@@ -73,29 +69,26 @@ def api_usuarios():
         elif active_filter == 'false':
             query = query.filter(User.active == False)
 
-    # Ordenamiento
     if sort_order == 'asc':
         query = query.order_by(asc(getattr(User, sort_by, User.username)))
     else:
         query = query.order_by(desc(getattr(User, sort_by, User.username)))
 
-    # Paginación
     paginated = query.paginate(page=page, per_page=per_page, error_out=False)
 
-    # Construir respuesta
     items = []
     for user in paginated.items:
         items.append({
             'id': user.id,
             'username': user.username,
             'email': user.email,
-            'es_activo': user.active,                # ← campo unificado
+            'es_activo': user.active,               
             'roles': [{'id': r.id_rol, 'name': r.name} for r in user.roles],
             'ultima_sesion': user.ultima_sesion.strftime('%Y-%m-%d %H:%M') if user.ultima_sesion else None
         })
 
     return jsonify({
-        'items': items,                              # ← clave unificada
+        'items': items,                              
         'total': paginated.total,
         'page': paginated.page,
         'pages': paginated.pages,
@@ -109,17 +102,13 @@ def guardar_usuario():
     form = UsuarioForm()
     if form.validate_on_submit():
         if form.id_usuario.data:
-            # Edición
             user = User.query.get_or_404(int(form.id_usuario.data))
-            # No permitir que un usuario se suba de rol si no es ADMIN
             if user.id == current_user.id and 'ADMINISTRADOR' not in [r.name for r in current_user.roles]:
                 return jsonify({'success': False, 'errors': {'general': 'No puedes modificar tu propio rol.'}}), 400
-            # Actualizar datos
             user.username = form.username.data
             user.email = form.email.data
             if form.cambiar_password.data and form.password.data:
                 user.password = hash_password(form.password.data)
-            # Actualizar roles
             user.roles = []
             for role_id in form.roles.data:
                 role = Role.query.get(role_id)
@@ -129,7 +118,6 @@ def guardar_usuario():
             registrar_auditoria(current_user.id, "Editar Usuario", f"Usuario editado: {user.email}")
             return jsonify({'success': True, 'message': 'Usuario actualizado exitosamente.'})
         else:
-            # Creación
             if not form.password.data:
                 return jsonify({'success': False, 'errors': {'password': 'La contraseña es obligatoria para un nuevo usuario.'}}), 400
             try:
@@ -153,7 +141,6 @@ def guardar_usuario():
                 db.session.rollback()
                 return jsonify({'success': False, 'errors': {'email': 'El correo electrónico ya está registrado.'}}), 400
     else:
-        # Errores de validación
         errors = {}
         for field, field_errors in form.errors.items():
             if field == 'csrf_token':
@@ -171,7 +158,7 @@ def obtener_usuario(id):
         'username': user.username,
         'email': user.email,
         'active': user.active,
-        'roles': [r.id_rol for r in user.roles]   # array de IDs
+        'roles': [r.id_rol for r in user.roles]  
     })
 
 @usuarios_bp.route('/usuarios/alternar_estado/<int:id>', methods=['POST'])

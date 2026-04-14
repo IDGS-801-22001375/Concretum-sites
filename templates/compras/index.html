@@ -7,7 +7,6 @@
 
 {{ components.page_header('Órdenes de Compra', 'Gestiona las compras de materiales e insumos') }}
 
-<!-- KPIs -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     {{ components.kpi_card(
     'Total Órdenes',
@@ -51,7 +50,6 @@
     ) }}
 </div>
 
-<!-- Table -->
 {{ components.crud_table(
 id_table='compras',
 api_endpoint='/compras',
@@ -78,7 +76,6 @@ filters=[
 btn_new_label='Nueva Compra'
 ) }}
 
-<!-- Modal -->
 {% set form_fields = [
 {'name': 'proveedor_id', 'label': 'Proveedor', 'type': 'select', 'required': true, 'options': proveedores_options},
 {'name': 'fecha_compra', 'label': 'Fecha', 'type': 'date', 'required': true}
@@ -87,7 +84,6 @@ btn_new_label='Nueva Compra'
 {% call components.crud_modal('compras', form_fields, id_field='id_compra', modal_title='Orden de Compra',
 modal_size='xl') %}
 
-<!-- Materiales Section -->
 <div class="sm:col-span-2">
     <div class="flex items-center justify-between mb-3">
         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider">
@@ -306,7 +302,6 @@ modal_size='xl') %}
             }
 
             if (valActual) select.value = valActual;
-            // Actualizar el texto de unidad para cada fila
             const row = select.closest('.material-row');
             if (row) {
                 const unidadSpan = row.querySelector('.unidad-texto');
@@ -400,7 +395,6 @@ modal_size='xl') %}
                     row = firstRow.cloneNode(true);
                     container.appendChild(row);
                 }
-                // Ahora la asignación funcionará porque las opciones correctas ya existen
                 const selectMat = row.querySelector('select[name="materia_prima_id[]"]');
                 selectMat.value = det.materia_prima_id;
                 selectMat.dispatchEvent(new Event('change', { bubbles: true }));
@@ -487,7 +481,6 @@ modal_size='xl') %}
             }
         });
 
-        // Sobrescribir renderTabla para agregar botones personalizados
         const originalRender = mgr.renderTabla.bind(mgr);
         mgr.renderTabla = function (items) {
             originalRender(items);
@@ -512,17 +505,14 @@ modal_size='xl') %}
                 const divAcciones = fila.querySelector('td:last-child div');
                 if (!divAcciones) return;
 
-                // Limpiar cualquier botón existente
                 divAcciones.innerHTML = '';
 
-                // Botón "Ver detalle"
                 const btnDetalle = document.createElement('a');
                 btnDetalle.href = `/compras/detalle/${compraId}`;
                 btnDetalle.className = 'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#008DC0] hover:text-white border border-transparent hover:border-[#008DC0] hover:bg-[#008DC0]/20 rounded-lg transition-all';
                 btnDetalle.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg> Ver detalle`;
                 divAcciones.appendChild(btnDetalle);
 
-                // Botón de cambio de estado (si no está cancelada)
                 if (estado !== 'CANCELADA') {
                     const btnCambio = document.createElement('button');
                     btnCambio.textContent = estado === 'RECIBIDA' ? 'Anular' : 'Recibir';

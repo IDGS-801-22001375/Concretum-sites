@@ -9,7 +9,6 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-  <!-- Panel izquierdo: Buscar Ticket -->
   <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden">
     <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
       <div class="flex items-center gap-3">
@@ -82,10 +81,8 @@
     </form>
   </div>
 
-  <!-- Panel derecho: Vista previa + Imprimir -->
   <div class="flex flex-col items-center vista-pantalla">
     <div class="flex flex-wrap gap-3 mb-6">
-      <!-- Solo botón de Imprimir -->
       <button onclick="window.print()"
         class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-[#008DC0] hover:bg-[#007AAD] rounded-xl shadow-lg shadow-[#008DC0]/20 transition-all active:scale-[0.98]">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,7 +93,6 @@
       </button>
     </div>
 
-    <!-- Vista previa del ticket -->
     <div class="relative mx-auto" style="width: 380px;">
       <div class="flex justify-around w-full">
         <svg width="380" height="10" viewBox="0 0 380 10" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -108,7 +104,6 @@
 
       <div
         style="background-color: #F5F3EF; width: 380px; padding: 24px 28px; box-shadow: 0 10px 50px rgba(0,0,0,0.4);">
-        <!-- Contenido del ticket (igual que antes) -->
         <div style="text-align: center; border-bottom: 2px dashed #d1d5db; padding-bottom: 16px; margin-bottom: 16px;">
           <div
             style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: linear-gradient(135deg, #008DC0, #00A8E8); border-radius: 10px; margin-bottom: 8px;">
@@ -213,10 +208,8 @@
 
 </div>
 
-<!-- Contenedor para impresión -->
 <div id="print-container" class="hidden">
   <div id="ticket-print-full" class="bg-white text-gray-800 p-10 w-full min-h-[400px]">
-    <!-- (Mantengo el contenido de impresión igual que antes) -->
     <div class="text-center border-b-2 border-dashed border-gray-400 pb-6 mb-8">
       <p class="text-4xl font-black tracking-widest text-[#002F5C]">CONCRE<span class="text-[#008DC0]">TUM</span></p>
       <p class="text-sm text-gray-500 mt-2 font-semibold">León, Guanajuato, México</p>

@@ -4,38 +4,46 @@
   </a>
 
   <div class="hidden md:flex items-center gap-6 text-sm font-medium">
-    <a href="{{ url_for('carrito_bp.catalogo') }}" class="text-[#70A7C7] hover:text-white transition flex items-center gap-2">
+    <a href="{{ url_for('carrito_bp.catalogo') }}"
+      class="text-[#70A7C7] hover:text-white transition flex items-center gap-2">
       Catálogo
     </a>
     {% if current_user.is_authenticated %}
-    <a href="{{ url_for('carrito_bp.dashboard_cliente') }}" class="text-[#70A7C7] hover:text-white transition flex items-center gap-2">
+    <a href="{{ url_for('carrito_bp.dashboard_cliente') }}"
+      class="text-[#70A7C7] hover:text-white transition flex items-center gap-2">
       Mi cuenta
     </a>
     {% endif %}
   </div>
 
   <div class="flex items-center gap-4">
-    
+
     {% if current_user.is_authenticated %}
     <button onclick="abrirCarrito()" class="relative flex items-center text-[#70A7C7] hover:text-white transition">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
       </svg>
-      <span class="badge-carrito absolute -top-2 -right-2 bg-[#008DC0] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center {% if total_items_carrito == 0 %}hidden{% endif %}">
+      <span
+        class="badge-carrito absolute -top-2 -right-2 bg-[#008DC0] text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center {% if total_items_carrito == 0 %}hidden{% endif %}">
         {{ total_items_carrito }}
       </span>
     </button>
 
-    <a href="{{ url_for('carrito_bp.dashboard_cliente') }}#notificaciones" class="relative text-[#70A7C7] hover:text-white transition">
+    <a href="{{ url_for('carrito_bp.dashboard_cliente') }}#notificaciones"
+      class="relative text-[#70A7C7] hover:text-white transition">
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
       </svg>
-      <span id="navbar-notif-badge" class="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+      <span id="navbar-notif-badge"
+        class="absolute -top-1 -right-2 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
     </a>
     {% endif %}
 
     <div class="relative">
-      <button id="user-menu-btn" class="flex items-center gap-2 text-[#70A7C7] hover:text-white focus:outline-none transition pl-4 border-l border-[#1E3A5F]">
+      <button id="user-menu-btn"
+        class="flex items-center gap-2 text-[#70A7C7] hover:text-white focus:outline-none transition pl-4 border-l border-[#1E3A5F]">
         <div class="w-8 h-8 rounded-full bg-[#008DC0] flex items-center justify-center text-white font-bold text-sm">
           {{ current_user.username[:1]|upper if current_user.is_authenticated else 'U' }}
         </div>
@@ -44,25 +52,43 @@
         </span>
       </button>
 
-      <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
+      <div id="user-dropdown"
+        class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
         {% if current_user.is_authenticated %}
-            <a href="{{ url_for('configurar_2fa') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition border-b border-gray-100">
-              <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-              Configurar Seguridad (2FA)
-            </a>
-            <a href="{{ url_for('security.logout') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
-              Cerrar sesión
-            </a>
+        <a href="{{ url_for('configurar_2fa') }}"
+          class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition border-b border-gray-100">
+          <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+            </path>
+          </svg>
+          Configurar Seguridad (2FA)
+        </a>
+        <a href="{{ url_for('security.logout') }}"
+          class="flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+          </svg>
+          Cerrar sesión
+        </a>
         {% else %}
-            <a href="{{ url_for('security.login') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition border-b border-gray-100">
-              <svg class="w-4 h-4 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
-              Iniciar Sesión
-            </a>
-            <a href="{{ url_for('security.register') }}" class="flex items-center gap-3 px-4 py-3 text-sm text-[#008DC0] hover:bg-[#E5F3FA] transition font-bold">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-              Registrarme
-            </a>
+        <a href="{{ url_for('security.login') }}"
+          class="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition border-b border-gray-100">
+          <svg class="w-4 h-4 text-[#008DC0]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+          </svg>
+          Iniciar Sesión
+        </a>
+        <a href="{{ url_for('security.register') }}"
+          class="flex items-center gap-3 px-4 py-3 text-sm text-[#008DC0] hover:bg-[#E5F3FA] transition font-bold">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+          </svg>
+          Registrarme
+        </a>
         {% endif %}
       </div>
     </div>
@@ -79,23 +105,22 @@
     });
     document.addEventListener('click', () => userDropdown.classList.add('hidden'));
   }
-  
-  // Script del contador de notificaciones solo si está logeado
+
   {% if current_user.is_authenticated %}
-    function actualizarBadgeNavbar() {
-        fetch('/tienda/notificaciones/no-leidas')
-            .then(res => res.json())
-            .then(data => {
-                const badge = document.getElementById('navbar-notif-badge');
-                if (badge) {
-                    badge.textContent = data.count;
-                    if (data.count > 0) badge.classList.remove('hidden');
-                    else badge.classList.add('hidden');
-                }
-            })
-            .catch(err => console.error(err));
-    }
-    setInterval(actualizarBadgeNavbar, 30000);
-    document.addEventListener('DOMContentLoaded', actualizarBadgeNavbar);
+  function actualizarBadgeNavbar() {
+    fetch('/tienda/notificaciones/no-leidas')
+      .then(res => res.json())
+      .then(data => {
+        const badge = document.getElementById('navbar-notif-badge');
+        if (badge) {
+          badge.textContent = data.count;
+          if (data.count > 0) badge.classList.remove('hidden');
+          else badge.classList.add('hidden');
+        }
+      })
+      .catch(err => console.error(err));
+  }
+  setInterval(actualizarBadgeNavbar, 30000);
+  document.addEventListener('DOMContentLoaded', actualizarBadgeNavbar);
   {% endif %}
 </script>

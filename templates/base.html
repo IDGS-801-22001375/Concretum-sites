@@ -135,7 +135,6 @@
             }
         }
 
-        // Auto-dismiss flash messages
         setTimeout(() => {
             document.querySelectorAll('.flash-message').forEach(alert => {
                 alert.style.opacity = '0';
@@ -165,7 +164,6 @@
     <div id="js-toast-container" class="fixed bottom-5 right-5 z-[110] flex flex-col gap-3 pointer-events-none"></div>
 
     <script>
-        // Función global para reemplazar el alert chafa
         window.mostrarAlerta = function (mensaje, tipo = 'error') {
             const container = document.getElementById('js-toast-container');
             const toast = document.createElement('div');

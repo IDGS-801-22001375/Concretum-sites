@@ -49,7 +49,6 @@ def kpis():
     
     total_registros = len(mermas_mes)
     
-    # Recalcular valor real usando costo ACTUAL de cada material
     valor_total = 0
     for m in mermas_mes:
         if m.tipo_material == 'MATERIA_PRIMA':
@@ -60,7 +59,6 @@ def kpis():
             costo = float(prod.precio_base) if prod and prod.precio_base else 0
         valor_total += float(m.cantidad) * costo
 
-    # Valor total del inventario actual
     valor_productos = db.session.query(
         sa_func.sum(Existencias.stock_actual * Productos.precio_base)
     ).join(Productos).filter(Productos.es_active == 1).scalar() or 0
@@ -101,7 +99,6 @@ def api_mermas():
     
     items = []
     for m in paginated.items:
-        # Obtener nombre del material según tipo
         if m.tipo_material == 'MATERIA_PRIMA':
             material = MateriaPrima.query.get(m.material_id)
             nombre = material.nombre if material else 'Desconocido'
@@ -150,12 +147,10 @@ def materiales_lista():
         } for p in productos]
     return jsonify({'items': items})
 
-# ESTA ES LA RUTA QUE SE ESTANDARIZÓ
 @mermas_bp.route('/mermas/guardar', methods=['POST'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'ALMACEN', 'PRODUCCION')
 def guardar_merma():
-    # Ahora usamos request.form para que sea compatible con el CrudManager
     data = request.form
     
     tipo = data.get('tipo_material')
@@ -182,7 +177,6 @@ def guardar_merma():
         if not prod_existe:
             return jsonify({'success': False, 'message': f'La orden de producción #{produccion_id} no existe en el sistema.'}), 400
     
-    # Obtener costo unitario y actualizar stock
     movimiento_id = None
     if tipo == 'MATERIA_PRIMA':
         material = MateriaPrima.query.get(material_id)
@@ -212,7 +206,6 @@ def guardar_merma():
             return jsonify({'success': False, 'message': 'Cantidad de merma supera el stock disponible'}), 400
         
         existencia.stock_actual -= cantidad_dec
-        # Crear movimiento de inventario
         movimiento = MovimientosInventario(
             existencia_id=existencia.id_existencias,
             usuario_id=current_user.id,

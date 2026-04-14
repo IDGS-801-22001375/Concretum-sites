@@ -1,11 +1,6 @@
 import datetime
 from .extensions import db
 
-
-# ============================================================
-# CARRITO
-# ============================================================
-
 class Carrito(db.Model):
     __tablename__ = 'carritos'
 
@@ -50,10 +45,6 @@ class CarritoItem(db.Model):
     def subtotal(self):
         return float(self.cantidad) * float(self.precio_unitario)
 
-
-# ============================================================
-# PEDIDOS CLIENTE
-# ============================================================
 
 class PedidoCliente(db.Model):
     __tablename__ = 'pedidos_cliente'
@@ -125,10 +116,6 @@ class PedidoClienteDetalle(db.Model):
         return self.id_detalle
 
 
-# ============================================================
-# SOLICITUDES DE PRODUCCIÓN URGENTE
-# ============================================================
-
 class SolicitudProduccion(db.Model):
     __tablename__ = 'solicitudes_produccion'
 
@@ -152,10 +139,6 @@ class SolicitudProduccion(db.Model):
         return self.id_solicitud
 
 
-# ============================================================
-# NOTIFICACIONES CLIENTE
-# ============================================================
-
 class NotificacionCliente(db.Model):
     __tablename__ = 'notificaciones_cliente'
 
@@ -175,10 +158,6 @@ class NotificacionCliente(db.Model):
     def id(self):
         return self.id_notificacion
 
-
-# ============================================================
-# COTIZACIONES
-# ============================================================
 
 class Cotizacion(db.Model):
     __tablename__ = 'cotizaciones'
