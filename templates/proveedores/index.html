@@ -7,7 +7,6 @@
 
 {{ components.page_header('Gestión de Proveedores', 'Administra tus proveedores y relaciones comerciales') }}
 
-<!-- KPIs -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     {{ components.kpi_card(
     'Proveedores Activos',
@@ -52,7 +51,6 @@
     ) }}
 </div>
 
-<!-- Tabla CRUD -->
 {{ components.crud_table(
 id_table='proveedores',
 api_endpoint='/proveedores',
@@ -82,7 +80,6 @@ filters=[
 btn_new_label='Nuevo Proveedor'
 ) }}
 
-<!-- Modal para formulario de proveedores (usando crud_modal) -->
 {% set form_fields = [
 {'name': 'razon_social', 'label': 'Razón Social', 'type': 'text', 'required': true, 'placeholder': 'Ej: Cementos del
 Norte S.A.'},
@@ -118,9 +115,7 @@ modal_size='lg'
 <script src="{{ url_for('static', filename='js/crud.js') }}"></script>
 <script>
     (function () {
-        // Función para ver historial de pagos (modal con cierre mejorado)
         window.verPagos = async function (id, razonSocial) {
-            // Eliminar modal anterior si existe (por si se abre múltiples veces)
             const existingModal = document.getElementById(`modal-pagos-${id}`);
             if (existingModal) existingModal.remove();
 
@@ -150,13 +145,10 @@ modal_size='lg'
             document.body.insertAdjacentHTML('beforeend', html);
             const modal = document.getElementById(`modal-pagos-${id}`);
 
-            // Cerrar con botón X
             modal.querySelector('.close-payment-modal').addEventListener('click', () => modal.remove());
-            // Cerrar al hacer clic en el backdrop (fondo)
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) modal.remove();
             });
-            // Cerrar con tecla Escape
             const keyHandler = (e) => {
                 if (e.key === 'Escape') {
                     modal.remove();
@@ -165,7 +157,6 @@ modal_size='lg'
             };
             document.addEventListener('keydown', keyHandler);
 
-            // Cargar datos
             try {
                 const resp = await fetch('/proveedores/' + id + '/pagos');
                 const data = await resp.json();
@@ -294,7 +285,6 @@ modal_size='lg'
             ]
         });
 
-        // Agregar botón "Ver Pagos" en cada fila
         var originalRender = mgr.renderTabla.bind(mgr);
         mgr.renderTabla = function (items) {
             originalRender(items);

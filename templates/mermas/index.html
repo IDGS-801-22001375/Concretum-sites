@@ -43,7 +43,6 @@
     ) }}
 </div>
 
-{# Definimos las columnas (sin acciones) #}
 {% set mermas_columns = [
 {'field': 'fecha_registro', 'label': 'Fecha', 'sortable': true},
 {'field': 'tipo_material', 'label': 'Tipo', 'sortable': true},
@@ -54,7 +53,6 @@
 {'field': 'valor_monetario', 'label': 'Valor', 'sortable': true}
 ] %}
 
-{# Filtros personalizados #}
 {% set mermas_filters = [
 {'type': 'select', 'name': 'tipo', 'label_default': 'Todos los tipos',
 'options': [
@@ -165,24 +163,21 @@ modal_size='md') %}
     document.addEventListener('DOMContentLoaded', function () {
         cargarKPIs();
 
-        // Configurar los eventos de los selects dentro del modal
         document.getElementById('tipo_material').addEventListener('change', (e) => {
             cargarMateriales(e.target.value);
         });
 
         document.getElementById('material_id').addEventListener('change', actualizarStockDisponible);
 
-        // Cuando se presiona el botón "Registrar Merma" (id generado por el macro crud_table)
         document.getElementById('btn-nuevo-mermas').addEventListener('click', () => {
             document.getElementById('material_id').innerHTML = '<option value="">Primero seleccione tipo</option>';
             const pInfo = document.getElementById('stock-disponible');
             if (pInfo) pInfo.innerHTML = '';
         });
 
-        // Inicializamos el CrudManager para Mermas
         window.crudManagers['mermas'] = new CrudManager({
             id: 'mermas',
-            apiEndpoint: '/mermas', // Hace fetch GET a /mermas/api y POST a /mermas/guardar
+            apiEndpoint: '/mermas',
             sortBy: 'fecha_registro',
             columns: [
                 { field: 'fecha_registro', label: 'Fecha', sortable: true, render: (val) => val },
@@ -199,9 +194,8 @@ modal_size='md') %}
                 { field: 'responsable', label: 'Responsable', sortable: true, render: (val) => val || '—' },
                 { field: 'valor_monetario', label: 'Valor', sortable: true, render: (val) => `<span class="font-semibold text-red-400">$${parseFloat(val).toFixed(2)}</span>` }
             ],
-            formFields: [], // No necesitamos auto-fill porque en mermas solo insertamos, no editamos
+            formFields: [],
             onSubmit: function (formData) {
-                // Validación extra antes de enviar
                 const select = document.getElementById('material_id');
                 const selectedOpt = select.options[select.selectedIndex];
                 const stock = parseFloat(selectedOpt.dataset.stock);
@@ -209,10 +203,9 @@ modal_size='md') %}
 
                 if (cantidad > stock) {
                     mostrarAlerta('La cantidad de merma no puede superar el stock disponible.', 'error');
-                    return false; // Evita que se envíe el formulario
+                    return false;
                 }
 
-                // Si todo está bien, mandamos actualizar los KPIs cuando termine
                 setTimeout(cargarKPIs, 1000);
                 return formData;
             }

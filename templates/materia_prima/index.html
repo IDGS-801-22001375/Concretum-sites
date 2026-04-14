@@ -7,128 +7,135 @@
 
 {{ components.page_header('Gestión de Materia Prima', 'Control de materiales e inventario') }}
 
-<!-- KPIs -->
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
     {{ components.kpi_card(
-        'Total Materiales',
-        'total-materiales',
-        '0',
-        'slate',
-        '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>'
+    'Total Materiales',
+    'total-materiales',
+    '0',
+    'slate',
+    '<svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+    </svg>'
     ) }}
     {{ components.kpi_card(
-        'Materiales Críticos',
-        'materiales-criticos',
-        '0',
-        'red',
-        '<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>'
+    'Materiales Críticos',
+    'materiales-criticos',
+    '0',
+    'red',
+    '<svg class="w-6 h-6 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>'
     ) }}
     {{ components.kpi_card(
     'Valor Económico',
     'valor-economico',
     '0.00',
     'green',
-    '<svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>',
+    '<svg class="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>',
     moneda=config_empresa.moneda if config_empresa else 'MXN'
-) }}
+    ) }}
 </div>
 
-<!-- Table -->
 {{ components.crud_table(
-    id_table='materia-prima',
-    api_endpoint='/materia-prima',
-    title='Catálogo de Materia Prima',
-    columns=[
-        {'field': 'sku',           'label': 'SKU',    'sortable': true},
-        {'field': 'nombre',        'label': 'Nombre', 'sortable': true},
-        {'field': 'unidad_medida', 'label': 'Unidad', 'sortable': true},
-        {'field': 'stock',         'label': 'Stock',  'sortable': true},
-        {'field': 'es_activo',     'label': 'Estado', 'sortable': true}
-    ],
-    search_placeholder='Buscar por SKU o nombre...',
-    filters=[
-        {'type': 'select', 'name': 'active', 'label_default': 'Todos los estados',
-         'options': [
-            {'value': 'true',  'label': 'Activos'},
-            {'value': 'false', 'label': 'Inactivos'}
-         ]}
-    ],
-    btn_new_label='Nuevo Material'
+id_table='materia-prima',
+api_endpoint='/materia-prima',
+title='Catálogo de Materia Prima',
+columns=[
+{'field': 'sku', 'label': 'SKU', 'sortable': true},
+{'field': 'nombre', 'label': 'Nombre', 'sortable': true},
+{'field': 'unidad_medida', 'label': 'Unidad', 'sortable': true},
+{'field': 'stock', 'label': 'Stock', 'sortable': true},
+{'field': 'es_activo', 'label': 'Estado', 'sortable': true}
+],
+search_placeholder='Buscar por SKU o nombre...',
+filters=[
+{'type': 'select', 'name': 'active', 'label_default': 'Todos los estados',
+'options': [
+{'value': 'true', 'label': 'Activos'},
+{'value': 'false', 'label': 'Inactivos'}
+]}
+],
+btn_new_label='Nuevo Material'
 ) }}
 
-<!-- Modal -->
 {% set form_fields = [
-    {'name': 'sku',            'label': 'SKU',               'type': 'text',   'required': true,  'placeholder': 'Ej: CEM-001'},
-    {'name': 'nombre',         'label': 'Nombre',            'type': 'text',   'required': true,  'placeholder': 'Ej: Cemento Portland'},
-    {'name': 'unidad_medida',  'label': 'Unidad de Medida',  'type': 'select', 'required': true,
-     'options': [
-        {'value': 'KG',  'label': 'Kilogramos (KG)'},
-        {'value': 'TON', 'label': 'Toneladas (TON)'},
-        {'value': 'M3',  'label': 'Metros cúbicos (M3)'},
-        {'value': 'LTS', 'label': 'Litros (LTS)'}
-    ]},
-    {'name': 'proveedor_id',   'label': 'Proveedor',         'type': 'select', 'required': true,  'options': proveedores_options},
-    {'name': 'stock_minimo',   'label': 'Stock Mínimo',      'type': 'number', 'required': false, 'step': '0.001', 'placeholder': '0.000'},
-    {'name': 'costo_unitario', 'label': 'Costo Unitario',    'type': 'number', 'required': false, 'step': '0.01',  'placeholder': '0.00'}
+{'name': 'sku', 'label': 'SKU', 'type': 'text', 'required': true, 'placeholder': 'Ej: CEM-001'},
+{'name': 'nombre', 'label': 'Nombre', 'type': 'text', 'required': true, 'placeholder': 'Ej: Cemento Portland'},
+{'name': 'unidad_medida', 'label': 'Unidad de Medida', 'type': 'select', 'required': true,
+'options': [
+{'value': 'KG', 'label': 'Kilogramos (KG)'},
+{'value': 'TON', 'label': 'Toneladas (TON)'},
+{'value': 'M3', 'label': 'Metros cúbicos (M3)'},
+{'value': 'LTS', 'label': 'Litros (LTS)'}
+]},
+{'name': 'proveedor_id', 'label': 'Proveedor', 'type': 'select', 'required': true, 'options': proveedores_options},
+{'name': 'stock_minimo', 'label': 'Stock Mínimo', 'type': 'number', 'required': false, 'step': '0.001', 'placeholder':
+'0.000'},
+{'name': 'costo_unitario', 'label': 'Costo Unitario', 'type': 'number', 'required': false, 'step': '0.01',
+'placeholder': '0.00'}
 ] %}
 
 {% call components.crud_modal(
-    'materia-prima',
-    form_fields,
-    id_field='id_materia_prima',
-    modal_title='Material',
-    modal_size='md'
+'materia-prima',
+form_fields,
+id_field='id_materia_prima',
+modal_title='Material',
+modal_size='md'
 ) %}
 {% endcall %}
 
 <script src="{{ url_for('static', filename='js/crud.js') }}"></script>
 <script>
-(function() {
-    var mgr = new CrudManager({
-        id: 'materia-prima',
-        apiEndpoint: '/materia-prima',
-        sortBy: 'nombre',
-        columns: [
-            {
-                field: 'sku', 
-                label: 'SKU', 
-                sortable: true,
-                render: function(val) {
-                    return `<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[#1E3A5F] text-white">${val}</span>`;
-                }
-            },
-            { 
-                field: 'nombre', 
-                label: 'Nombre', 
-                sortable: true,
-                render: function(val, item) {
-                    // Mostrar el nombre y debajo el proveedor
-                    return `<div>
+    (function () {
+        var mgr = new CrudManager({
+            id: 'materia-prima',
+            apiEndpoint: '/materia-prima',
+            sortBy: 'nombre',
+            columns: [
+                {
+                    field: 'sku',
+                    label: 'SKU',
+                    sortable: true,
+                    render: function (val) {
+                        return `<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-medium bg-[#1E3A5F] text-white">${val}</span>`;
+                    }
+                },
+                {
+                    field: 'nombre',
+                    label: 'Nombre',
+                    sortable: true,
+                    render: function (val, item) {
+                        return `<div>
                                 <span class="font-medium text-white">${val}</span>
                                 <br>
                                 <span class="text-xs text-gray-400">${item.proveedor_nombre || 'Proveedor no asignado'}</span>
                             </div>`;
-                }
-            },
-            {
-                field: 'unidad_medida', 
-                label: 'Unidad', 
-                sortable: true,
-                render: function(val) {
-                    return `<span class="text-sm text-gray-400">${val}</span>`;
-                }
-            },
-            {
-                field: 'stock', 
-                label: 'Stock', 
-                sortable: true,
-                render: function(val, item) {
-                    var stock = parseFloat(val);
-                    var minimo = parseFloat(item.stock_minimo);
-                    var critical = stock < minimo;
-                    
-                    if (critical) {
-                        return `<div class="flex items-center gap-2">
+                    }
+                },
+                {
+                    field: 'unidad_medida',
+                    label: 'Unidad',
+                    sortable: true,
+                    render: function (val) {
+                        return `<span class="text-sm text-gray-400">${val}</span>`;
+                    }
+                },
+                {
+                    field: 'stock',
+                    label: 'Stock',
+                    sortable: true,
+                    render: function (val, item) {
+                        var stock = parseFloat(val);
+                        var minimo = parseFloat(item.stock_minimo);
+                        var critical = stock < minimo;
+
+                        if (critical) {
+                            return `<div class="flex items-center gap-2">
                             <span class="font-semibold text-red-400">${stock.toFixed(3)}</span>
                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400">
                                 <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,66 +144,69 @@
                                 Bajo
                             </span>
                         </div>`;
+                        }
+                        return `<span class="font-medium text-white">${stock.toFixed(3)}</span>`;
                     }
-                    return `<span class="font-medium text-white">${stock.toFixed(3)}</span>`;
-                }
-            },
-            {
-                field: 'es_activo', 
-                label: 'Estado', 
-                sortable: true,
-                render: function(val) {
-                    if (val) {
-                        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400">
+                },
+                {
+                    field: 'es_activo',
+                    label: 'Estado',
+                    sortable: true,
+                    render: function (val) {
+                        if (val) {
+                            return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Activo
                         </span>`;
-                    }
-                    return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">
+                        }
+                        return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/20 text-red-400">
                         <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Inactivo
                     </span>`;
+                    }
                 }
-            }
-        ],
-        formFields: [
-            { name: 'sku',            label: 'SKU',              type: 'text',   required: true },
-            { name: 'nombre',         label: 'Nombre',           type: 'text',   required: true },
-            { name: 'unidad_medida',  label: 'Unidad de medida', type: 'select', required: true,
-              options: [
-                {value:'KG',  label:'Kilogramos (KG)'},
-                {value:'TON', label:'Toneladas (TON)'},
-                {value:'M3',  label:'Metros cúbicos (M3)'},
-                {value:'LTS', label:'Litros (LTS)'}
-              ]},
-            { name: 'proveedor_id',   label: 'Proveedor',        type: 'select', required: true,
-              options: {{ proveedores_options | tojson }} },
-            { name: 'stock_minimo',   label: 'Stock mínimo',     type: 'number', required: false, step: '0.001' },
-            { name: 'costo_unitario', label: 'Costo unitario',   type: 'number', required: false, step: '0.01' }
+            ],
+            formFields: [
+                { name: 'sku', label: 'SKU', type: 'text', required: true },
+                { name: 'nombre', label: 'Nombre', type: 'text', required: true },
+                {
+                    name: 'unidad_medida', label: 'Unidad de medida', type: 'select', required: true,
+                    options: [
+                        { value: 'KG', label: 'Kilogramos (KG)' },
+                        { value: 'TON', label: 'Toneladas (TON)' },
+                        { value: 'M3', label: 'Metros cúbicos (M3)' },
+                        { value: 'LTS', label: 'Litros (LTS)' }
+                    ]
+                },
+                {
+                    name: 'proveedor_id', label: 'Proveedor', type: 'select', required: true,
+                    options: {{ proveedores_options | tojson }} },
+    { name: 'stock_minimo', label: 'Stock mínimo', type: 'number', required: false, step: '0.001' },
+    { name: 'costo_unitario', label: 'Costo unitario', type: 'number', required: false, step: '0.01' }
         ]
     });
 
     var originalRender = mgr.renderTabla.bind(mgr);
-    mgr.renderTabla = function(items) {
+    mgr.renderTabla = function (items) {
         originalRender(items);
         if (!items || !items.length) return;
-        
+
         var total = items.length;
-        var criticos = items.filter(function(i) {
+        var criticos = items.filter(function (i) {
             return parseFloat(i.stock) < parseFloat(i.stock_minimo);
         }).length;
-        var valor = items.reduce(function(sum, i) {
+        var valor = items.reduce(function (sum, i) {
             return sum + parseFloat(i.stock) * parseFloat(i.costo_unitario || 0);
         }, 0);
-        
+
         var elTotal = document.getElementById('total-materiales');
         var elCrit = document.getElementById('materiales-criticos');
         var elValor = document.getElementById('valor-economico');
-        
+
         if (elTotal) elTotal.textContent = total;
         if (elCrit) elCrit.textContent = criticos;
-        if (elValor) elValor.textContent = window.APP_CONFIG.moneda + ' ' + valor.toLocaleString('es-MX', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        if (elValor) elValor.textContent = window.APP_CONFIG.moneda + ' ' + valor.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
 
     window.crudManagers['materia-prima'] = mgr;
-})();
+}) ();
 </script>
 {% endblock %}

@@ -1,7 +1,6 @@
 from datetime import datetime
 from .extensions import db
 
-# ====================== PRODUCCIÓN ======================
 class Produccion(db.Model):
     __tablename__ = 'producciones'
 
@@ -31,7 +30,6 @@ class Produccion(db.Model):
     def id(self):
         return self.id_produccion
     
-# ====================== PRODUCCIÓN CONSUMO ======================
 class ProduccionConsumo(db.Model):
     __tablename__ = 'produccion_consumo'
 
@@ -56,7 +54,6 @@ class ProduccionConsumo(db.Model):
     def id(self):
         return self.id_consumo
     
-# ====================== LOTES DE PRODUCCIÓN ======================
 class LoteProduccion(db.Model):
     __tablename__ = 'lotes_produccion'
 

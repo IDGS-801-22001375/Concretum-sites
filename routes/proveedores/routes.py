@@ -30,19 +30,14 @@ def registrar_auditoria(usuario_accion, accion, detalles):
     
     threading.Thread(target=_guardar_en_mongo, args=(datos_auditoria,)).start()
 
-# ----------------------------------------------------------------------
-# VISTA PRINCIPAL
-# ----------------------------------------------------------------------
 @proveedores_bp.route('/proveedores')
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
 def index():
-    # Calculamos KPIs
     total_activos = Proveedor.query.filter_by(es_activo=True).count()
     volumen_mensual = db.session.query(func.sum(Compra.total)).filter(
         Compra.fecha_compra >= datetime.datetime.utcnow() - datetime.timedelta(days=30)
     ).scalar() or 0
-    # Cuentas vencidas: pagos con fecha_vencimiento < hoy y fecha_pago nulo
     hoy = datetime.date.today()
     cuentas_vencidas = PagoProveedor.query.filter(
         PagoProveedor.fecha_vencimiento < hoy,
@@ -61,9 +56,6 @@ def index():
     }
     return render_template('proveedores/index.html', kpis=kpis)
 
-# ----------------------------------------------------------------------
-# API PARA OBTENER PROVEEDORES (formato tarjetas)
-# ----------------------------------------------------------------------
 @proveedores_bp.route('/proveedores/api', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
@@ -92,7 +84,6 @@ def api_proveedores():
     if categoria_filter:
         query = query.filter(Proveedor.categoria == categoria_filter)
 
-    # Ordenamiento
     if sort_order == 'asc':
         query = query.order_by(asc(getattr(Proveedor, sort_by, Proveedor.razon_social)))
     else:
@@ -128,9 +119,6 @@ def api_proveedores():
         'per_page': paginated.per_page
     })
 
-# ----------------------------------------------------------------------
-# GUARDAR PROVEEDOR (incluyendo nuevos campos)
-# ----------------------------------------------------------------------
 @proveedores_bp.route('/proveedores/guardar', methods=['POST'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
@@ -173,9 +161,6 @@ def guardar_proveedor():
         registrar_auditoria(current_user.id, "Crear Proveedor", f"Proveedor creado: {prov.razon_social}")
         return jsonify({'success': True, 'message': 'Proveedor creado.'})
 
-# ----------------------------------------------------------------------
-# OBTENER UN PROVEEDOR (para edición)
-# ----------------------------------------------------------------------
 @proveedores_bp.route('/proveedores/obtener/<int:id>', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
@@ -196,9 +181,6 @@ def obtener_proveedor(id):
         'es_activo': prov.es_activo
     })
 
-# ----------------------------------------------------------------------
-# ALTERNAR ESTADO
-# ----------------------------------------------------------------------
 @proveedores_bp.route('/proveedores/alternar_estado/<int:id>', methods=['POST'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
@@ -210,15 +192,11 @@ def alternar_estado(id):
     db.session.commit()
     return jsonify({'success': True, 'message': f'Proveedor {estado_txt.lower()} correctamente.'})
 
-# ----------------------------------------------------------------------
-# HISTORIAL DE PAGOS DE UN PROVEEDOR
-# ----------------------------------------------------------------------
 @proveedores_bp.route('/proveedores/<int:id>/pagos', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
 def pagos_proveedor(id):
     proveedor = Proveedor.query.get_or_404(id)
-    # Obtener todas las compras y sus pagos
     compras = proveedor.compras.all()
     pagos = []
     for compra in compras:

@@ -38,7 +38,6 @@ def index():
     form = ClienteForm()
     total_activos = Cliente.query.filter_by(es_activo=1).count()
     
-    # Clientes nuevos este mes
     mes_actual = datetime.datetime.now().replace(day=1, hour=0, minute=0, second=0)
     nuevos_mes = Cliente.query.filter(Cliente.fecha_creacion >= mes_actual).count()
     
@@ -107,10 +106,8 @@ def guardar_cliente():
     id_cli = data.get('id_cliente')
     
     if id_cli:
-        # Edición
         cliente = Cliente.query.get_or_404(int(id_cli))
         
-        # Validar RFC único si se cambia
         if data.get('rfc') and data.get('rfc') != cliente.rfc and Cliente.query.filter_by(rfc=data.get('rfc')).first():
             return jsonify({'success': False, 'errors': {'rfc': 'El RFC ya está registrado en otro cliente.'}}), 400
             
@@ -132,7 +129,6 @@ def guardar_cliente():
         registrar_auditoria(current_user.id, "Editar Cliente", f"Cliente editado: {cliente.razon_social}")
         return jsonify({'success': True, 'message': 'Cliente actualizado exitosamente.'})
     else:
-        # Nuevo Cliente
         if data.get('rfc') and Cliente.query.filter_by(rfc=data.get('rfc')).first():
             return jsonify({'success': False, 'errors': {'rfc': 'El RFC ya está registrado.'}}), 400
             
@@ -143,7 +139,7 @@ def guardar_cliente():
             es_activo=1
         )
         db.session.add(nuevo_cliente)
-        db.session.flush() # Para obtener el ID generado
+        db.session.flush() 
         
         detalle = ClienteDetalle(
             cliente_id=nuevo_cliente.id_cliente,

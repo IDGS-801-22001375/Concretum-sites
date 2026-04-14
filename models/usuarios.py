@@ -2,14 +2,12 @@ from flask_security import UserMixin, RoleMixin
 from datetime import datetime
 from .extensions import db
 
-# ====================== TABLA INTERMEDIA ======================
 usuario_roles = db.Table('usuario_roles',
     db.Column('usuario_id', db.BigInteger, db.ForeignKey('usuarios.id_usuario', ondelete='CASCADE'), primary_key=True),
     db.Column('rol_id',     db.BigInteger, db.ForeignKey('roles.id_rol',     ondelete='RESTRICT'), primary_key=True),
     db.Column('asignado_en', db.DateTime, default=datetime.utcnow)
 )
 
-# ====================== ROL ======================
 class Role(db.Model, RoleMixin):
     __tablename__ = 'roles'
 
@@ -22,7 +20,6 @@ class Role(db.Model, RoleMixin):
     def id(self):
         return self.id_rol
 
-# ====================== USUARIO ======================
 class User(db.Model, UserMixin):
     __tablename__ = 'usuarios'
 

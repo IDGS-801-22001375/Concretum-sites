@@ -7,118 +7,120 @@
 
 {{ components.page_header('Gestión de Usuarios', 'Administra los usuarios y permisos del sistema') }}
 
-{# Preparamos las opciones de roles para el filtro #}
 {% set role_options = [] %}
 {% for role in roles_list %}
-    {% set _ = role_options.append({'value': role.id_rol, 'label': role.name}) %}
+{% set _ = role_options.append({'value': role.id_rol, 'label': role.name}) %}
 {% endfor %}
 
 {{ components.crud_table(
-    id_table='usuarios',
-    api_endpoint='/usuarios',
-    title='Usuarios del Sistema',
-    columns=[
-        {'field': 'username', 'label': 'Nombre', 'sortable': true},
-        {'field': 'email', 'label': 'Email', 'sortable': true},
-        {'field': 'roles', 'label': 'Roles', 'sortable': false},
-        {'field': 'es_activo', 'label': 'Estado', 'sortable': true},
-        {'field': 'ultima_sesion', 'label': 'Última Conexión', 'sortable': true}
-    ],
-    search_placeholder='Buscar por nombre o email...',
-    filters=[
-        {'type': 'select', 'name': 'role', 'label_default': 'Todos los roles', 'options': role_options},
-        {'type': 'select', 'name': 'active', 'label_default': 'Todos los estados', 'options': [
-            {'value': 'true', 'label': 'Activos'},
-            {'value': 'false', 'label': 'Inactivos'}
-        ]}
-    ],
-    btn_new_label='Nuevo Usuario'
+id_table='usuarios',
+api_endpoint='/usuarios',
+title='Usuarios del Sistema',
+columns=[
+{'field': 'username', 'label': 'Nombre', 'sortable': true},
+{'field': 'email', 'label': 'Email', 'sortable': true},
+{'field': 'roles', 'label': 'Roles', 'sortable': false},
+{'field': 'es_activo', 'label': 'Estado', 'sortable': true},
+{'field': 'ultima_sesion', 'label': 'Última Conexión', 'sortable': true}
+],
+search_placeholder='Buscar por nombre o email...',
+filters=[
+{'type': 'select', 'name': 'role', 'label_default': 'Todos los roles', 'options': role_options},
+{'type': 'select', 'name': 'active', 'label_default': 'Todos los estados', 'options': [
+{'value': 'true', 'label': 'Activos'},
+{'value': 'false', 'label': 'Inactivos'}
+]}
+],
+btn_new_label='Nuevo Usuario'
 ) }}
 
 {% set form_fields = [
-    {'name': 'username', 'label': 'Nombre de Usuario', 'type': 'text', 'required': true, 'placeholder': 'Ej: jperez'},
-    {'name': 'email', 'label': 'Correo Electrónico', 'type': 'email', 'required': true, 'placeholder': 'Ej: jperez@concretum.com'}
+{'name': 'username', 'label': 'Nombre de Usuario', 'type': 'text', 'required': true, 'placeholder': 'Ej: jperez'},
+{'name': 'email', 'label': 'Correo Electrónico', 'type': 'email', 'required': true, 'placeholder': 'Ej:
+jperez@concretum.com'}
 ] %}
 
 {% call components.crud_modal('usuarios', form_fields, id_field='id_usuario', modal_title='Usuario') %}
-    
-    <!-- Toggle Cambiar Contraseña -->
-    <div class="sm:col-span-2 pt-2">
-        <label class="relative inline-flex items-center cursor-pointer group">
-            <input type="checkbox" name="cambiar_password" id="cambiar_password" class="sr-only peer">
-            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/20 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-blue-600"></div>
-            <span class="ms-3 text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                Cambiar Contraseña
-            </span>
-        </label>
-    </div>
-    
-    <!-- Password Fields (Hidden by default) -->
-    <div id="password-fields" class="sm:col-span-2 hidden">
-        <div class="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label for="password" class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
-                        Nueva Contraseña
-                    </label>
-                    <input type="password" name="password" id="password" placeholder="••••••••"
-                        class="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all">
-                    <p class="error-password hidden mt-1.5 text-xs text-red-500 font-medium"></p>
-                </div>
-                <div>
-                    <label for="confirm_password" class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
-                        Confirmar Contraseña
-                    </label>
-                    <input type="password" name="confirm_password" id="confirm_password" placeholder="••••••••"
-                        class="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all">
-                    <p class="error-confirm_password hidden mt-1.5 text-xs text-red-500 font-medium"></p>
-                </div>
+
+<div class="sm:col-span-2 pt-2">
+    <label class="relative inline-flex items-center cursor-pointer group">
+        <input type="checkbox" name="cambiar_password" id="cambiar_password" class="sr-only peer">
+        <div
+            class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500/20 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-blue-600">
+        </div>
+        <span
+            class="ms-3 text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+            Cambiar Contraseña
+        </span>
+    </label>
+</div>
+
+<div id="password-fields" class="sm:col-span-2 hidden">
+    <div
+        class="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label for="password"
+                    class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Nueva Contraseña
+                </label>
+                <input type="password" name="password" id="password" placeholder="••••••••"
+                    class="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all">
+                <p class="error-password hidden mt-1.5 text-xs text-red-500 font-medium"></p>
+            </div>
+            <div>
+                <label for="confirm_password"
+                    class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                    Confirmar Contraseña
+                </label>
+                <input type="password" name="confirm_password" id="confirm_password" placeholder="••••••••"
+                    class="w-full px-4 py-3 text-sm rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all">
+                <p class="error-confirm_password hidden mt-1.5 text-xs text-red-500 font-medium"></p>
             </div>
         </div>
     </div>
-    
-    <!-- Roles Section -->
-    <div class="sm:col-span-2">
-        <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-3">
-            Roles Asignados <span class="text-red-500 ml-0.5">*</span>
+</div>
+
+<div class="sm:col-span-2">
+    <label class="block text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-3">
+        Roles Asignados <span class="text-red-500 ml-0.5">*</span>
+    </label>
+    <div id="roles-checkboxes" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {% for role in roles_list %}
+        <label
+            class="relative flex items-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 group">
+            <input type="checkbox" name="roles" value="{{ role.id_rol }}"
+                class="w-4 h-4 text-blue-600 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500 focus:ring-2">
+            <span
+                class="ms-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                {{ role.name }}
+            </span>
         </label>
-        <div id="roles-checkboxes" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {% for role in roles_list %}
-            <label class="relative flex items-center p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600 cursor-pointer transition-all has-[:checked]:border-blue-500 has-[:checked]:bg-blue-50 dark:has-[:checked]:bg-blue-900/20 group">
-                <input type="checkbox" name="roles" value="{{ role.id_rol }}" 
-                    class="w-4 h-4 text-blue-600 bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500 focus:ring-2">
-                <span class="ms-2.5 text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                    {{ role.name }}
-                </span>
-            </label>
-            {% endfor %}
-        </div>
-        <p class="error-roles hidden mt-1.5 text-xs text-red-500 font-medium"></p>
+        {% endfor %}
     </div>
-    
+    <p class="error-roles hidden mt-1.5 text-xs text-red-500 font-medium"></p>
+</div>
+
 {% endcall %}
 
 <script src="{{ url_for('static', filename='js/crud.js') }}"></script>
 <script>
     function fillUserForm(item) {
-        // Reset roles checkboxes
         document.querySelectorAll('input[name="roles"]').forEach(cb => cb.checked = false);
-        
-        // Check corresponding roles
+
         if (item.roles) {
             item.roles.forEach(roleId => {
                 const cb = document.querySelector(`input[name="roles"][value="${roleId}"]`);
                 if (cb) cb.checked = true;
             });
         }
-        
-        // Reset password fields
+
         document.getElementById('cambiar_password').checked = false;
         document.getElementById('password-fields').classList.add('hidden');
         document.getElementById('password').value = '';
         document.getElementById('confirm_password').value = '';
     }
-    
+
     function escapeHtml(text) {
         if (!text) return '';
         const div = document.createElement('div');
@@ -126,44 +128,44 @@
         return div.innerHTML;
     }
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         window.crudManagers['usuarios'] = new CrudManager({
             id: 'usuarios',
             apiEndpoint: '/usuarios',
             sortBy: 'username',
             columns: [
-                { 
-                    field: 'username', 
-                    label: 'Nombre', 
+                {
+                    field: 'username',
+                    label: 'Nombre',
                     sortable: true,
-                    render: function(val) {
+                    render: function (val) {
                         return `<span class="font-semibold text-slate-900 dark:text-white">${escapeHtml(val)}</span>`;
                     }
                 },
-                { 
-                    field: 'email', 
-                    label: 'Email', 
+                {
+                    field: 'email',
+                    label: 'Email',
                     sortable: true,
-                    render: function(val) {
+                    render: function (val) {
                         return `<span class="text-slate-600 dark:text-slate-400">${escapeHtml(val)}</span>`;
                     }
                 },
-                { 
-                    field: 'roles', 
-                    label: 'Roles', 
-                    sortable: false, 
-                    render: function(val) {
+                {
+                    field: 'roles',
+                    label: 'Roles',
+                    sortable: false,
+                    render: function (val) {
                         if (!val || !val.length) return '<span class="text-slate-400">Sin roles</span>';
-                        return val.map(r => 
+                        return val.map(r =>
                             `<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 mr-1">${escapeHtml(r.name)}</span>`
                         ).join('');
-                    } 
+                    }
                 },
-                { 
-                    field: 'es_activo', 
-                    label: 'Estado', 
-                    sortable: true, 
-                    render: function(val) {
+                {
+                    field: 'es_activo',
+                    label: 'Estado',
+                    sortable: true,
+                    render: function (val) {
                         if (val) {
                             return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Activo
@@ -174,13 +176,13 @@
                         </span>`;
                     }
                 },
-                { 
-                    field: 'ultima_sesion', 
-                    label: 'Última Conexión', 
-                    sortable: true, 
-                    render: function(val) {
-                        return val 
-                            ? `<span class="text-sm text-slate-600 dark:text-slate-400">${val}</span>` 
+                {
+                    field: 'ultima_sesion',
+                    label: 'Última Conexión',
+                    sortable: true,
+                    render: function (val) {
+                        return val
+                            ? `<span class="text-sm text-slate-600 dark:text-slate-400">${val}</span>`
                             : `<span class="text-sm text-slate-400 italic">Nunca</span>`;
                     }
                 }
@@ -193,13 +195,12 @@
         });
     });
 
-    // Toggle password fields visibility
-    document.addEventListener('change', function(e) {
+    document.addEventListener('change', function (e) {
         if (e.target && e.target.id === 'cambiar_password') {
             const passwordFields = document.getElementById('password-fields');
             const passwordInput = document.getElementById('password');
             const confirmInput = document.getElementById('confirm_password');
-            
+
             if (e.target.checked) {
                 passwordFields.classList.remove('hidden');
                 passwordInput.required = true;

@@ -1,7 +1,6 @@
 from datetime import datetime
 from .extensions import db
 
-# ====================== MATERIA PRIMA ======================
 class MateriaPrima(db.Model):
     __tablename__ = 'materias_primas'
 
@@ -28,7 +27,6 @@ class MateriaPrima(db.Model):
         return self.id_materia_prima
 
 
-# ====================== EXISTENCIA DE MATERIA PRIMA ======================
 class ExistenciaMateriaPrima(db.Model):
     __tablename__ = 'existencias_materia_prima'
 

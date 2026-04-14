@@ -31,9 +31,6 @@ def registrar_auditoria(usuario_accion, accion, detalles):
     
     threading.Thread(target=_guardar_en_mongo, args=(datos_auditoria,)).start()
 
-# ----------------------------------------------------------------------
-# VISTA PRINCIPAL
-# ----------------------------------------------------------------------
 @compras_bp.route('/compras')
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
@@ -60,9 +57,6 @@ def index():
                            proveedores_options=proveedores_options,
                            materias_options=materias_options)
 
-# ----------------------------------------------------------------------
-# API LISTAR COMPRAS
-# ----------------------------------------------------------------------
 @compras_bp.route('/compras/api', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
@@ -95,7 +89,6 @@ def api_compras():
 
     items = []
     for c in paginated.items:
-        # Construir resumen de productos (máximo 3 para no saturar)
         productos_resumen = []
         for det in c.detalles[:3]:
             mp = det.materia_prima
@@ -108,7 +101,7 @@ def api_compras():
             'id': c.id,
             'folio': c.folio,
             'proveedor_nombre': c.proveedor.razon_social,
-            'fecha_compra': c.fecha_compra.strftime('%Y-%m-%d %H:%M'),  # ya tiene hora
+            'fecha_compra': c.fecha_compra.strftime('%Y-%m-%d %H:%M'), 
             'total': float(c.total),
             'estado': c.estado,
             'productos_resumen': resumen_str
@@ -122,9 +115,6 @@ def api_compras():
         'per_page': paginated.per_page
     })
 
-# ----------------------------------------------------------------------
-# OBTENER COMPRA (para editar)
-# ----------------------------------------------------------------------
 @compras_bp.route('/compras/obtener/<int:id>', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
@@ -137,20 +127,16 @@ def obtener_compra(id):
         'precio_unitario': float(d.precio_unitario),
         'subtotal': float(d.total_linea)
     } for d in compra.detalles]
-    # Devolver solo la fecha (YYYY-MM-DD) para el input date
     return jsonify({
         'id': compra.id,
         'folio': compra.folio,
         'proveedor_id': compra.proveedor_id,
-        'fecha_compra': compra.fecha_compra.strftime('%Y-%m-%d'),  # solo fecha
+        'fecha_compra': compra.fecha_compra.strftime('%Y-%m-%d'), 
         'total': float(compra.total),
         'estado': compra.estado,
         'detalles': detalles
     })
 
-# ----------------------------------------------------------------------
-# GUARDAR COMPRA (CREAR O EDITAR)
-# ----------------------------------------------------------------------
 @compras_bp.route('/compras/guardar', methods=['POST'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
@@ -158,18 +144,15 @@ def guardar_compra():
     data = request.form
     id_compra = data.get('id_compra')
     
-    # Validar fecha (solo fecha, se convertirá a datetime con hora 23:59:59)
     fecha_str = data.get('fecha_compra')
     if not fecha_str:
         return jsonify({'success': False, 'errors': {'fecha_compra': 'La fecha es obligatoria.'}}), 400
     try:
         fecha_compra = datetime.datetime.strptime(fecha_str, '%Y-%m-%d')
-        # Establecer hora al final del día (23:59:59)
         fecha_compra = fecha_compra.replace(hour=23, minute=59, second=59)
     except ValueError:
         return jsonify({'success': False, 'errors': {'fecha_compra': 'Formato de fecha inválido.'}}), 400
     
-    # Validar detalles
     detalles_json = data.get('detalles_json')
     if not detalles_json:
         return jsonify({'success': False, 'errors': {'general': 'Debe agregar al menos un material.'}}), 400
@@ -186,7 +169,6 @@ def guardar_compra():
     total = sum(float(d['cantidad']) * float(d['precio_unitario']) for d in detalles)
     
     if id_compra:
-        # Editar (solo si está CREADA)
         compra = Compra.query.get_or_404(int(id_compra))
         if compra.estado != 'CREADA':
             return jsonify({'success': False, 'errors': {'general': 'No se puede editar una compra ya recibida o cancelada.'}}), 400
@@ -194,7 +176,6 @@ def guardar_compra():
         compra.proveedor_id = int(data['proveedor_id'])
         compra.fecha_compra = fecha_compra
         compra.total = total
-        # Eliminar detalles antiguos y crear nuevos
         CompraDetalle.query.filter_by(compra_id=compra.id).delete()
         for d in detalles:
             detalle = CompraDetalle(
@@ -209,7 +190,6 @@ def guardar_compra():
         registrar_auditoria(current_user.id, "Editar Compra", f"Compra editada: {compra.folio}")
         return jsonify({'success': True, 'message': 'Compra actualizada correctamente.'})
     else:
-        # Crear nueva
         folio = f"OC-{datetime.datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:6].upper()}"
         compra = Compra(
             proveedor_id=int(data['proveedor_id']),
@@ -243,9 +223,6 @@ def guardar_compra():
         registrar_auditoria(current_user.id, "Crear Compra", f"Compra creada: {compra.folio}")
         return jsonify({'success': True, 'message': f'Compra creada con folio {folio}.'})
 
-# ----------------------------------------------------------------------
-# CAMBIAR ESTADO (CON ACTUALIZACIÓN DE STOCK)
-# ----------------------------------------------------------------------
 @compras_bp.route('/compras/cambiar_estado/<int:id>', methods=['POST'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
@@ -287,7 +264,7 @@ def cambiar_estado(id):
         
         historial = HistorialCompra(
             compra_id=compra.id,
-            accion='ACTUALIZADA' if nuevo_estado != 'CREADA' else 'CREADA', # <--- CAMBIO AQUÍ
+            accion='ACTUALIZADA' if nuevo_estado != 'CREADA' else 'CREADA', 
             modificado_por=current_user.id,
             comentario=f"Cambio de estado: {estado_anterior} -> {nuevo_estado}. {observaciones}"
         )
@@ -301,9 +278,7 @@ def cambiar_estado(id):
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 
-# ----------------------------------------------------------------------
-# ELIMINAR COMPRA (solo CREADA)
-# ----------------------------------------------------------------------
+
 @compras_bp.route('/compras/eliminar/<int:id>', methods=['DELETE'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
@@ -382,22 +357,16 @@ def generar_compra_automatica():
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error al generar la compra: {str(e)}'}), 500
     
-# ----------------------------------------------------------------------
-# DETALLE DE COMPRA (página completa)
-# ----------------------------------------------------------------------
 @compras_bp.route('/compras/detalle/<int:id>')
 @login_required
 @roles_accepted('ADMINISTRADOR', 'COMPRAS')
 def detalle_compra(id):
     from sqlalchemy.orm import joinedload
-    # Cargar la compra con detalles, materia prima e historial (pero no pagos, porque es dynamic)
     compra = Compra.query.options(
         joinedload(Compra.detalles).joinedload(CompraDetalle.materia_prima),
         joinedload(Compra.historial).joinedload(HistorialCompra.usuario)
     ).get_or_404(id)
     
-    # Los pagos se cargarán de forma perezosa (lazy='dynamic') cuando se acceda a compra.pagos
-    # Calcular total de pagos (si los hay)
     total_pagado = sum(p.monto for p in compra.pagos if p.estatus == 'PAGADO')
     saldo_pendiente = compra.total - total_pagado
     

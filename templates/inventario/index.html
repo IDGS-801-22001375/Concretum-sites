@@ -251,7 +251,6 @@ modal_size='md') %}
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Tabs
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabPanels = document.querySelectorAll('.tab-panel');
 
@@ -406,7 +405,6 @@ modal_size='md') %}
             });
         }
 
-        // Lógica del Modal
         async function cargarProductosSelector() {
             try {
                 const res = await fetch('/stock/inventario/productos-lista');
@@ -422,13 +420,11 @@ modal_size='md') %}
             } catch (e) { console.error(e); }
         }
 
-        // Asignamos la función al botón global y cargamos productos antes de abrir
         window.abrirModalMovimiento = async function () {
             await cargarProductosSelector();
             window.openModal_movimiento();
         };
 
-        // Interceptar el envío del formulario del macro
         document.getElementById('form-movimiento').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
@@ -454,7 +450,6 @@ modal_size='md') %}
             }
         });
 
-        // Eventos de búsqueda con debounce
         let debounceTimer;
         const debounce = (fn, delay = 300) => {
             clearTimeout(debounceTimer);
@@ -466,7 +461,6 @@ modal_size='md') %}
         document.getElementById('search-movimientos').addEventListener('input', () => debounce(() => cargarMovimientos()));
         document.getElementById('filter-tipo').addEventListener('change', () => cargarMovimientos());
 
-        // Carga inicial
         cargarKPIs();
         cargarProductos();
     });

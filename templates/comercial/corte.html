@@ -7,7 +7,6 @@
 
 {{ components.page_header('Corte de Caja', 'Control de ingresos y cierre diario de operaciones') }}
 
-<!-- Info del período actual -->
 <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] p-6 mb-8">
   <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
     <div class="flex items-center gap-4">
@@ -35,7 +34,6 @@
   </div>
 </div>
 
-<!-- KPIs -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
   {{ components.kpi_card(
   'Fondo Inicial',
@@ -82,10 +80,8 @@
   ) }}
 </div>
 
-<!-- Grid Principal -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
-  <!-- Desglose por Forma de Pago -->
   <div class="lg:col-span-2 bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden">
     <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
       <h2 class="text-lg font-bold text-white">Desglose por Forma de Pago</h2>
@@ -154,7 +150,6 @@
     </div>
   </div>
 
-  <!-- Balance General -->
   <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden flex flex-col">
     <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
       <h2 class="text-lg font-bold text-white">Balance General</h2>
@@ -221,7 +216,6 @@
   </div>
 </div>
 
-<!-- Registro Histórico -->
 <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden">
   <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
     <h2 class="text-lg font-bold text-white">Registro Histórico</h2>

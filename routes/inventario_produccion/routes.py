@@ -31,9 +31,6 @@ def registrar_auditoria(usuario_accion, accion, detalles):
     
     threading.Thread(target=_guardar_en_mongo, args=(datos_auditoria,)).start()
 
-# ----------------------------------------------------------------------
-# VISTA PRINCIPAL
-# ----------------------------------------------------------------------
 @stock_bp.route('/inventario')
 @login_required
 @roles_accepted('ADMINISTRADOR', 'ALMACEN', 'PRODUCCION')
@@ -41,9 +38,6 @@ def index():
     return render_template('inventario/index.html')
 
 
-# ----------------------------------------------------------------------
-# API: PRODUCTOS TERMINADOS (con stock)
-# ----------------------------------------------------------------------
 @stock_bp.route('/inventario/api/productos', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'ALMACEN', 'PRODUCCION')
@@ -91,10 +85,6 @@ def api_productos():
         'per_page': paginated.per_page
     })
 
-
-# ----------------------------------------------------------------------
-# API: MATERIA PRIMA (stock actual)
-# ----------------------------------------------------------------------
 @stock_bp.route('/inventario/api/materia-prima', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'ALMACEN', 'PRODUCCION')
@@ -143,10 +133,6 @@ def api_materia_prima():
         'per_page': paginated.per_page
     })
 
-
-# ----------------------------------------------------------------------
-# API: PRODUCCIONES EN PROCESO
-# ----------------------------------------------------------------------
 @stock_bp.route('/inventario/api/producciones', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'ALMACEN', 'PRODUCCION')
@@ -190,10 +176,6 @@ def api_producciones():
         'per_page': paginated.per_page
     })
 
-
-# ----------------------------------------------------------------------
-# API: MOVIMIENTOS DE INVENTARIO
-# ----------------------------------------------------------------------
 @stock_bp.route('/inventario/api/movimientos', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'ALMACEN', 'PRODUCCION')
@@ -244,15 +226,10 @@ def api_movimientos():
         'per_page': paginated.per_page
     })
 
-
-# ----------------------------------------------------------------------
-# REGISTRAR MOVIMIENTO
-# ----------------------------------------------------------------------
 @stock_bp.route('/inventario/movimiento', methods=['POST'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'ALMACEN', 'PRODUCCION')
 def registrar_movimiento():
-    # Cambiado a request.form para estandarizar con CrudManager
     data = request.form
 
     producto_id = data.get('producto_id')
@@ -298,10 +275,6 @@ def registrar_movimiento():
 
     return jsonify({'success': True, 'message': 'Movimiento registrado correctamente.'})
 
-
-# ----------------------------------------------------------------------
-# LISTA DE PRODUCTOS (Para select de movimientos)
-# ----------------------------------------------------------------------
 @stock_bp.route('/inventario/productos-lista', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'ALMACEN', 'PRODUCCION')
@@ -319,10 +292,6 @@ def productos_lista():
 
     return jsonify({'items': items})
 
-
-# ----------------------------------------------------------------------
-# KPIs
-# ----------------------------------------------------------------------
 @stock_bp.route('/inventario/kpis', methods=['GET'])
 @login_required
 @roles_accepted('ADMINISTRADOR', 'ALMACEN', 'PRODUCCION')

@@ -29,7 +29,6 @@ def convertir_ruta_imagen(enlace_fotografia):
 @login_required
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
 def get_datos():
-    # KPIs rápidos
     total_productos = Productos.query.count()
     activos = Productos.query.filter_by(es_active=1).count()
     inactivos = Productos.query.filter_by(es_active=0).count()

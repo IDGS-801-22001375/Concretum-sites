@@ -227,7 +227,6 @@ def custom_login():
 
 app.view_functions['security.login'] = custom_login
 
-# Registro personalizado para evitar el auto-login
 def custom_register():
     if current_user.is_authenticated:
         return redirect(url_for('comercial_bp.dashboard'))
@@ -241,7 +240,6 @@ def custom_register():
     if form.validate_on_submit():
         app.logger.debug("Formulario validado correctamente")
         try:
-            # Verificar duplicados manualmente
             if User.query.filter_by(email=form.email.data).first():
                 flash('El correo electrónico ya está registrado.', 'danger')
                 return render_template('auth/register.html', register_user_form=form)
@@ -253,7 +251,6 @@ def custom_register():
             from flask_security import hash_password
             import uuid
 
-            # Crear usuario con rol CLIENTE
             nuevo_usuario = User(
                 username=form.username.data,
                 email=form.email.data,
@@ -263,9 +260,8 @@ def custom_register():
                 intentos_fallidos=0
             )
             db.session.add(nuevo_usuario)
-            db.session.flush()  # para obtener ID
+            db.session.flush()  
 
-            # Asegurar rol CLIENTE
             cliente_role = Role.query.filter_by(name='CLIENTE').first()
             if not cliente_role:
                 cliente_role = Role(name='CLIENTE', description='Usuario cliente', es_activo=True)
@@ -274,10 +270,9 @@ def custom_register():
 
             nuevo_usuario.roles.append(cliente_role)
 
-            # Crear registro en clientes vinculado al usuario
             nuevo_cliente = Cliente(
                 usuario_id=nuevo_usuario.id,
-                razon_social=form.username.data,   # o podrías poner el nombre completo después
+                razon_social=form.username.data,  
                 email=form.email.data,
                 es_activo=1
             )
@@ -304,7 +299,6 @@ def custom_register():
 
     return render_template('auth/register.html', register_user_form=form)
 
-# Sobrescribimos la ruta original de Flask-Security
 app.view_functions['security.register'] = custom_register
 
 @app.route('/verificar-2fa', methods=['GET', 'POST'])

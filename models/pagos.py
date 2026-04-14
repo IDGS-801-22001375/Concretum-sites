@@ -1,8 +1,6 @@
 from datetime import datetime
 from .extensions import db
 
-# ====================== PAGO A PROVEEDOR ======================
-
 class PagoProveedor(db.Model):
     __tablename__ = 'pagos_proveedor'
 

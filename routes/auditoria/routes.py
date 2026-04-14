@@ -48,7 +48,6 @@ def api_auditoria():
 
     query = {}
 
-    # Filtro de fechas
     if start_date_str and end_date_str:
         try:
             start = datetime.datetime.strptime(start_date_str, '%Y-%m-%d')
@@ -57,7 +56,6 @@ def api_auditoria():
         except ValueError:
             pass
 
-    # Filtro de búsqueda
     if search:
         search = search.split('/api?')[0].split('?')[0]
         regex = re.compile(search, re.IGNORECASE)
@@ -67,7 +65,6 @@ def api_auditoria():
             {'detalles': regex}
         ]
 
-    # Paginación y ordenamiento
     total_docs = mongo_db.auditoria_eventos.count_documents(query)
     cursor = mongo_db.auditoria_eventos.find(query).sort('fecha_creacion', -1).skip((page - 1) * per_page).limit(per_page)
 

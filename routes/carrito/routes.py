@@ -1,7 +1,3 @@
-"""
-rutas_carrito.py
-Rutas del módulo de tienda / carrito para el portal público de Concretum.
-"""
 import datetime
 import uuid
 
@@ -14,7 +10,6 @@ from . import carrito_bp
 from models import (
     db, Productos, CategoriasProducto, Existencias, Color, Recetas
 )
-# Importar los modelos del módulo carrito
 from models import (
     Carrito, CarritoItem,
     PedidoCliente, PedidoClienteDetalle,
@@ -24,12 +19,7 @@ from models import (
 from forms import AgregarAlCarritoForm, CheckoutForm, ContactoClienteForm
 
 
-# ─────────────────────────────────────────────
-# Utilidades internas
-# ─────────────────────────────────────────────
-
 def _obtener_o_crear_carrito():
-    """Retorna el carrito activo del usuario autenticado, creándolo si no existe."""
     carrito = Carrito.query.filter_by(usuario_id=current_user.id).first()
     if not carrito:
         carrito = Carrito(usuario_id=current_user.id)
@@ -39,7 +29,6 @@ def _obtener_o_crear_carrito():
 
 
 def _generar_folio(prefijo='PED'):
-    """Genera un folio único con prefijo + fecha + fragmento UUID."""
     hoy = datetime.datetime.now().strftime('%Y%m%d')
     fragmento = str(uuid.uuid4()).replace('-', '').upper()[:6]
     return f"{prefijo}-{hoy}-{fragmento}"
@@ -47,7 +36,6 @@ def _generar_folio(prefijo='PED'):
 
 def _crear_notificacion(usuario_id, tipo, titulo, mensaje,
                         referencia_id=None, referencia_tipo=None):
-    """Crea una notificación para el cliente indicado."""
     notif = NotificacionCliente(
         usuario_id=usuario_id,
         tipo=tipo,
@@ -60,7 +48,6 @@ def _crear_notificacion(usuario_id, tipo, titulo, mensaje,
 
 
 def _registrar_auditoria_mongo(accion, detalles):
-    """Registra evento de auditoría en MongoDB (no bloqueante)."""
     try:
         from app import mongo_db
         mongo_db.auditoria_eventos.insert_one({
@@ -75,10 +62,6 @@ def _registrar_auditoria_mongo(accion, detalles):
     except Exception as error:
         print(f"Error Mongo auditoría: {error}")
 
-
-# ─────────────────────────────────────────────
-# CONTEXT PROCESSOR — total de ítems en carrito
-# ─────────────────────────────────────────────
 
 @carrito_bp.app_context_processor
 def inyectar_carrito_global():
@@ -132,13 +115,8 @@ def carrito_contenido():
     return render_template('tienda/_carrito_items.html', items_carrito=items, carrito=carrito)
 
 
-# ─────────────────────────────────────────────
-# CATÁLOGO DE PRODUCTOS (con carrito lateral)
-# ─────────────────────────────────────────────
-
 @carrito_bp.route('/productos')
 def catalogo():
-    """Página principal de la tienda con todos los productos y carrito lateral."""
     categoria_id = request.args.get('categoria', type=int)
     busqueda     = request.args.get('q', '').strip()
 
@@ -167,7 +145,6 @@ def catalogo():
     productos_lista = consulta.order_by(Productos.nombre.asc()).all()
     categorias      = CategoriasProducto.query.filter_by(es_active=1).all()
 
-    # Carrito del usuario autenticado
     carrito      = None
     items_carrito = []
     if current_user.is_authenticated:
@@ -188,10 +165,6 @@ def catalogo():
         form_agregar=form_agregar,
     )
 
-
-# ─────────────────────────────────────────────
-# AGREGAR AL CARRITO (JSON para AJAX)
-# ─────────────────────────────────────────────
 
 @carrito_bp.route('/carrito/agregar', methods=['POST'])
 @login_required
@@ -233,11 +206,11 @@ def agregar_al_carrito():
     faltante = max(0, solicitado - disponible)
     if faltante > 0:
         if disponible > 0:
-            mensaje_stock = f"⚠️ Stock disponible: {disponible} unidades. Las {faltante} restantes se enviarán a producción tras autorizar el pedido."
+            mensaje_stock = f"Stock disponible: {disponible} unidades. Las {faltante} restantes se enviarán a producción tras autorizar el pedido."
         else:
-            mensaje_stock = f"⚠️ Sin stock disponible. Las {solicitado} unidades se enviarán a producción tras autorizar el pedido."
+            mensaje_stock = f"Sin stock disponible. Las {solicitado} unidades se enviarán a producción tras autorizar el pedido."
     else:
-        mensaje_stock = f"✅ Stock suficiente. Las {int(solicitado)} unidades están disponibles para entrega inmediata."
+        mensaje_stock = f"Stock suficiente. Las {int(solicitado)} unidades están disponibles para entrega inmediata."
 
     total_items = carrito.total_items
     subtotal = carrito.subtotal
@@ -254,11 +227,6 @@ def agregar_al_carrito():
         'item_html': item_html,
         'item_id': item.id_item
     })
-
-
-# ─────────────────────────────────────────────
-# QUITAR ÍTEM DEL CARRITO
-# ─────────────────────────────────────────────
 
 @carrito_bp.route('/carrito/quitar/<int:item_id>', methods=['POST'])
 @login_required
@@ -283,10 +251,6 @@ def quitar_del_carrito(item_id):
         'subtotal':    f"${carrito.subtotal:,.2f}",
     })
 
-
-# ─────────────────────────────────────────────
-# ACTUALIZAR CANTIDAD DE ÍTEM
-# ─────────────────────────────────────────────
 
 @carrito_bp.route('/carrito/actualizar/<int:item_id>', methods=['POST'])
 @login_required
@@ -323,11 +287,6 @@ def actualizar_cantidad(item_id):
         'subtotal':     f"${carrito.subtotal:,.2f}",
     })
 
-
-# ─────────────────────────────────────────────
-# CHECKOUT — GET (pasarela de pago)
-# ─────────────────────────────────────────────
-
 @carrito_bp.route('/checkout')
 @login_required
 def checkout():
@@ -353,11 +312,6 @@ def checkout():
         form=form,
     )
 
-
-# ─────────────────────────────────────────────
-# CHECKOUT — POST (procesar pago)
-# ─────────────────────────────────────────────
-
 @carrito_bp.route('/checkout', methods=['POST'])
 @login_required
 def procesar_pago():
@@ -374,12 +328,11 @@ def procesar_pago():
         return redirect(url_for('carrito_bp.checkout'))
 
     items_carrito = carrito.items.all()
-    subtotal = Decimal(str(carrito.subtotal))   # Convertir a Decimal de forma segura
-    iva = (subtotal * Decimal('0.16')).quantize(Decimal('0.01'))  # Redondear a 2 decimales
+    subtotal = Decimal(str(carrito.subtotal))   
+    iva = (subtotal * Decimal('0.16')).quantize(Decimal('0.01')) 
     total = subtotal + iva
     folio = _generar_folio('PED')
 
-    # Crear pedido en estado COTIZACION
     pedido = PedidoCliente(
         folio=folio,
         usuario_id=current_user.id,
@@ -394,7 +347,6 @@ def procesar_pago():
     db.session.add(pedido)
     db.session.flush()
 
-    # Crear detalles del pedido
     for item in items_carrito:
         detalle = PedidoClienteDetalle(
             pedido_id=pedido.id_pedido_cliente,
@@ -417,7 +369,6 @@ def procesar_pago():
         referencia_tipo='pedido_cliente',
     )
 
-    # Vaciar carrito
     for item in items_carrito:
         db.session.delete(item)
 
@@ -426,11 +377,6 @@ def procesar_pago():
 
     flash(f'Tu pedido {folio} ha sido enviado para autorización. Te notificaremos cuando sea aprobado.', 'success')
     return redirect(url_for('carrito_bp.dashboard_cliente'))
-
-
-# ─────────────────────────────────────────────
-# DASHBOARD DEL CLIENTE
-# ─────────────────────────────────────────────
 
 @carrito_bp.route('/mi-cuenta')
 @login_required
@@ -479,11 +425,6 @@ def dashboard_cliente():
         form_contacto=form_contacto,
     )
 
-
-# ─────────────────────────────────────────────
-# MARCAR NOTIFICACIÓN COMO LEÍDA
-# ─────────────────────────────────────────────
-
 @carrito_bp.route('/notificaciones/leer/<int:notif_id>', methods=['POST'])
 @login_required
 def marcar_leida(notif_id):
@@ -501,11 +442,6 @@ def marcar_todas_leidas():
     NotificacionCliente.query.filter_by(usuario_id=current_user.id, leida=0).update({'leida': 1})
     db.session.commit()
     return jsonify({'exito': True})
-
-
-# ─────────────────────────────────────────────
-# CONTACTO DESDE EL PORTAL
-# ─────────────────────────────────────────────
 
 @carrito_bp.route('/mi-cuenta/contacto', methods=['POST'])
 @login_required
@@ -595,7 +531,7 @@ def responder_fecha_pedido(pedido_id):
                 venta = Venta(
                     folio=folio_venta,
                     cliente_id=cliente_id,
-                    usuario_id=None, # Venta automatizada
+                    usuario_id=None, 
                     metodo_pago=pedido.metodo_pago,
                     estado='COBRADO' if pedido.metodo_pago != 'CREDITO' else 'CREDITO',
                     subtotal=subtotal_venta,

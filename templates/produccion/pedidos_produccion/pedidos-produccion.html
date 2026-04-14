@@ -206,7 +206,6 @@ Producción', modal_size='md') %}
         }
     });
 
-    // Cerrar con Escape o clic en backdrop
     document.getElementById('modal-confirmar-accion').addEventListener('click', function (e) {
         if (e.target === this) cerrarModalAccion();
     });
@@ -241,7 +240,6 @@ Producción', modal_size='md') %}
             }
         });
 
-        // Sobrescribir render para agregar columna de acciones con "Ver detalle"
         const originalRender = window.crudManagers['produccion'].renderTabla.bind(window.crudManagers['produccion']);
         window.crudManagers['produccion'].renderTabla = function (items) {
             originalRender(items);
@@ -249,7 +247,6 @@ Producción', modal_size='md') %}
             rows.forEach((row, idx) => {
                 if (!items[idx]) return;
                 const id = items[idx].id_produccion.replace('#', '');
-                // Eliminar cualquier botón existente (editar/desactivar) que pudiera haber sido agregado por defecto
                 const lastCell = row.querySelector('td:last-child');
                 if (lastCell) {
                     lastCell.innerHTML = '';

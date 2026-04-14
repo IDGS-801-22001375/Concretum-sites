@@ -1,7 +1,6 @@
 from datetime import datetime
 from .extensions import db
 
-# ====================== MERMAS ======================
 class Merma(db.Model):
     __tablename__ = 'mermas'
 

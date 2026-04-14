@@ -51,87 +51,84 @@
         </div>
     </div>
 
-    <!-- Información de pagos -->
     <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] p-6">
         <h3 class="text-white font-bold text-lg mb-4">Información de pagos</h3>
         {% if compra.pagos %}
-            <div class="space-y-3">
-                {% for pago in compra.pagos %}
-                <div class="bg-[#0B2239] p-3 rounded-xl border border-[#1E3A5F]">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-400">Monto:</span>
-                        <span class="text-white font-bold">${{ "{:,.2f}".format(pago.monto|float) }}</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-400">Forma de pago:</span>
-                        <span class="text-white">{{ pago.forma_pago }}</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-400">Vencimiento:</span>
-                        <span class="text-white">{{ pago.fecha_vencimiento.strftime('%d/%m/%Y') }}</span>
-                    </div>
-                    {% if pago.fecha_pago %}
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-400">Fecha pago:</span>
-                        <span class="text-emerald-400">{{ pago.fecha_pago.strftime('%d/%m/%Y') }}</span>
-                    </div>
-                    {% endif %}
-                    <div class="flex justify-between text-sm mt-2">
-                        <span class="text-gray-400">Estatus:</span>
-                        <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold
+        <div class="space-y-3">
+            {% for pago in compra.pagos %}
+            <div class="bg-[#0B2239] p-3 rounded-xl border border-[#1E3A5F]">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Monto:</span>
+                    <span class="text-white font-bold">${{ "{:,.2f}".format(pago.monto|float) }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Forma de pago:</span>
+                    <span class="text-white">{{ pago.forma_pago }}</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Vencimiento:</span>
+                    <span class="text-white">{{ pago.fecha_vencimiento.strftime('%d/%m/%Y') }}</span>
+                </div>
+                {% if pago.fecha_pago %}
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-400">Fecha pago:</span>
+                    <span class="text-emerald-400">{{ pago.fecha_pago.strftime('%d/%m/%Y') }}</span>
+                </div>
+                {% endif %}
+                <div class="flex justify-between text-sm mt-2">
+                    <span class="text-gray-400">Estatus:</span>
+                    <span class="inline-flex px-2 py-0.5 rounded-full text-xs font-semibold
                             {% if pago.estatus == 'PAGADO' %}bg-emerald-500/20 text-emerald-400
                             {% elif pago.estatus == 'VENCIDO' %}bg-red-500/20 text-red-400
                             {% else %}bg-amber-500/20 text-amber-400{% endif %}">
-                            {{ pago.estatus }}
-                        </span>
-                    </div>
-                </div>
-                {% endfor %}
-                <div class="border-t border-[#1E3A5F] pt-3 mt-2">
-                    <div class="flex justify-between text-sm font-bold">
-                        <span class="text-gray-200">Total pagado:</span>
-                        <span class="text-emerald-400">${{ "{:,.2f}".format(total_pagado|float) }}</span>
-                    </div>
-                    {% if saldo_pendiente > 0 %}
-                    <div class="flex justify-between text-sm font-bold">
-                        <span class="text-gray-200">Saldo pendiente:</span>
-                        <span class="text-amber-400">${{ "{:,.2f}".format(saldo_pendiente|float) }}</span>
-                    </div>
-                    {% endif %}
+                        {{ pago.estatus }}
+                    </span>
                 </div>
             </div>
+            {% endfor %}
+            <div class="border-t border-[#1E3A5F] pt-3 mt-2">
+                <div class="flex justify-between text-sm font-bold">
+                    <span class="text-gray-200">Total pagado:</span>
+                    <span class="text-emerald-400">${{ "{:,.2f}".format(total_pagado|float) }}</span>
+                </div>
+                {% if saldo_pendiente > 0 %}
+                <div class="flex justify-between text-sm font-bold">
+                    <span class="text-gray-200">Saldo pendiente:</span>
+                    <span class="text-amber-400">${{ "{:,.2f}".format(saldo_pendiente|float) }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
         {% else %}
-            <p class="text-gray-400 text-sm">No hay pagos registrados para esta compra.</p>
+        <p class="text-gray-400 text-sm">No hay pagos registrados para esta compra.</p>
         {% endif %}
     </div>
 
-    <!-- Historial de cambios -->
     <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] p-6">
         <h3 class="text-white font-bold text-lg mb-4">Historial de cambios</h3>
         <div class="space-y-3 max-h-64 overflow-y-auto">
             {% if compra.historial %}
-                {% for h in compra.historial|sort(attribute='fecha_modificacion', reverse=True) %}
-                <div class="bg-[#0B2239] p-3 rounded-xl border border-[#1E3A5F]">
-                    <div class="flex justify-between text-xs">
-                        <span class="text-gray-400">{{ h.fecha_modificacion.strftime('%d/%m/%Y %H:%M') }}</span>
-                        <span class="text-white font-semibold">{{ h.accion }}</span>
-                    </div>
-                    <div class="text-xs text-gray-400 mt-1">
-                        {% if h.usuario %}Por: {{ h.usuario.username }}{% else %}Sistema{% endif %}
-                    </div>
-                    {% if h.comentario %}
-                    <div class="text-xs text-gray-500 mt-1 italic">"{{ h.comentario }}"</div>
-                    {% endif %}
+            {% for h in compra.historial|sort(attribute='fecha_modificacion', reverse=True) %}
+            <div class="bg-[#0B2239] p-3 rounded-xl border border-[#1E3A5F]">
+                <div class="flex justify-between text-xs">
+                    <span class="text-gray-400">{{ h.fecha_modificacion.strftime('%d/%m/%Y %H:%M') }}</span>
+                    <span class="text-white font-semibold">{{ h.accion }}</span>
                 </div>
-                {% endfor %}
+                <div class="text-xs text-gray-400 mt-1">
+                    {% if h.usuario %}Por: {{ h.usuario.username }}{% else %}Sistema{% endif %}
+                </div>
+                {% if h.comentario %}
+                <div class="text-xs text-gray-500 mt-1 italic">"{{ h.comentario }}"</div>
+                {% endif %}
+            </div>
+            {% endfor %}
             {% else %}
-                <p class="text-gray-400 text-sm">No hay historial disponible.</p>
+            <p class="text-gray-400 text-sm">No hay historial disponible.</p>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Materiales comprados -->
 <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] overflow-hidden mb-8">
     <div class="px-6 py-5 border-b border-[#1E3A5F] bg-[#0B2239]">
         <h3 class="text-white font-bold text-lg">Materiales comprados</h3>
@@ -150,25 +147,28 @@
             <tbody class="divide-y divide-[#1E3A5F]">
                 {% for detalle in compra.detalles %}
                 <tr class="hover:bg-[#123555]/50">
-                    <td class="px-6 py-4 text-white">{{ detalle.materia_prima.nombre }} ({{ detalle.materia_prima.sku }})</td>
+                    <td class="px-6 py-4 text-white">{{ detalle.materia_prima.nombre }} ({{ detalle.materia_prima.sku
+                        }})</td>
                     <td class="px-6 py-4 text-right text-white">{{ detalle.cantidad|float }}</td>
                     <td class="px-6 py-4 text-gray-400">{{ detalle.materia_prima.unidad_medida }}</td>
-                    <td class="px-6 py-4 text-right text-white font-mono">${{ "{:,.2f}".format(detalle.precio_unitario|float) }}</td>
-                    <td class="px-6 py-4 text-right text-white font-mono">${{ "{:,.2f}".format(detalle.total_linea|float) }}</td>
+                    <td class="px-6 py-4 text-right text-white font-mono">${{
+                        "{:,.2f}".format(detalle.precio_unitario|float) }}</td>
+                    <td class="px-6 py-4 text-right text-white font-mono">${{
+                        "{:,.2f}".format(detalle.total_linea|float) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
             <tfoot class="bg-[#0B2239] border-t border-[#1E3A5F]">
                 <tr>
                     <td colspan="4" class="px-6 py-4 text-right font-bold text-gray-200">Total:</td>
-                    <td class="px-6 py-4 text-right font-bold text-emerald-400">${{ "{:,.2f}".format(compra.total|float) }}</td>
+                    <td class="px-6 py-4 text-right font-bold text-emerald-400">${{ "{:,.2f}".format(compra.total|float)
+                        }}</td>
                 </tr>
             </tfoot>
         </table>
     </div>
 </div>
 
-<!-- Observaciones (si existen) -->
 {% if compra.historial and compra.historial[0].comentario %}
 <div class="bg-[#0F2A44] rounded-2xl border border-[#1E3A5F] p-6">
     <h3 class="text-white font-bold text-lg mb-3">Observaciones generales</h3>

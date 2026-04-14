@@ -188,7 +188,7 @@
     </div>
     <div class="p-6">
       {% if productos_top %}
-      <div class="relative h-64 w-full"> <!-- o h-60 si quieres un poco más baja -->
+      <div class="relative h-64 w-full">
         <canvas id="chartProductos" class="w-full h-full"></canvas>
       </div>
       {% else %}
@@ -303,12 +303,11 @@
       }
     });
 
-    Chart.defaults.color = '#9ca3af'; // Texto gris claro
+    Chart.defaults.color = '#9ca3af';
     Chart.defaults.font.family = "'Inter', 'Barlow', sans-serif";
-    Chart.defaults.scale.grid.color = 'rgba(30, 58, 95, 0.3)'; // Líneas de fondo sutiles
-    Chart.defaults.scale.grid.borderColor = 'transparent'; // Ocultar borde del eje
+    Chart.defaults.scale.grid.color = 'rgba(30, 58, 95, 0.3)';
+    Chart.defaults.scale.grid.borderColor = 'transparent';
 
-    // Plugin para dibujar un fondo si no hay datos suficientes (Opcional, pero ayuda)
     const emptyStatePlugin = {
       id: 'emptyState',
       afterDraw(chart) {
@@ -358,7 +357,7 @@
           bottomLeft: 0,
           bottomRight: 0
         },
-        borderSkipped: 'bottom', // Fuerza a que la base sea plana
+        borderSkipped: 'bottom',
         maxBarThickness: 60
       }]
     },
@@ -383,7 +382,6 @@
         y: {
           beginAtZero: true,
           min: 0,
-          // Añadimos un pequeño extra arriba para que la barra no toque el techo
           suggestedMax: Math.max(...prodCantidades) * 1.1,
           ticks: { stepSize: 1, precision: 0 }
         },
@@ -445,7 +443,6 @@
     } catch (e) { console.error(e); }
   {% endif %}
 
-  // --- 5. GRÁFICA DE LÍNEAS (Tendencia de Ventas) ---
   {% if ventas_recientes %}
   try {
     let ventasHoras = [];
@@ -512,7 +509,7 @@
         scales: {
           y: {
             beginAtZero: true,
-            min: 0, // Asegura que el eje empiece en 0
+            min: 0,
             suggestedMax: Math.max(...ventasTotales) * 1.2,
             ticks: {
               callback: function (value) {

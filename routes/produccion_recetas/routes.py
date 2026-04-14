@@ -35,7 +35,6 @@ def convertir_unidades(cantidad, origen, destino):
     return cant_dec
 
 def finalizar_produccion(id_produccion):
-    # Simulador de tiempo de producción en background (30 seg para pruebas)
     time.sleep(30)
     with db.app.app_context():
         produccion = Produccion.query.get(id_produccion)
@@ -43,8 +42,6 @@ def finalizar_produccion(id_produccion):
             produccion.estado = 'FINALIZADA'
             produccion.fecha_fin = datetime.utcnow()
             db.session.commit()
-
-# ====================== VISTA PRINCIPAL ======================
 
 @produccion_recetas_bp.route('/producciones')
 @login_required
@@ -59,8 +56,6 @@ def index():
         'produccion/pedidos_produccion/pedidos-produccion.html',
         recetas_options=recetas_opts
     )
-
-# ====================== APIS PARA AJAX ======================
 
 @produccion_recetas_bp.route('/api/kpis_y_activas')
 @login_required
@@ -119,8 +114,6 @@ def api_historial():
         'per_page': paginated.per_page
     })
 
-# ====================== ACCIONES (CREAR, FINALIZAR, CANCELAR) ======================
-
 @produccion_recetas_bp.route('/historial/guardar', methods=['POST'])
 @login_required
 def guardar_orden():
@@ -142,7 +135,6 @@ def guardar_orden():
     detalles = RecetaDetalle.query.filter_by(receta_id=receta.id_receta).all()
     consumos = []
 
-    # Validar stock antes de crear
     for det in detalles:
         mp = MateriaPrima.query.get(det.materia_prima_id)
         existencia = mp.existencia
@@ -163,7 +155,6 @@ def guardar_orden():
         consumos.append((mp, existencia, cantidad_convertida))
 
     try:
-        # Crear producción
         produccion = Produccion(
             producto_id=receta.producto_id,
             receta_id=receta.id_receta,
@@ -176,7 +167,6 @@ def guardar_orden():
         db.session.add(produccion)
         db.session.flush()
 
-        # Descontar stock y registrar consumos
         for mp, existencia, cant_conv in consumos:
             existencia.stock_actual = Decimal(str(existencia.stock_actual)) - cant_conv
             db.session.add(ProduccionConsumo(
@@ -187,7 +177,6 @@ def guardar_orden():
 
         db.session.commit()
 
-        # Iniciar simulación en background
         threading.Thread(target=finalizar_produccion, args=(produccion.id_produccion,)).start()
 
         return jsonify({'success': True, 'message': 'Orden de producción iniciada correctamente.'})
@@ -229,14 +218,12 @@ def finalizar_manual(id):
         produccion.estado = 'FINALIZADA'
         produccion.fecha_fin = datetime.utcnow()
 
-        # Actualizar la solicitud de producción asociada (si existe)
         if produccion.solicitud_id:
             solicitud = SolicitudProduccion.query.get(produccion.solicitud_id)
             if solicitud:
                 solicitud.estado = 'COMPLETADA'
                 solicitud.fecha_respuesta = datetime.utcnow()
 
-                # Actualizar el pedido: reducir cantidad pendiente
                 pedido = solicitud.pedido
                 if pedido:
                     detalle = PedidoClienteDetalle.query.filter_by(
@@ -288,8 +275,6 @@ def cancelar_orden(id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
-
-# ====================== RUTAS SOLICITUDES INTACTAS ======================
 
 @produccion_recetas_bp.route('/solicitudes')
 @login_required
@@ -389,7 +374,6 @@ def aceptar_solicitud(solicitud_id):
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
 def ver_pedido_produccion(pedido_id):
     pedido = PedidoCliente.query.get_or_404(pedido_id)
-    # Ocultamos datos del cliente
     return render_template('produccion/pedido_detalle_produccion.html', pedido=pedido)
 
 @produccion_recetas_bp.route('/solicitud/<int:solicitud_id>/detalle')
@@ -406,7 +390,6 @@ def detalle_solicitud_materiales(solicitud_id):
         mp = det.materia_prima
         existencia = mp.existencia
         necesario = det.cantidad * lotes
-        # Conversión de unidades (reutilizar función convertir_unidades)
         necesario_convertido = convertir_unidades(necesario, det.unidad_medida.clave, mp.unidad_medida)
         materiales.append({
             'nombre': mp.nombre,
@@ -456,6 +439,5 @@ def detalle_solicitud(solicitud_id):
 @roles_accepted('ADMINISTRADOR', 'PRODUCCION')
 def detalle_produccion(id):
     produccion = Produccion.query.get_or_404(id)
-    # Obtener consumos de materia prima
     consumos = ProduccionConsumo.query.filter_by(produccion_id=id).all()
     return render_template('produccion/detalle_produccion.html', produccion=produccion, consumos=consumos)

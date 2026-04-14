@@ -4,8 +4,6 @@ from wtforms.validators import DataRequired, Length, NumberRange, Optional, Emai
 
 
 class AgregarAlCarritoForm(FlaskForm):
-    """Formulario para agregar un producto al carrito."""
-
     producto_id = IntegerField(
         'Producto',
         validators=[DataRequired(message="El producto es requerido")]
@@ -21,8 +19,6 @@ class AgregarAlCarritoForm(FlaskForm):
 
 
 class ActualizarCantidadForm(FlaskForm):
-    """Formulario para actualizar la cantidad de un ítem en el carrito."""
-
     item_id = IntegerField(
         'Ítem',
         validators=[DataRequired(message="El ítem es requerido")]
@@ -38,9 +34,6 @@ class ActualizarCantidadForm(FlaskForm):
 
 
 class CheckoutForm(FlaskForm):
-    """Formulario de checkout / pasarela de pago."""
-
-    # Datos de entrega
     direccion_entrega = StringField(
         'Dirección de entrega',
         validators=[
@@ -54,7 +47,6 @@ class CheckoutForm(FlaskForm):
         validators=[Optional(), Length(max=1000)]
     )
 
-    # Método de pago
     metodo_pago = SelectField(
         'Método de pago',
         choices=[
@@ -65,7 +57,6 @@ class CheckoutForm(FlaskForm):
         validators=[DataRequired(message="Selecciona un método de pago")]
     )
 
-    # Datos de tarjeta (solo se validan si metodo_pago == TARJETA, la lógica va en la ruta)
     nombre_titular = StringField(
         'Nombre del titular',
         validators=[Optional(), Length(max=100)]
